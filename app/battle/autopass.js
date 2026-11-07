@@ -1,0 +1,111 @@
+/**
+ * When the app passes priority for the player, and what the main button says.
+ * Magic gives priority many times a turn; like MTG Arena's "smart stops", the app
+ * only stops when the player could sensibly act.
+ */
+import { DECISION, CHOICE } from '../../src/engine/Game.js';
+import { PHASE, STEP } from '../../src/engine/turnStructure.js';
+import { ACTION } from '../../src/engine/actions.js';
+import {
+  isCreature, hasKeyword, cantAttack, KEYWORD, TARGET,
+} from '../../src/cards/cards.js';
+
+const isMain = (state) => state.phase === PHASE.PRECOMBAT_MAIN || state.phase === PHASE.POSTCOMBAT_MAIN;
+
+/**
+ * Whether to pass priority for `me` without asking. `hasOptions`: whether they can
+ * do anything but pass (see playOptions). `fullControl`: stop whenever they have
+ * priority. `endingTurn`: they pressed "End turn" this turn, so only stop if the
+ * opponent does something they could answer.
+ */
+export function shouldAutoPass(state, me, { hasOptions, fullControl = false, endingTurn = false }) {
+  if (state.pendingDecision || state.priorityPlayerId !== me) return false;
+  if (fullControl) return false;
+  if (!hasOptions) return true;
+  const top = state.stack.at(-1);
+  // Something of the opponent's on the stack: a chance to respond.
+  if (top && top.controllerId !== me) return false;
+  const myTurn = state.activePlayerId === me;
+  if (myTurn) {
+    if (endingTurn) return true;
+    // After blocks: a chance to pump or remove a creature before damage.
+    if (state.step === STEP.DECLARE_BLOCKERS && !top && state.combat?.attackers?.length) return false;
+    return !(isMain(state) && !top);
+  }
+  // Their turn: stop when they attack, after blocks, and at their end step.
+  return !(state.step === STEP.DECLARE_ATTACKERS || state.step === STEP.DECLARE_BLOCKERS || state.step === STEP.END);
+}
+
+/** Why the blocks can't be confirmed yet: menace, or a blocking requirement. */
+export function blockHint(state) {
+  const attackers = (state.combat?.attackers ?? []).map((a) => state.battlefield?.find((p) => p.id === a.cardId)).filter(Boolean);
+  const named = (keyword) => attackers.find((a) => hasKeyword(a, keyword))?.name;
+  if (named(KEYWORD.LURE)) return `Every creature able to block ${named(KEYWORD.LURE)} must`;
+  if (named(KEYWORD.MUST_BE_BLOCKED)) return `${named(KEYWORD.MUST_BE_BLOCKED)} must be blocked`;
+  return 'Menace needs two blockers';
+}
+
+/** Creatures of `me` that look able to attack (untapped, no defender, not summoning sick). */
+export const readyAttackers = (state, me) => state.battlefield.filter((p) => p.controllerId === me && isCreature(p)
+  && !p.tapped && !cantAttack(p) && (!p.summoningSick || hasKeyword(p, 'haste')));
+
+/**
+ * The main button: `{ label, action?, endTurn?, waiting?, reopen? }`. `action` is the valid
+ * action it takes; `endTurn` means it also starts passing until the turn ends; `reopen`
+ * means it shows the decision's sheet again;
+ * `waiting` means it's the opponent's move (the button shows a spinner).
+ */
+export function primaryAction(state, me) {
+  const mine = state.validActions.filter((a) => a.playerId === me);
+  const find = (type) => mine.find((a) => a.type === type);
+  const decision = state.pendingDecision;
+  if (decision?.playerId === me) {
+    switch (decision.type) {
+      case DECISION.DECLARE_ATTACKERS: {
+        const n = decision.attackers.length;
+        return { label: n ? `Attack (${n})` : 'No attacks', action: find(ACTION.CONFIRM_ATTACKERS) };
+      }
+      case DECISION.DECLARE_BLOCKERS: {
+        const n = Object.keys(decision.blocks).length;
+        const action = find(ACTION.CONFIRM_BLOCKERS);
+        return { label: n ? `Block (${n})` : 'No blocks', action, ...(action ? {} : { hint: blockHint(state) }) };
+      }
+      case DECISION.CHOOSE_TARGETS: {
+        // "You may": the button declines. A card in a graveyard is chosen from a sheet.
+        const decline = mine.find((a) => a.type === ACTION.CHOOSE_TARGETS && a.targets.length === 0);
+        if (decision.targetKind === TARGET.PERMANENT_CARD_IN_YOUR_GRAVEYARD) return { label: 'Choose a card', reopen: true };
+        return decline ? { label: 'Don\'t', action: decline } : { label: 'Choose a target' };
+      }
+      case DECISION.CHOOSE_MODE:
+        return { label: 'Choose one', reopen: true };
+      case DECISION.LEGEND_RULE:
+        return { label: 'Keep one', reopen: true };
+      case DECISION.DISCARD_TO_HAND_SIZE:
+        return { label: `Discard ${decision.count}` };
+      case DECISION.MULLIGAN:
+        // The choice is a sheet, as for damage.
+        return { label: 'Keep or mulligan', reopen: true };
+      case DECISION.PUT_ON_BOTTOM:
+        return { label: `Bottom ${decision.count}` };
+      case DECISION.ASSIGN_COMBAT_DAMAGE:
+        // The choice is a sheet; the button brings it back if it was dismissed.
+        return { label: 'Assign damage', reopen: true };
+      case DECISION.CHOOSE:
+        // A card in hand is tapped there; a permanent (on the board) or anything else, the button brings back.
+        if ([CHOICE.DISCARD, CHOICE.BOTTOM_FROM_HAND].includes(decision.kind)) return { label: decision.kind === CHOICE.DISCARD ? 'Discard 1' : 'Bottom 1' };
+        return { label: 'Choose', reopen: true };
+      case DECISION.CHOOSE_MANY:
+        return { label: { [CHOICE.SCRY]: 'Scry', [CHOICE.KEEP]: 'Keep', [CHOICE.EXILE_COST]: 'Exile', [CHOICE.EXILE_FROM_HAND]: 'Exile', [CHOICE.SACRIFICE_ANY]: 'Sacrifice' }[decision.kind] ?? 'Choose', reopen: true };
+      default:
+        return { label: 'Choose' };
+    }
+  }
+  if (state.status !== 'inProgress') return { label: 'Game over' };
+  if (decision || state.priorityPlayerId !== me) return { label: 'Opponent', waiting: true };
+  const pass = find(ACTION.PASS_PRIORITY);
+  if (state.stack.length) return { label: 'Resolve', action: pass };
+  if (state.activePlayerId !== me) return { label: 'Pass', action: pass };
+  if (state.phase === PHASE.COMBAT && state.combat?.attackers?.length) return { label: 'Deal damage', action: pass };
+  if (state.phase === PHASE.PRECOMBAT_MAIN && readyAttackers(state, me).length) return { label: 'Combat', action: pass };
+  return { label: 'End turn', action: pass, endTurn: true };
+}

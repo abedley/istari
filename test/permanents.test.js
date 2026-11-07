@@ -1,0 +1,491 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  Game, ACTION, PHASE, STEP, CARD_TYPE, SUBTYPE, KEYWORD, TARGET, AFFECTED, EFFECT, equipAbility,
+  passPriority, castSpell, activateAbility, playLand, toggleAttacker, confirmAttackers, setBlocker,
+  confirmBlockers, CARDS as ALL_CARDS,
+} from '../src/index.js';
+import { REAL_CARDS } from './fixtures/realCards.js';
+
+const players = [{ id: 'p1' }, { id: 'p2' }];
+
+// Free test cards, so whole boards can be built in one main phase.
+const creature = (id, power, toughness) => ({ id, name: id, manaCost: {}, types: [CARD_TYPE.CREATURE], power, toughness });
+const CARDS = {
+  Bear: creature('Bear', 2, 2),
+  Mouse: creature('Mouse', 1, 1),
+  Talisman: {
+    id: 'Talisman', name: 'Talisman', manaCost: {}, types: [CARD_TYPE.ARTIFACT],
+    abilities: [{ id: 'tapForG', text: '{T}: Add {G}.', cost: { tap: true }, effect: { type: EFFECT.ADD_MANA, mana: { G: 1 } } }],
+  },
+  Golem: { ...creature('Golem', 2, 2), types: [CARD_TYPE.ARTIFACT, CARD_TYPE.CREATURE] },
+  Altar: {
+    id: 'Altar', name: 'Altar', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT],
+    abilities: [{ id: 'gainLife', text: '{2}: You gain 1 life.', cost: { mana: { generic: 2 } }, effect: { type: EFFECT.GAIN_LIFE, amount: 1 } }],
+  },
+  Might: {
+    id: 'Might', name: 'Might', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT], subtypes: [SUBTYPE.AURA],
+    enchant: TARGET.CREATURE,
+    staticAbilities: [{ affected: AFFECTED.ATTACHED_PERMANENT, power: 2, toughness: 2, keywords: [KEYWORD.TRAMPLE] }],
+  },
+  Wings: {
+    id: 'Wings', name: 'Wings', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT], subtypes: [SUBTYPE.AURA],
+    enchant: TARGET.CREATURE,
+    staticAbilities: [{ affected: AFFECTED.ATTACHED_PERMANENT, keywords: [KEYWORD.FLYING] }],
+  },
+  Bonds: {
+    id: 'Bonds', name: 'Bonds', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT], subtypes: [SUBTYPE.AURA],
+    enchant: TARGET.CREATURE,
+    staticAbilities: [{ affected: AFFECTED.ATTACHED_PERMANENT, keywords: [KEYWORD.CANT_ATTACK, KEYWORD.CANT_BLOCK] }],
+  },
+  Anthem: {
+    id: 'Anthem', name: 'Anthem', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT],
+    staticAbilities: [{ affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, power: 1, toughness: 1 }],
+  },
+  Lord: {
+    ...creature('Lord', 2, 2),
+    staticAbilities: [{ affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, power: 1, toughness: 1, keywords: [KEYWORD.VIGILANCE], other: true }],
+  },
+  Banner: {
+    id: 'Banner', name: 'Banner', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT],
+    staticAbilities: [{ affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, power: 1, colors: ['W'] }],
+  },
+  Squire: { ...creature('Squire', 1, 1), colors: ['W'] },
+  Zap: {
+    id: 'Zap', name: 'Zap', manaCost: {}, types: [CARD_TYPE.INSTANT], target: TARGET.CREATURE,
+    effects: [{ type: EFFECT.DEAL_DAMAGE, amount: 2 }],
+  },
+  Smash: {
+    id: 'Smash', name: 'Smash', manaCost: {}, types: [CARD_TYPE.INSTANT], target: TARGET.CREATURE,
+    effects: [{ type: EFFECT.DESTROY }],
+  },
+  Blade: {
+    id: 'Blade', name: 'Blade', manaCost: {}, types: [CARD_TYPE.ARTIFACT], subtypes: [SUBTYPE.EQUIPMENT],
+    staticAbilities: [{ affected: AFFECTED.ATTACHED_PERMANENT, power: 2, keywords: [KEYWORD.FIRST_STRIKE] }],
+    abilities: [equipAbility({ generic: 1 })],
+  },
+  Strap: {
+    id: 'Strap', name: 'Strap', manaCost: {}, types: [CARD_TYPE.ARTIFACT], subtypes: [SUBTYPE.EQUIPMENT],
+    abilities: [equipAbility({ generic: 1 })],
+  },
+  // "As long as Shire Bounder is equipped, it gets +1/+1 and has first strike.", for free.
+  Bounder: { ...REAL_CARDS.shireBounder, id: 'Bounder', name: 'Bounder', manaCost: {} },
+};
+
+/** Starts with the decks in order (no shuffle, no emblems) and moves to p1's turn 1 main phase. */
+function setup({ p1 = [], p2 = [] } = {}) {
+  const deck = (names) => [...names, ...Array(40 - names.length).fill('forest')];
+  const game = new Game({
+    players, cards: CARDS, shuffleLibraries: false, emblems: { p1: [], p2: [] }, decks: { p1: deck(p1), p2: deck(p2) },
+  });
+  const events = [];
+  game.onAny((name, payload) => events.push({ name, payload }));
+  game.start();
+  passRound(game);
+  return { game, events };
+}
+
+const state = (game) => game.getState();
+const player = (game, id) => state(game).players.find((p) => p.id === id);
+const permanent = (game, id) => state(game).battlefield.find((p) => p.id === id);
+const inHand = (game, playerId, name) => player(game, playerId).hand.find((c) => c.name === name);
+const actionsOf = (game, type) => state(game).validActions.filter((a) => a.type === type);
+
+function passRound(game) {
+  for (let i = 0; i < 2; i++) {
+    assert.deepEqual(game.dispatch(passPriority(state(game).priorityPlayerId)), { ok: true });
+  }
+}
+
+/** Passes, confirming empty declarations or taking the first choice, until the given turn and phase. */
+function advanceTo(game, { turn, phase }) {
+  while (state(game).turn < turn || state(game).phase !== phase) {
+    const { pendingDecision, validActions } = state(game);
+    if (pendingDecision) game.dispatch(validActions.find((a) => a.type.startsWith('CONFIRM_')) ?? validActions[0]);
+    else passRound(game);
+  }
+}
+
+/** Casts the named card from hand (with optional targets) and lets it resolve. Returns its id. */
+function cast(game, playerId, name, targets) {
+  const { id } = inHand(game, playerId, name);
+  assert.deepEqual(game.dispatch(castSpell(playerId, id, targets)), { ok: true }, `cast ${name}`);
+  passRound(game);
+  return id;
+}
+
+function playForestAndTap(game, playerId) {
+  game.dispatch(playLand(playerId, inHand(game, playerId, 'Forest').id));
+  const forest = state(game).battlefield.find((p) => p.controllerId === playerId && p.cardId === 'forest' && !p.tapped);
+  assert.deepEqual(game.dispatch(activateAbility(playerId, forest.id, 'tapForG')), { ok: true });
+}
+
+// -----------------------------------------------------------------------------
+// Artifacts and enchantments
+
+test('an artifact is cast at sorcery speed and resolves onto the battlefield', () => {
+  const { game } = setup({ p1: ['Talisman'] });
+  const id = inHand(game, 'p1', 'Talisman').id;
+  game.dispatch(castSpell('p1', id));
+  assert.deepEqual(state(game).stack.map((o) => [o.kind, o.sourceId]), [['spell', id]]);
+  passRound(game);
+  assert.deepEqual(permanent(game, id).types, ['Artifact']);
+  assert.equal(permanent(game, id).power, undefined);
+});
+
+test('a noncreature artifact can use {T} abilities the turn it arrives', () => {
+  const { game } = setup({ p1: ['Talisman'] });
+  const id = cast(game, 'p1', 'Talisman');
+  assert.equal(permanent(game, id).summoningSick, true);
+  assert.deepEqual(game.dispatch(activateAbility('p1', id, 'tapForG')), { ok: true });
+  assert.equal(player(game, 'p1').manaPool.G, 1);
+});
+
+test('an artifact creature is both, and has summoning sickness', () => {
+  const { game } = setup({ p1: ['Golem'] });
+  const id = cast(game, 'p1', 'Golem');
+  assert.deepEqual(permanent(game, id).types, ['Artifact', 'Creature']);
+  passRound(game); // -> combat
+  passRound(game); // -> declare attackers: the Golem can't attack yet
+  assert.equal(state(game).pendingDecision, null);
+});
+
+test('an enchantment\'s activated ability can be used at instant speed, even on the opponent\'s turn', () => {
+  const { game, events } = setup({ p1: ['Altar', 'Talisman'] });
+  const altar = cast(game, 'p1', 'Altar');
+  const talisman = cast(game, 'p1', 'Talisman');
+  game.dispatch(playLand('p1', inHand(game, 'p1', 'Forest').id));
+  const forest = state(game).battlefield.find((p) => p.cardId === 'forest').id;
+  advanceTo(game, { turn: 2, phase: PHASE.BEGINNING });
+  assert.equal(state(game).step, STEP.UPKEEP);
+  game.dispatch(passPriority('p2')); // p1 gets priority in p2's upkeep
+  game.dispatch(activateAbility('p1', forest, 'tapForG'));
+  assert.ok(!actionsOf(game, ACTION.ACTIVATE_ABILITY).some((a) => a.cardId === altar)); // {2} needs two mana
+  game.dispatch(activateAbility('p1', talisman, 'tapForG'));
+  assert.deepEqual(game.dispatch(activateAbility('p1', altar, 'gainLife')), { ok: true });
+  assert.equal(state(game).stack.length, 1);
+  passRound(game);
+  assert.equal(player(game, 'p1').life, 21);
+  assert.equal(state(game).activePlayerId, 'p2');
+  assert.ok(events.some((e) => e.name === 'lifeGained'));
+});
+
+// -----------------------------------------------------------------------------
+// Auras
+
+test('an Aura spell targets a creature: one cast action per legal target', () => {
+  const { game } = setup({ p1: ['Bear', 'Might'], p2: ['Mouse'] });
+  const might = inHand(game, 'p1', 'Might').id;
+  // No creatures yet: the Aura can't be cast.
+  assert.deepEqual(actionsOf(game, ACTION.CAST_SPELL).filter((a) => a.cardId === might), []);
+  const bear = cast(game, 'p1', 'Bear');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const mouse = cast(game, 'p2', 'Mouse');
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  // Any creature can be enchanted, including the opponent's.
+  assert.deepEqual(
+    actionsOf(game, ACTION.CAST_SPELL).filter((a) => a.cardId === might),
+    [
+      { type: ACTION.CAST_SPELL, playerId: 'p1', cardId: might, targets: [bear] },
+      { type: ACTION.CAST_SPELL, playerId: 'p1', cardId: might, targets: [mouse] },
+    ],
+  );
+  assert.equal(game.dispatch(castSpell('p1', might)).ok, false); // a target is required
+});
+
+test('an Aura enters attached to its target and changes its power, toughness and keywords', () => {
+  const { game, events } = setup({ p1: ['Bear', 'Might'] });
+  const bear = cast(game, 'p1', 'Bear');
+  const might = inHand(game, 'p1', 'Might').id;
+  game.dispatch(castSpell('p1', might, [bear]));
+  assert.deepEqual(state(game).stack[0].targets, [bear]);
+  passRound(game);
+
+  assert.equal(permanent(game, might).attachedTo, bear);
+  const host = permanent(game, bear);
+  assert.deepEqual([host.power, host.toughness, host.keywords], [4, 4, ['trample']]);
+  assert.deepEqual([host.base.power, host.base.toughness, host.base.keywords], [2, 2, []]);
+  assert.ok(events.some((e) => e.name === 'attached' && e.payload.cardId === might && e.payload.attachedTo === bear));
+});
+
+test('an Aura that says "can\'t attack or block" keeps its creature out of combat', () => {
+  const { game } = setup({ p1: ['Bear', 'Mouse', 'Bonds'], p2: ['Bear'] });
+  const bear = cast(game, 'p1', 'Bear');
+  const mouse = cast(game, 'p1', 'Mouse');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const theirBear = cast(game, 'p2', 'Bear');
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  cast(game, 'p1', 'Bonds', [bear]);
+  assert.deepEqual(permanent(game, bear).keywords, [KEYWORD.CANT_ATTACK, KEYWORD.CANT_BLOCK]);
+  passRound(game);
+  passRound(game);
+  // Only the Mouse may attack.
+  assert.deepEqual(actionsOf(game, ACTION.TOGGLE_ATTACKER).map((a) => a.cardId), [mouse]);
+  game.dispatch(confirmAttackers('p1'));
+  advanceTo(game, { turn: 4, phase: PHASE.COMBAT });
+  passRound(game);
+  game.dispatch(toggleAttacker('p2', theirBear));
+  game.dispatch(confirmAttackers('p2'));
+  passRound(game);
+  // Only the Mouse may block.
+  assert.deepEqual([...new Set(actionsOf(game, ACTION.SET_BLOCKER).map((a) => a.cardId))], [mouse]);
+});
+
+test('the basic AI puts a curse on the opponent\'s best creature, and a bonus on its own', async () => {
+  const { BasicAIController } = await import('../src/index.js');
+  const { game } = setup({ p1: ['Mouse', 'Bonds', 'Might'], p2: ['Mouse', 'Bear'] });
+  const mouse = cast(game, 'p1', 'Mouse');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  cast(game, 'p2', 'Mouse');
+  const theirBear = cast(game, 'p2', 'Bear');
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  const ai = new BasicAIController({ playerId: 'p1' });
+  const casts = [];
+  for (let i = 0; i < 12 && casts.length < 2; i++) {
+    // The opponent passes, so the spells resolve.
+    const action = ai.chooseAction(state(game)) ?? passPriority('p2');
+    if (action.type === ACTION.CAST_SPELL) casts.push([state(game).players[0].hand.find((c) => c.id === action.cardId).name, action.targets]);
+    game.dispatch(action);
+  }
+  assert.deepEqual(casts.sort(), [['Bonds', [theirBear]], ['Might', [mouse]]]);
+});
+
+test('an Aura goes to its owner\'s graveyard when the enchanted creature dies', () => {
+  const { game, events } = setup({ p1: ['Bear', 'Wings'], p2: ['Mouse'] });
+  const bear = cast(game, 'p1', 'Bear');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const mouse = cast(game, 'p2', 'Mouse');
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  // p1 gives the opponent's Mouse flying, then attacks: the flying Mouse blocks and dies.
+  const wings = cast(game, 'p1', 'Wings', [mouse]);
+  assert.deepEqual(permanent(game, mouse).keywords, ['flying']);
+  passRound(game);
+  passRound(game);
+  game.dispatch(toggleAttacker('p1', bear));
+  game.dispatch(confirmAttackers('p1'));
+  passRound(game);
+  game.dispatch(setBlocker('p2', mouse, bear));
+  game.dispatch(confirmBlockers('p2'));
+  passRound(game);
+
+  assert.ok(!permanent(game, mouse));
+  assert.ok(!permanent(game, wings));
+  assert.ok(player(game, 'p1').graveyard.some((c) => c.id === wings)); // owner's graveyard
+  const deadMouse = player(game, 'p2').graveyard.find((c) => c.id === mouse);
+  assert.deepEqual([deadMouse.power, deadMouse.keywords], [1, []]); // printed values again
+  assert.equal(events.find((e) => e.name === 'permanentToGraveyard').payload.reason, 'auraNotLegallyAttached');
+});
+
+// -----------------------------------------------------------------------------
+// Equipment
+
+test('Equipment enters unattached; equip is a sorcery-speed ability that targets your creature', () => {
+  const { game } = setup({ p1: ['Bear', 'Mouse', 'Blade'], p2: ['Mouse'] });
+  const bear = cast(game, 'p1', 'Bear');
+  const mouse = cast(game, 'p1', 'Mouse');
+  const blade = cast(game, 'p1', 'Blade');
+  assert.equal(permanent(game, blade).attachedTo, null);
+  const equips = () => actionsOf(game, ACTION.ACTIVATE_ABILITY).filter((a) => a.abilityId === 'equip');
+  assert.deepEqual(equips(), []); // Equip {1} needs mana
+
+  playForestAndTap(game, 'p1');
+  assert.deepEqual(equips(), [
+    { type: ACTION.ACTIVATE_ABILITY, playerId: 'p1', cardId: blade, abilityId: 'equip', targets: [bear] },
+    { type: ACTION.ACTIVATE_ABILITY, playerId: 'p1', cardId: blade, abilityId: 'equip', targets: [mouse] },
+  ]);
+  // Not at instant speed: after passing into combat, it's gone.
+  passRound(game);
+  assert.equal(state(game).phase, PHASE.COMBAT);
+  assert.deepEqual(equips(), []);
+});
+
+// Anthems and lords
+
+test('an anthem pumps only its controller\'s creatures, including ones that arrive later', () => {
+  const { game } = setup({ p1: ['Bear', 'Anthem', 'Mouse'], p2: ['Mouse'] });
+  const bear = cast(game, 'p1', 'Bear');
+  cast(game, 'p1', 'Anthem');
+  const mouse = cast(game, 'p1', 'Mouse');
+  assert.deepEqual([permanent(game, bear).power, permanent(game, bear).toughness], [3, 3]);
+  assert.deepEqual([permanent(game, mouse).power, permanent(game, mouse).base.power], [2, 1]);
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const theirs = cast(game, 'p2', 'Mouse');
+  assert.equal(permanent(game, theirs).power, 1);
+});
+
+test('a lord pumps the others, not itself; when it dies, a damaged creature can die with it', () => {
+  const { game } = setup({ p1: ['Lord', 'Bear'], p2: ['Zap', 'Smash'] });
+  const lord = cast(game, 'p1', 'Lord');
+  const bear = cast(game, 'p1', 'Bear');
+  assert.deepEqual([permanent(game, lord).power, permanent(game, bear).toughness, permanent(game, bear).keywords], [2, 3, ['vigilance']]);
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  // The 3/3 Bear takes 2 and lives; without the Lord, it's a 2/2 with 2 damage.
+  cast(game, 'p2', 'Zap', [bear]);
+  assert.equal(permanent(game, bear).damage, 2);
+  cast(game, 'p2', 'Smash', [lord]);
+  assert.ok(!permanent(game, lord));
+  assert.ok(!permanent(game, bear));
+});
+
+test('the basic AI aims removal at a lord worth more than the biggest body', async () => {
+  const { BasicAIController } = await import('../src/index.js');
+  const { game } = setup({ p1: ['Lord', 'Bear', 'Mouse'], p2: ['Smash'] });
+  const lord = cast(game, 'p1', 'Lord');
+  cast(game, 'p1', 'Bear'); // a 3/3 with the Lord
+  cast(game, 'p1', 'Mouse');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const ai = new BasicAIController({ playerId: 'p2' });
+  // The instant waits for the start of its combat (a land first); p1 just passes.
+  let action = null;
+  for (let i = 0; i < 10; i++) {
+    const s = state(game);
+    action = s.priorityPlayerId === 'p2' ? ai.chooseAction(s) : passPriority(s.priorityPlayerId);
+    if (action.type === ACTION.CAST_SPELL) break;
+    game.dispatch(action);
+  }
+  assert.equal(state(game).step, STEP.BEGINNING_OF_COMBAT);
+  assert.deepEqual([action.type, action.targets], [ACTION.CAST_SPELL, [lord]]);
+});
+
+test('a color anthem pumps only creatures of that color', () => {
+  const { game } = setup({ p1: ['Banner', 'Squire', 'Mouse'] });
+  cast(game, 'p1', 'Banner');
+  const squire = cast(game, 'p1', 'Squire');
+  const mouse = cast(game, 'p1', 'Mouse');
+  assert.deepEqual([permanent(game, squire).power, permanent(game, mouse).power], [2, 1]);
+});
+
+test('equipping uses the stack, attaches, and grants the bonus; re-equipping moves it', () => {
+  const { game, events } = setup({ p1: ['Bear', 'Mouse', 'Blade'] });
+  const bear = cast(game, 'p1', 'Bear');
+  const mouse = cast(game, 'p1', 'Mouse');
+  const blade = cast(game, 'p1', 'Blade');
+  playForestAndTap(game, 'p1');
+  game.dispatch(activateAbility('p1', blade, 'equip', [bear]));
+  assert.equal(player(game, 'p1').manaPool.G, 0); // paid {1} with {G}
+  assert.deepEqual(state(game).stack.map((o) => [o.abilityId, o.targets]), [['equip', [bear]]]);
+  assert.equal(permanent(game, blade).attachedTo, null);
+  passRound(game);
+
+  assert.equal(permanent(game, blade).attachedTo, bear);
+  assert.deepEqual([permanent(game, bear).power, permanent(game, bear).toughness, permanent(game, bear).keywords], [4, 2, ['first strike']]);
+
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  playForestAndTap(game, 'p1');
+  // Not offered for the creature it's already attached to.
+  assert.deepEqual(
+    actionsOf(game, ACTION.ACTIVATE_ABILITY).filter((a) => a.abilityId === 'equip').map((a) => a.targets),
+    [[mouse]],
+  );
+  game.dispatch(activateAbility('p1', blade, 'equip', [mouse]));
+  passRound(game);
+  assert.equal(permanent(game, blade).attachedTo, mouse);
+  assert.deepEqual([permanent(game, bear).power, permanent(game, bear).keywords], [2, []]);
+  assert.deepEqual([permanent(game, mouse).power, permanent(game, mouse).keywords], [3, ['first strike']]);
+  assert.equal(events.findLast((e) => e.name === 'attached').payload.from, bear);
+});
+
+test('"as long as this creature is equipped" applies only while an Equipment is attached to it', () => {
+  const { game } = setup({ p1: ['Bounder', 'Bear', 'Strap'] });
+  const bounder = cast(game, 'p1', 'Bounder');
+  const bear = cast(game, 'p1', 'Bear');
+  const strap = cast(game, 'p1', 'Strap');
+  const look = () => [permanent(game, bounder).power, permanent(game, bounder).toughness, permanent(game, bounder).keywords];
+  assert.deepEqual(look(), [1, 1, []]);
+  playForestAndTap(game, 'p1');
+  game.dispatch(activateAbility('p1', strap, 'equip', [bounder]));
+  passRound(game);
+  assert.deepEqual(look(), [2, 2, ['first strike']]);
+
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  playForestAndTap(game, 'p1');
+  game.dispatch(activateAbility('p1', strap, 'equip', [bear]));
+  passRound(game);
+  assert.deepEqual(look(), [1, 1, []]);
+  assert.deepEqual([permanent(game, bear).power, permanent(game, bear).keywords], [2, []]);
+});
+
+test('you can\'t equip the opponent\'s creatures', () => {
+  const { game } = setup({ p1: ['Blade'], p2: ['Bear'] });
+  const blade = cast(game, 'p1', 'Blade');
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const bear = cast(game, 'p2', 'Bear');
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  playForestAndTap(game, 'p1');
+  assert.equal(game.dispatch(activateAbility('p1', blade, 'equip', [bear])).ok, false);
+});
+
+test('first strike granted by Equipment creates a first-strike damage step', () => {
+  const { game, events } = setup({ p1: ['Mouse', 'Blade'], p2: ['Bear'] });
+  const mouse = cast(game, 'p1', 'Mouse');
+  const blade = cast(game, 'p1', 'Blade');
+  playForestAndTap(game, 'p1');
+  game.dispatch(activateAbility('p1', blade, 'equip', [mouse]));
+  passRound(game);
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const bear = cast(game, 'p2', 'Bear');
+  // p2's Bear attacks on turn 4 and p1's 3/1 first-striking Mouse blocks: the Bear dies first.
+  advanceTo(game, { turn: 4, phase: PHASE.PRECOMBAT_MAIN });
+  passRound(game);
+  passRound(game);
+  game.dispatch(toggleAttacker('p2', bear));
+  game.dispatch(confirmAttackers('p2'));
+  passRound(game);
+  game.dispatch(setBlocker('p1', mouse, bear));
+  game.dispatch(confirmBlockers('p1'));
+  passRound(game);
+  assert.equal(state(game).step, STEP.FIRST_STRIKE_DAMAGE); // first strike came from the Equipment
+  assert.ok(!permanent(game, bear));
+  assert.ok(permanent(game, mouse));
+
+  assert.equal(permanent(game, blade).attachedTo, mouse);
+  assert.ok(events.every((e) => e.name !== 'unattached'));
+});
+
+test('Equipment becomes unattached when its creature dies', () => {
+  const { game, events } = setup({ p1: ['Mouse', 'Blade'], p2: ['Bear', 'Bear'] });
+  const mouse = cast(game, 'p1', 'Mouse');
+  const blade = cast(game, 'p1', 'Blade');
+  playForestAndTap(game, 'p1');
+  game.dispatch(activateAbility('p1', blade, 'equip', [mouse]));
+  passRound(game);
+  advanceTo(game, { turn: 2, phase: PHASE.PRECOMBAT_MAIN });
+  const bears = [cast(game, 'p2', 'Bear'), cast(game, 'p2', 'Bear')];
+  // p1 attacks with the 3/1 first-striker; both Bears block. It kills one, the other kills it.
+  advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
+  passRound(game);
+  passRound(game);
+  game.dispatch(toggleAttacker('p1', mouse));
+  game.dispatch(confirmAttackers('p1'));
+  passRound(game);
+  for (const bear of bears) game.dispatch(setBlocker('p2', bear, mouse));
+  game.dispatch(confirmBlockers('p2'));
+  passRound(game);
+  // Divide the 3 first-strike damage: all of it to the first Bear.
+  const choice = state(game).validActions.find((a) => a.assignment?.[bears[0]] === 3);
+  game.dispatch(choice);
+  passRound(game); // regular damage: the surviving Bear kills the Mouse
+
+  assert.ok(!permanent(game, mouse));
+  assert.equal(permanent(game, blade).attachedTo, null);
+  assert.ok(events.some((e) => e.name === 'unattached' && e.payload.cardId === blade && e.payload.from === mouse));
+});
+
+test('two basic AIs play a full game with artifacts, enchantments, Auras and Equipment', async () => {
+  const { BasicAIController, GAME_STATUS } = await import('../src/index.js');
+  const { SAMPLE_PERMANENTS, SAMPLE_PERMANENTS_DECK } = await import('./fixtures/sampleCards.js');
+  for (const seed of [1, 2, 3, 4, 5, 6]) {
+    const game = new Game({ players, seed, cards: SAMPLE_PERMANENTS, decks: { p1: SAMPLE_PERMANENTS_DECK, p2: SAMPLE_PERMANENTS_DECK } });
+    const ais = players.map(({ id }) => new BasicAIController({ game, playerId: id, delayMs: null }));
+    const seen = new Set();
+    const rejected = [];
+    game.on('spellCast', (e) => seen.add(e.cardName));
+    game.on('attached', () => seen.add('attached'));
+    game.on('actionRejected', (e) => rejected.push(e));
+    game.start();
+    ais.forEach((ai) => ai.detach());
+    assert.equal(game.getState().status, GAME_STATUS.GAME_OVER, `seed ${seed}`);
+    assert.deepEqual(rejected, [], `seed ${seed}`);
+    assert.ok(seen.has('attached'), `seed ${seed}: something got attached`);
+  }
+});
