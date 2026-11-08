@@ -244,12 +244,27 @@ test('round setups: each deck against its counterpart, the variant rules, and tu
   assert.deepEqual(second.game.decks[PLAYER_ID], match.decks[1]);
   assert.notEqual(second.game.startingPlayerId, first.game.startingPlayerId);
   assert.deepEqual(second.game.startingLife, { [firstId]: 8, [secondId]: 5 });
-  assert.equal(playerStartsRound(match, 2), playerStartsRound(match, 0));
   // A real game from it starts.
   const game = new Game(first.game);
   game.start();
   assert.equal(game.getState().players[0].hand.length, 5);
   assert.notEqual(game.getState().pendingDecision?.type, DECISION.MULLIGAN);
+});
+
+test('round 1 is a coin flip; then the loser of the last round goes first, and after a draw the other player', () => {
+  const { WON, LOST, DRAWN } = ROUND_RESULT;
+  for (const playerStarts of [true, false]) {
+    const match = { ...ready(), playerStarts };
+    assert.equal(playerStartsRound(match, 0), playerStarts);
+    assert.equal(playerStartsRound(play(match, [LOST]), 1), true);
+    assert.equal(playerStartsRound(play(match, [WON]), 1), false);
+    assert.equal(playerStartsRound(play(match, [DRAWN]), 1), !playerStarts);
+    assert.equal(playerStartsRound(play(match, [WON, LOST]), 2), true);
+    assert.equal(playerStartsRound(play(match, [LOST, DRAWN]), 2), false);
+    assert.equal(roundSetup(play(match, [WON])).game.startingPlayerId, CPU_ID);
+    assert.equal(roundSetup(play(match, [LOST])).game.startingPlayerId, PLAYER_ID);
+  }
+  assert.throws(() => playerStartsRound(ready(), 1));
 });
 
 test('the match ends at two wins, or after three rounds on the most wins', () => {

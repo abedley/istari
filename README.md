@@ -36,7 +36,8 @@ round), from *New match* on the title screen:
    hand, infinite mana and no emblems, and can't lose by drawing from an empty library. The player
    who goes first starts at 5 life, the other at 8.
    A round is won, lost, or drawn when the board stalls (see *Variant rules*); 40 turns is a
-   backstop. Who goes first is a coin flip in round 1, then alternates.
+   backstop. Who goes first is a coin flip in round 1; after that, the loser of the
+   last round goes first (after a draw, whoever went second in it).
 4. **Fast forward:** once a player is out of actions (no cards in hand, no creatures, and no
    abilities but mana abilities, `outOfActions` in `src/paigow/fastForward.js`), a *Fast forward*
    button plays the round out at once. `planFastForward` tries a few basic-AI lines for both sides

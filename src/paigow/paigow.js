@@ -94,7 +94,7 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
 
 /**
  * A new match: a booster opened for each side, the CPU's decks arranged, its opponent picked from
- * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (then it alternates).
+ * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
  */
 export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32) } = {}) {
   const random = seededRandom(seed);
@@ -147,8 +147,20 @@ export function nextRound(match) {
   return match.decks && outcome(match) === null ? match.rounds.length : null;
 }
 
-/** Whether the player goes first in round `round` (0-based): round 1 by coin flip, then taking turns. */
-export const playerStartsRound = (match, round) => (round % 2 === 0) === match.playerStarts;
+/**
+ * Whether the player goes first in round `round` (0-based): round 1 by coin flip, then the loser of the
+ * round before. After a drawn round, whoever went second in it goes first. Needs the rounds before
+ * `round` to have been played.
+ */
+export function playerStartsRound(match, round) {
+  let playerFirst = match.playerStarts;
+  for (let i = 0; i < round; i += 1) {
+    const result = match.rounds[i]?.result;
+    if (result === undefined) throw new Error(`Round ${i + 1} hasn't been played.`);
+    playerFirst = result === ROUND_RESULT.LOST ? true : result === ROUND_RESULT.WON ? false : !playerFirst;
+  }
+  return playerFirst;
+}
 
 /** The match with the next round's result recorded: `ROUND_RESULT`. */
 export function recordRound(match, result) {
