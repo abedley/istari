@@ -761,16 +761,38 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
   to { transform: translate3d(calc(var(--d) * -12px), calc(var(--d) * -4px), 0) scale(calc(1 + var(--d) * .04)); }
 }
 .rv-motes { position: absolute; inset: -20%; background-image: radial-gradient(2px 2px at 20% 30%, #fff8, transparent), radial-gradient(1.5px 1.5px at 70% 60%, #ffe9a8aa, transparent), radial-gradient(2px 2px at 40% 80%, #ffe2a099, transparent), radial-gradient(1px 1px at 85% 20%, #fff9, transparent); background-size: 220px 260px; animation: drift 40s linear infinite; opacity: .55; }
-/* Shade where the words go: the sky at the top, the overlook at the bottom. */
-.rv-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14, 12, 8, .62) 0%, rgba(14, 12, 8, .38) 22%, rgba(14, 12, 8, 0) 36%, rgba(0, 0, 0, 0) 62%, rgba(6, 7, 4, .55) 100%); }
 @keyframes drift { to { transform: translateY(-260px); } }
-.title-main { position: relative; flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 11vh 28px calc(13vh + var(--safe-bottom)); }
-.title-head { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+/* Shade behind the name (under the branches, so they stay bright), and at the foot for the button. */
+.rv-scrim-top { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14, 12, 8, .35) 0%, rgba(14, 12, 8, .4) 18%, rgba(14, 12, 8, .3) 28%, rgba(14, 12, 8, 0) 40%); }
+.rv-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(6, 7, 4, .6) 100%); }
+/* The name, as a layer, in the open sky between the branches and the cliffs: its box is a layer's
+   (112% of the screen, from -6%), so 22% down it is 18.6% down the screen. */
+.rv-title .logo-big { position: absolute; left: 0; right: 0; top: calc(22% + var(--safe-top)); margin: 0; line-height: 1; text-align: center; }
+/* The tagline, under the name, fades in once the camera has settled (rv-intro's 4.2s). */
+.title-main { position: relative; flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 28px calc(12vh + var(--safe-bottom)); }
+.tagline { position: absolute; left: 16px; right: 16px; top: calc(18.6% + 66px); opacity: 0; }
+.screen-title:has(.rv.ready) .tagline { animation: tagline-in 1.4s 4.3s ease-out both; }
+@keyframes tagline-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .logo { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 
 .logo-big { font: 800 52px var(--title); letter-spacing: .06em; background: linear-gradient(180deg, #fff4cf, #e9c46a 55%, #a87a1f); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .7)) drop-shadow(0 4px 14px rgba(233, 196, 106, .35)); }
 .tagline { margin: 0; color: #fbf1d8; font-size: 14px; font-weight: 500; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, .9), 0 0 10px rgba(0, 0, 0, .7); }
 .menu { display: flex; flex-direction: column; gap: 12px; width: min(300px, 80vw); }
+/* The way in: gold words between hairline rules, on nothing but a soft shadow, rather than a solid button. */
+.begin {
+  appearance: none; position: relative; display: flex; align-items: center; justify-content: center; gap: 0; width: 100%;
+  padding: 16px 0; border: 0; background: radial-gradient(closest-side, rgba(12, 9, 4, .5), transparent); cursor: pointer;
+  color: #f7e0a0; font: 700 17px var(--title); letter-spacing: .26em; text-transform: uppercase; white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 16px rgba(0, 0, 0, .7);
+  transition: transform .15s var(--ease), color .2s;
+}
+.begin::before, .begin::after { content: ''; flex: 1; height: 1px; max-width: 70px; background: linear-gradient(90deg, transparent, rgba(233, 196, 106, .9)); box-shadow: 0 0 6px rgba(233, 196, 106, .5); }
+.begin::after { background: linear-gradient(270deg, transparent, rgba(233, 196, 106, .9)); }
+.begin-label { display: inline-flex; align-items: center; padding-left: .26em; }
+.begin-label::before, .begin-label::after { content: ''; width: 5px; height: 5px; margin: 0 14px; transform: rotate(45deg); background: #e9c46a; box-shadow: 0 0 6px rgba(233, 196, 106, .8); }
+.begin-label::before { margin-left: 10px; }
+.begin:active { transform: scale(.97); color: #fff4d4; }
+.begin:focus-visible { outline: 1px solid rgba(233, 196, 106, .8); outline-offset: 2px; border-radius: 4px; }
 .title-foot { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--safe-bottom)); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; }
 
 .node { width: 54px; height: 54px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 800 20px var(--display); background: #1f2216; color: #6f6a52; box-shadow: inset 0 0 0 2px #35382a; }
@@ -859,6 +881,7 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .screen-title .tagline { animation-delay: 0s !important; }
 }
 
 /* The opening hand in the mulligan sheet. */

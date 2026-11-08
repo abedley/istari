@@ -6,11 +6,10 @@ export function titleScreen(app) {
   const el = h('div',
     rivendell(h),
     h('div.title-main',
-      h('div.title-head',
-        h('div.logo', h('span.logo-big', 'Istari')),
-        h('p.tagline', 'Fifteen cards. Three decks. Best of three.')),
+      // Fades in once the camera has settled (app.css, "title").
+      h('p.tagline', 'Fifteen cards. Three decks. Best of three.'),
       h('div.menu',
-        h('button.btn.primary.big', { onclick: () => app.go('paigow') }, 'New match'))),
+        h('button.begin', { onclick: () => app.go('paigow') }, h('span.begin-label', 'New match')))),
     h('footer.title-foot',
       h('button.icon-btn', { onclick: () => app.overlays.settings(), 'aria-label': 'Settings' }, icon('gear'))));
   return { el };
