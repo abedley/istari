@@ -152,7 +152,7 @@ function scoreView(app, match, final) {
     if (final || await app.overlays.confirm({ title: 'Leave the match?', text: 'This match will be lost.', yes: 'Leave', danger: true })) app.go('title');
   };
   const el = h('div',
-    header({ title: 'Pai Gow', onBack: leave }),
+    header({ title: '', onBack: leave }),
     h('div.pg-body',
       title,
       h('div.pg-score',

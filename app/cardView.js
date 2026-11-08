@@ -180,4 +180,4 @@ function withCost(paragraphs, cost) {
   return paragraphs;
 }
 
-export const cardBack = () => h('div.card-back', h('div.back-oval', h('div.back-sigil', icon('star'))));
+export const cardBack = () => h('div.card-back', h('div.back-oval', h('div.back-sigil', icon('ring'))));

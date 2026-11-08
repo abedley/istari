@@ -1,19 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="38%" r="70%">
-      <stop offset="0" stop-color="#3a2f86"/>
-      <stop offset=".55" stop-color="#15123a"/>
-      <stop offset="1" stop-color="#07060f"/>
+    <radialGradient id="bg" cx="50%" cy="40%" r="72%">
+      <stop offset="0" stop-color="#34401f"/>
+      <stop offset=".55" stop-color="#151a0e"/>
+      <stop offset="1" stop-color="#070806"/>
     </radialGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff4cf"/>
-      <stop offset=".5" stop-color="#e9c46a"/>
-      <stop offset="1" stop-color="#a87a1f"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2c4"/>
+      <stop offset=".35" stop-color="#e2bd62"/>
+      <stop offset=".7" stop-color="#a9802c"/>
+      <stop offset="1" stop-color="#f0d48a"/>
     </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5a3e22"/>
+      <stop offset=".5" stop-color="#8a6438"/>
+      <stop offset="1" stop-color="#3e2a16"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fffbe8"/>
+      <stop offset=".25" stop-color="#fff1c0" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#ffe08a" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="178" fill="none" stroke="url(#gold)" stroke-width="10" opacity=".55"/>
-  <path d="M256 76 L300 212 L436 256 L300 300 L256 436 L212 300 L76 256 L212 212 Z" fill="url(#gold)"/>
-  <circle cx="256" cy="256" r="46" fill="#15123a"/>
-  <circle cx="256" cy="256" r="24" fill="url(#gold)"/>
+  <!-- The ring, behind the staff. -->
+  <circle cx="256" cy="282" r="132" fill="none" stroke="#2a1d08" stroke-width="40" opacity=".55"/>
+  <circle cx="256" cy="276" r="132" fill="none" stroke="url(#gold)" stroke-width="30"/>
+  <circle cx="256" cy="276" r="146" fill="none" stroke="#fff4cf" stroke-width="2" opacity=".35"/>
+  <!-- A wizard's staff, its head alight. -->
+  <path d="M248 156 L264 156 L270 424 Q256 436 242 424 Z" fill="url(#wood)"/>
+  <path d="M256 112 C232 112 226 140 236 158 C244 172 268 172 276 158 C286 140 280 112 256 112 Z" fill="none" stroke="url(#wood)" stroke-width="10"/>
+  <circle cx="256" cy="138" r="78" fill="url(#glow)"/>
+  <circle cx="256" cy="138" r="13" fill="#fffdf3"/>
 </svg>
