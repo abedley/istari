@@ -732,6 +732,8 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .vs-sub { color: var(--muted); font-size: 13px; letter-spacing: .1em; text-transform: uppercase; }
 .vs-side .crest-lg { width: 112px; height: 112px; font-size: 80px; }
 .vs-mark { font: 900 58px var(--title); color: var(--gold); text-shadow: 0 0 24px rgba(233, 196, 106, .7), 0 3px 0 rgba(0, 0, 0, .6); animation: vs-in .5s .25s both cubic-bezier(.2, .9, .3, 1.4); }
+.vs-power { max-width: 300px; font: 15px/1.3 var(--rules); color: #d6cdb4; }
+.vs-power b { font: 700 13px var(--display); letter-spacing: .04em; color: var(--gold); }
 .vs-opp { animation: from-top .55s both var(--ease); }
 .vs-me { animation: from-bottom .55s both var(--ease); }
 @keyframes vs-in { from { transform: scale(3); opacity: 0; } }
@@ -915,7 +917,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-opp b { color: var(--ink); }
 .pg-help { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
 /* The deck builder, on one screen: the three decks side by side, then the booster's cards five across. */
-.pg-head-opp { display: flex; align-items: center; gap: 8px; max-width: 42%; font-size: 13px; color: #d6cdb4; text-align: right; line-height: 1.15; }
+.pg-head-opp { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 42%; font-size: 13px; color: #d6cdb4; text-align: right; line-height: 1.15; }
 .pg-builder { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
 .pg-board { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .pg-col { display: flex; flex-direction: column; gap: 4px; padding: 5px 4px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .06); background: rgba(255, 255, 255, .03); cursor: pointer; }
@@ -940,7 +942,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-tray-wrap { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 4px; }
 .pg-tray-wrap h4 { margin: 4px 0 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .pg-score { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 4px; }
-.pg-score-side { width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; text-align: center; }
+.pg-score-side { appearance: none; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; text-align: center; }
 .pg-score-num { display: flex; flex-direction: column; align-items: center; font: 900 34px var(--title); color: var(--gold); }
 .pg-score-num small { font: 600 12px var(--ui); color: var(--muted); }
 .pg-rounds { display: flex; flex-direction: column; gap: 8px; }
@@ -958,3 +960,24 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-match .pg-card { flex: 0 1 58px; width: auto; min-width: 0; }
 .pg-vs { font: 800 12px var(--title); color: var(--muted); }
 .screen-paigow .result-title { justify-content: center; font-size: 40px; }
+
+/* ---------------------------------------------------------------- heroes (choosing yours) */
+.heroes { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 16px 8px; display: flex; flex-direction: column; gap: 12px; }
+.hero {
+  appearance: none; display: flex; align-items: flex-start; gap: 16px; width: 100%; padding: 14px 14px 14px 16px; text-align: left; cursor: pointer;
+  border-radius: 16px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .03); color: inherit;
+  transition: transform .15s var(--ease), opacity .15s;
+}
+.hero:active { transform: scale(.98); }
+.hero .crest { flex: none; margin-top: 4px; }
+.hero.selected { border-color: var(--gold); background: rgba(233, 196, 106, .1); box-shadow: 0 0 0 1px var(--gold), 0 0 18px rgba(233, 196, 106, .25); }
+.hero-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.hero-name { font: 800 21px/1.1 var(--display); color: var(--ink); letter-spacing: .02em; }
+.hero.selected .hero-name { color: var(--gold); }
+.hero-blurb { font: italic 15px/1.25 var(--rules); color: var(--muted); }
+.power { margin-top: 4px; padding: 7px 10px; border-radius: 10px; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); }
+.power-name { font: 700 12px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--gold); }
+.power-text { font: 15px/1.3 var(--rules); color: var(--ink); }
+.powers { display: flex; flex-direction: column; gap: 14px; margin: 4px 0 10px; text-align: left; }
+.power-side { display: flex; gap: 12px; align-items: flex-start; }
+.power-side .hero-name { font-size: 17px; }

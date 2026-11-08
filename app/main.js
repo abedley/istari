@@ -1,6 +1,6 @@
 /**
- * The Istari app: one page, a few screens (title, Pai Gow's deck builder and
- * scoreboard, battle), for phones held upright.
+ * The Istari app: one page, a few screens (title, choosing a hero, Pai Gow's deck
+ * builder and scoreboard, battle), for phones held upright.
  */
 import { CARDS } from '../src/cards/cards.js';
 import { CARD_PRESENTATION } from '../src/cards/importedCards.js';
@@ -13,12 +13,14 @@ import { createOverlays } from './overlays.js';
 import { titleScreen } from './screens/title.js';
 import { battleScreen } from './screens/battle.js';
 import { paigowScreen } from './screens/paigow.js';
+import { heroesScreen } from './screens/heroes.js';
 
 const SETTINGS_KEY = 'istari.settings';
 const DEFAULT_SETTINGS = { sound: true, speed: 1, autoPass: true };
 
 const SCREENS = {
   title: titleScreen,
+  heroes: heroesScreen,
   paigow: paigowScreen,
   battle: battleScreen,
 };

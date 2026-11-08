@@ -1,7 +1,9 @@
 /**
  * Pai Gow's CPU opponents: figures of Middle-earth, each with a portrait from their LTR card's art,
  * what they say (see src/ai/banter.js), and how they play: the search AI with their own
- * thinking time and evaluation (an archetype from src/ai/evaluate.js).
+ * thinking time and evaluation (an archetype from src/ai/evaluate.js), and their planeswalker power
+ * (`emblem`, an id in EMBLEMS, src/cards/emblems.js). PAIGOW_HEROES are the player's characters to choose
+ * from, each with a portrait and a power of their own.
  */
 import { AI_KIND } from '../ai/cpu.js';
 
@@ -23,7 +25,7 @@ const search = (budgetMs, weights) => ({ kind: AI_KIND.SEARCH, budgetMs, ...(wei
 
 export const PAIGOW_OPPONENTS = deepFreeze({
   gandalf: {
-    name: 'Gandalf', color: 'blue', ai: search(2000),
+    name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: search(2000),
     portrait: portrait('c/c/cc9cfcc7-be64-4871-8d52-851e43fe3305.jpg?1783916321', 68, 0, 300, 'Gandalf, Friend of the Shire', 'Dmitry Burmak'),
     banter: {
       start: ['Five cards each? A small game. Small things have a way of mattering.', 'Shall we? I have fireworks to see to afterwards.', 'Mind your hand. A wizard notices things.'],
@@ -34,7 +36,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   tomBombadil: {
-    name: 'Tom Bombadil', color: 'gold', ai: search(1000),
+    name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: search(1000),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),
     banter: {
       start: ['Hop along, come along! Tom will play a merry game!', 'Cards, is it? Tom has time. Tom always has time.', 'Hey dol! Sit you down, and deal them merry!'],
@@ -45,7 +47,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   sauron: {
-    name: 'Sauron', color: 'black', ai: search(2500, 'aggro'),
+    name: 'Sauron', color: 'black', emblem: 'sauron', ai: search(2500, 'aggro'),
     portrait: portrait('0/3/034e0929-b2c7-4b5f-94f2-8eaf4fb1a2a1.jpg?1783916249', 50, 0, 320, 'Sauron, the Dark Lord', 'Kieran Yanner'),
     banter: {
       start: ['You play against me? Then you have already lost.', 'Every card you hold, I see.', 'Kneel, or be broken. The choice is the only one you have.'],
@@ -56,7 +58,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   saruman: {
-    name: 'Saruman', color: 'white', ai: search(2000, 'control'),
+    name: 'Saruman', color: 'white', emblem: 'saruman', ai: search(2000, 'control'),
     portrait: portrait('1/b/1bfccbab-29fa-4e92-8919-6cd4815fb655.jpg?1783916311', 52, 16, 300, 'Saruman the White', 'Matt Stewart'),
     banter: {
       start: ['Come, let us be reasonable. You cannot win, but you may learn something.', 'I have studied every card in this game. Have you?', 'Sit. My patience is greater than your deck.'],
@@ -67,7 +69,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   theoden: {
-    name: 'Théoden', color: 'red', ai: search(1500, 'aggro'),
+    name: 'Théoden', color: 'red', emblem: 'theoden', ai: search(1500, 'aggro'),
     portrait: portrait('f/6/f6dcd1ca-4943-46e4-bb5d-c14949e21e23.jpg?1783916242', 27, 0, 300, 'Théoden, King of Rohan', 'Kieran Yanner'),
     banter: {
       start: ['Ride with me, or ride against me! Either way, we ride!', 'A king does not hide behind his cards.', 'Sound the horns. Let this be a game worth singing of.'],
@@ -78,7 +80,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   denethor: {
-    name: 'Denethor', color: 'black', ai: search(1000, 'control'),
+    name: 'Denethor', color: 'black', emblem: 'denethor', ai: search(1000, 'control'),
     portrait: portrait('f/a/fa8654cf-431c-427b-b78f-0e48f6007e9e.jpg?1783916256', 34, 4, 320, 'Denethor, Ruling Steward', 'Campbell White'),
     banter: {
       start: ['You come before the Steward of Gondor. Play carefully.', 'I have seen how this ends. Shall we pretend otherwise?', 'Sit. I rule here, and I do not lose lightly.'],
@@ -89,7 +91,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   elrond: {
-    name: 'Elrond', color: 'blue', ai: search(1500, 'control'),
+    name: 'Elrond', color: 'blue', emblem: 'elrond', ai: search(1500, 'control'),
     portrait: portrait('a/6/a62a5e55-fa1b-4c70-9293-740dd513d52e.jpg?1783916319', 52, 0, 320, 'Elrond, Lord of Rivendell', 'Ryan Yee'),
     banter: {
       start: ['Welcome to Rivendell. Let us play, and let the game be fair.', 'I have watched long ages. One more game is no burden.', 'Take your time. Here, time is something we have.'],
@@ -100,7 +102,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   galadriel: {
-    name: 'Galadriel', color: 'green', ai: search(2500),
+    name: 'Galadriel', color: 'green', emblem: 'galadriel', ai: search(2500),
     portrait: portrait('a/6/a6e5c3b3-9a70-4a1c-bfb3-db27e51c4b8d.jpg?1783916254', 34, 0, 320, 'Galadriel of Lothlórien', 'Magali Villeneuve'),
     banter: {
       start: ['I know what is in your hand. And what is in your heart.', 'Look into the mirror, and play what you see.', 'Welcome to the Golden Wood. Tread softly.'],
@@ -111,6 +113,31 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
 });
+
+/** The player's characters: one is chosen for the whole match. `blurb` is a line for the picker. */
+export const PAIGOW_HEROES = deepFreeze({
+  frodo: {
+    name: 'Frodo', color: 'gold', emblem: 'frodo',
+    blurb: 'The Ring-bearer. Carries the burden, and it carries him.',
+    portrait: portrait('d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257', 50, 10, 260, 'Frodo Baggins', 'Ekaterina Burmak'),
+  },
+  aragorn: {
+    name: 'Aragorn', color: 'gold', emblem: 'aragorn',
+    blurb: 'Heir of Isildur, with the sword that was broken, reforged.',
+    portrait: portrait('7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260', 50, 10, 260, 'Aragorn, Company Leader', 'Anna Steinbauer'),
+  },
+  bilbo: {
+    name: 'Bilbo', color: 'gold', emblem: 'bilbo',
+    blurb: 'A burglar, retired. Mostly.',
+    portrait: portrait('5/2/527df93e-cc2b-4216-909a-4ada1abcbfd3.jpg?1783916260', 50, 10, 260, 'Bilbo, Retired Burglar', 'Anna Pavleeva'),
+  },
+});
+
+/** The hero a match starts with when none is chosen. */
+export const DEFAULT_HERO = 'frodo';
+
+/** A Pai Gow hero by id. */
+export const paigowHero = (id) => PAIGOW_HEROES[id];
 
 /** A Pai Gow opponent by id. */
 export const paigowOpponent = (id) => PAIGOW_OPPONENTS[id];

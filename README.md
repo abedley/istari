@@ -22,8 +22,10 @@ tuning tools stay there.
 ## How Pai Gow plays
 
 A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain match object), with
-its screens in `app/screens/paigow.js` (deck builder, scoreboard) and `app/screens/battle.js` (a
-round), from *New match* on the title screen:
+its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
+scoreboard) and `app/screens/battle.js` (a round), from *New match* on the title screen:
+0. You choose your hero, Frodo, Aragorn or Bilbo (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
+   with a planeswalker power of their own (see *Planeswalker powers*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
@@ -35,7 +37,7 @@ round), from *New match* on the title screen:
    (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
    its decks.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
-   hand, infinite mana and no emblems, and can't lose by drawing from an empty library. The player
+   hand, infinite mana and their character's planeswalker power, and can't lose by drawing from an empty library. The player
    who goes first starts at 5 life, the other at 8.
    A round is won, lost, or drawn when the board stalls (see *Variant rules*); 40 turns is a
    backstop. Who goes first is a coin flip in round 1; after that, the loser of the
@@ -57,6 +59,33 @@ their own thinking time (1 to 2.5 seconds) and style (Sauron and Théoden race, 
 and Elrond grind). The match lives in memory: reloading the page starts a
 new one. As everywhere, the search AI assumes it knows its opponent's deck list, and with
 five-card decks that means it knows your hand.
+
+**Planeswalker powers:** every hero and every opponent has one power, an emblem in
+`src/cards/emblems.js` (see *Emblems*) named by their `emblem` in `src/paigow/personas.js`. A power can be
+used once a turn, uses the stack, and costs nothing or a little life (mana means nothing here). They're
+placeholders to tune:
+
+| Who | Power | What it does |
+| --- | --- | --- |
+| Frodo | The Burden | Pay 1 life: The Ring tempts you. Sorcery speed. |
+| Aragorn | Andúril | 0: Target creature you control gets +1/+1 and first strike until end of turn. |
+| Bilbo | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
+| Gandalf | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
+| Tom Bombadil | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
+| Sauron | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
+| Saruman | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
+| Théoden | Ride Now! | 0: Target creature you control gets +1/+0 and haste until end of turn. Sorcery speed. |
+| Denethor | Despair | Pay 1 life: Each opponent discards a card. Sorcery speed. |
+| Elrond | Vilya | 0: Target creature you control gains hexproof and indestructible until end of turn. |
+| Galadriel | Light of Eärendil | 0: Put a +1/+1 counter on target creature you control. Sorcery speed. |
+
+Each is written with `power(id, name, { text, cost, effects, target, timing })`: change the effects
+(any card effect works), the cost (`{ life: n }`), the timing (`SORCERY`, or leave it out for any time),
+and the `text` to match. Your power is a button beside your portrait in a round; the opponent's shows
+its cost by theirs (hold it to read it). The *vs* screen before a round shows both, and so does tapping
+the opponent on the deck builder or either side on the scoreboard. For fast forward, a power that
+targets your own creature, or one that can do nothing more (no creature of theirs to target, no cards
+for them to discard, the Ring at its last level), doesn't count as an action.
 
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each
@@ -185,7 +214,7 @@ Add it to the home screen to play full screen; the service worker (`sw.js`) cach
 card images, so it then works offline. It's registered only when not on localhost, so local
 edits show up on reload.
 
-**Screens:** title → Pai Gow's deck builder (your 15 cards and three decks) → a round (the
+**Screens:** title → choosing your hero → Pai Gow's deck builder (your 15 cards and three decks) → a round (the
 battle) → the scoreboard → … → the final score. The title has a settings sheet (sound, animation
 speed, auto-pass). The match lives in memory, so reloading starts a new one.
 
@@ -249,7 +278,7 @@ when inspecting). Tokens use the art of a matching printed Scryfall token (see *
 art*). Cards without art, such as the samples, get generated art: a gradient in their color with
 their type's emblem, and their name on the board. Opponents have a `portrait`:
 a printed card's Scryfall art crop, framed on the face (`x`, `y`, `zoom`), with the card and
-artist it comes from (see `src/paigow/personas.js`). You, without one, get a hooded figure.
+artist it comes from (see `src/paigow/personas.js`), and so do the heroes.
 
 **Fonts** stand in for the ones printed on cards: Faustina for Beleren (names, type lines and the
 interface) and Crimson Pro for MPlantin (rules text), both SIL OFL and vendored in `app/vendor/`
@@ -314,7 +343,7 @@ color) are drawn with the open-source [Mana](https://mana.andrewgioia.com) and
 
 **Code:**
 - `app/main.js`: the router and settings
-- `app/screens/`: the title, Pai Gow (deck builder and scoreboard) and battle screens
+- `app/screens/`: the title, heroes, Pai Gow (deck builder and scoreboard) and battle screens
 - `app/battle/`:
   - `Battle.js`: the game, input and the animation queue
   - `BoardView.js`: rendering and FLIP
@@ -664,7 +693,8 @@ Every payload carries a `seq` number that increases for each event the game emit
 
 ### Emblems (this game's planeswalker abilities)
 
-Emblems are defined in `src/cards/emblems.js` and given to players with the `emblems` option
+Emblems are defined in `src/cards/emblems.js` (Pai Gow's heroes and opponents have one each, see *Planeswalker
+powers*) and given to players with the `emblems` option
 (default: `DEFAULT_EMBLEMS`, i.e. `['planeswalker']` for everyone). Each emblem appears in
 `state.players[].emblems` with its abilities, `activationsPerTurn` and `activationsThisTurn`.
 

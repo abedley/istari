@@ -1313,6 +1313,7 @@ export class Game extends EventEmitter {
       controllerId: ownerId,
       abilities: definition.abilities.map((ability) => ({
         id: ability.id,
+        ...(ability.name ? { name: ability.name } : {}),
         text: ability.text,
         cost: structuredClone(ability.cost),
         effects: structuredClone(abilityEffects(ability)),

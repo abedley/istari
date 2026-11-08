@@ -4,23 +4,39 @@
  * actions.
  */
 import { GAME_STATUS } from '../engine/Game.js';
-import { isCreature } from '../cards/cards.js';
+import { isCreature, TARGET, EFFECT } from '../cards/cards.js';
 import { BasicAIController } from '../ai/BasicAIController.js';
 import { actingPlayerId } from '../ai/simulate.js';
 
 const usable = (abilities) => (abilities ?? []).some((ability) => !ability.isManaAbility);
 
 /**
+ * Whether an emblem's power could still do something for `player`, who has no hand and no creatures:
+ * not one that targets their own creature, nor one that targets an opponent's creature or makes
+ * opponents discard when there are none, nor the Ring tempting them once it's at its last level.
+ */
+function powerLeft(state, player, ability) {
+  const target = typeof ability.target === 'object' && ability.target ? ability.target.kind : ability.target;
+  if (target === TARGET.CREATURE_YOU_CONTROL) return false;
+  const opponents = state.players.filter((p) => p.id !== player.id);
+  if (target === TARGET.CREATURE_OPPONENT_CONTROLS) return state.battlefield.some((p) => p.controllerId !== player.id && isCreature(p));
+  const effects = ability.effects ?? [];
+  if (effects.length && effects.every((e) => e.type === EFFECT.DISCARD)) return opponents.some((p) => (p.hand?.length ?? p.handSize ?? 0) > 0);
+  if (effects.length && effects.every((e) => e.type === EFFECT.RING_TEMPTS)) return (player.ring?.level ?? 0) < 4;
+  return true;
+}
+
+/**
  * Whether `playerId` has nothing left to do: no cards in hand, no creatures (to attack or block
- * with), no activated abilities but mana abilities (useless with infinite mana) on their permanents,
- * emblems or graveyard cards, and no exiled cards they may cast. `state`: getState() or peekState().
+ * with), no activated abilities but mana abilities (useless with infinite mana) on their permanents
+ * or graveyard cards, no planeswalker power that could still do something (see powerLeft), and no exiled cards they may cast. `state`: getState() or peekState().
  */
 export function outOfActions(state, playerId) {
   const player = state.players.find((p) => p.id === playerId);
   if (!player || (player.hand?.length ?? player.handSize ?? 0) > 0) return false;
   const mine = state.battlefield.filter((p) => p.controllerId === playerId);
   if (mine.some(isCreature) || mine.some((p) => usable(p.abilities))) return false;
-  if ((player.emblems ?? []).some((e) => usable(e.abilities))) return false;
+  if ((player.emblems ?? []).some((e) => (e.abilities ?? []).some((a) => !a.isManaAbility && powerLeft(state, player, a)))) return false;
   if ((player.graveyard ?? []).some((c) => usable(c.graveyardAbilities))) return false;
   return !state.players.some((p) => (p.exile ?? []).some((c) => c.mayPlay?.playerId === playerId));
 }

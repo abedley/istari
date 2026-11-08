@@ -1,6 +1,8 @@
 import { h } from '../dom.js';
 import { Battle } from '../battle/Battle.js';
 import { personInfo } from './common.js';
+import { heroOf } from './paigow.js';
+import { powerOf } from './heroes.js';
 import {
   roundSetup, recordRound, outcome, score, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
@@ -29,8 +31,8 @@ export function battleScreen(app, { match = null } = {}) {
   };
   const battle = new Battle(app, {
     setup,
-    meInfo: personInfo(null, 'You'),
-    oppInfo: personInfo(opponent),
+    meInfo: { ...personInfo(heroOf(match)), power: powerOf(heroOf(match)) },
+    oppInfo: { ...personInfo(opponent), power: powerOf(opponent) },
     subtitle: `Round ${setup.encounter.round + 1} · ${won}–${lost}`,
     onEnd,
     fastForward: true,

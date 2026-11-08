@@ -98,7 +98,8 @@ export class Battle {
 
   /**
    * `setup`: matchSetup()'s result (`game` options, `cpu`, `encounter`), or the
-   * same shape for a quick match. `meInfo`/`oppInfo`: `{ name, color?, art? }`.
+   * same shape for a quick match. `meInfo`/`oppInfo`: `{ name, color?, art?, portrait?, power? }`
+   * (`power`: `{ name, text }`, a planeswalker power shown on the intro).
    * `onEnd({ won, drawn, turns })` is called after the final banner (`drawn`: nobody won, as when a
    * Pai Gow round stalls). With `fastForward`, a button plays the game out at once when a player is out
    * of actions (src/paigow/fastForward.js). `resultText({ won, drawn })`: the result banner's text, when
@@ -160,10 +161,12 @@ export class Battle {
     const tokens = Object.keys(defs).filter((id) => id.startsWith('token:'));
     const urls = [...setup.game.decks[this.#me], ...setup.game.decks[this.#opp], ...tokens].map((id) => defs[id]?.image?.art)
       .concat(meInfo.portrait?.art, oppInfo.portrait?.art);
+    // A side's planeswalker power, when it has one: `{ name, text }`.
+    const power = (info) => (info.power ? h('div.vs-power', h('b', info.power.name), ' ', info.power.text) : null);
     const intro = h('div.versus',
-      h('div.vs-side.vs-opp', crest(oppInfo, { size: 'lg' }), h('div.vs-name', oppInfo.name), subtitle ? h('div.vs-sub', subtitle) : null),
+      h('div.vs-side.vs-opp', crest(oppInfo, { size: 'lg' }), h('div.vs-name', oppInfo.name), subtitle ? h('div.vs-sub', subtitle) : null, power(oppInfo)),
       h('div.vs-mark', 'VS'),
-      h('div.vs-side.vs-me', crest(meInfo, { size: 'lg' }), h('div.vs-name', meInfo.name)));
+      h('div.vs-side.vs-me', crest(meInfo, { size: 'lg' }), h('div.vs-name', meInfo.name), power(meInfo)));
     this.el.append(intro);
     this.#app.sound('turn');
     await Promise.all([Promise.race([preloadImages(urls), wait(2500)]), wait(1400 * this.#app.settings.speed + 300)]);

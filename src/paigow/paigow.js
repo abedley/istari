@@ -3,7 +3,8 @@
  *
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
  * splits its 15 cards into three decks of five. Round N pits deck N against deck N: both players start with all
- * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), no emblems, and can't lose by drawing from an empty
+ * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), their
+ * character's planeswalker power (an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
  * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
  * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
@@ -13,7 +14,9 @@
 import { CARDS, isCreature, manaValue } from '../cards/cards.js';
 import { GAME_LIMITS } from '../engine/Game.js';
 import { seededRandom, shuffle } from '../engine/random.js';
-import { PAIGOW_OPPONENTS, paigowOpponent } from './personas.js';
+import {
+  PAIGOW_OPPONENTS, PAIGOW_HEROES, DEFAULT_HERO, paigowOpponent, paigowHero,
+} from './personas.js';
 import { weightsFor } from '../ai/evaluate.js';
 
 export const PAIGOW_RULES = Object.freeze({
@@ -95,8 +98,10 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
 /**
  * A new match: a booster opened for each side, the CPU's decks arranged, its opponent picked from
  * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
+ * `heroId`: the player's character, from PAIGOW_HEROES.
  */
-export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32) } = {}) {
+export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO } = {}) {
+  if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
   const random = seededRandom(seed);
   const cards = openBooster(random);
   const cpuCards = openBooster(random);
@@ -104,6 +109,7 @@ export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32) } = {})
   const opponentId = candidates[Math.floor(random() * candidates.length)];
   return {
     seed,
+    heroId,
     opponentId,
     cards,
     decks: null,
@@ -178,6 +184,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
   const round = nextRound(match);
   if (round === null) throw new Error('No round to play.');
   const opponent = paigowOpponent(match.opponentId);
+  const hero = paigowHero(match.heroId ?? DEFAULT_HERO);
   const players = [{ id: PLAYER_ID, name: playerName }, { id: CPU_ID, name: opponent.name }];
   const playerFirst = playerStartsRound(match, round);
   const { startingLife: first, secondPlayerLife: second } = PAIGOW_RULES;
@@ -187,7 +194,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       startingPlayerId: playerFirst ? PLAYER_ID : CPU_ID,
       seed: (match.seed + round * 7919) >>> 0,
       decks: { [PLAYER_ID]: [...match.decks[round]], [CPU_ID]: [...match.cpuDecks[round]] },
-      emblems: { [PLAYER_ID]: [], [CPU_ID]: [] },
+      emblems: { [PLAYER_ID]: [hero.emblem], [CPU_ID]: [opponent.emblem] },
       startingLife: { [PLAYER_ID]: playerFirst ? first : second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,
@@ -209,6 +216,6 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       },
       banter: opponent.banter ?? null,
     },
-    encounter: { round, opponentId: match.opponentId, opponentName: opponent.name },
+    encounter: { round, opponentId: match.opponentId, opponentName: opponent.name, heroId: match.heroId ?? DEFAULT_HERO },
   };
 }

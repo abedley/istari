@@ -6,17 +6,18 @@ import {
   createMatch, setDecks, score, outcome, nextRound, playerStartsRound,
   PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
-import { paigowOpponent } from '../../src/paigow/personas.js';
+import { paigowOpponent, paigowHero, DEFAULT_HERO } from '../../src/paigow/personas.js';
+import { powerBlock } from './heroes.js';
 
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
  * Pai Gow (src/paigow/paigow.js): split 15 cards into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Without a `match`, a
- * new one is dealt.
+ * new one is dealt, for the hero `heroId` (see the heroes screen).
  */
-export function paigowScreen(app, { match: given = null, view = null } = {}) {
-  const match = given ?? createMatch();
+export function paigowScreen(app, { match: given = null, view = null, heroId = DEFAULT_HERO } = {}) {
+  const match = given ?? createMatch({ heroId });
   const shown = view ?? (match.decks ? (outcome(match) ? 'final' : 'scoreboard') : 'build');
   return shown === 'build' ? buildView(app, match) : scoreView(app, match, shown === 'final');
 }
@@ -35,11 +36,22 @@ function miniCard(app, cardId, { onTap = null, full = false } = {}) {
   return el;
 }
 
-/** The opponent, for the header: their portrait and name. */
-const opponentBadge = (match) => {
+/** The match's hero, or the default for a match from before heroes. */
+export const heroOf = (match) => paigowHero(match.heroId ?? DEFAULT_HERO);
+
+/** The opponent, for the header: their portrait and name. Tap to read their power. */
+const opponentBadge = (app, match) => {
   const opponent = paigowOpponent(match.opponentId);
-  return h('div.pg-head-opp', h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
+  return h('button.pg-head-opp', { type: 'button', onclick: () => showPowers(app, match) }, h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
 };
+
+/** Both sides' planeswalker powers, on a sheet. */
+function showPowers(app, match) {
+  const opponent = paigowOpponent(match.opponentId);
+  const hero = heroOf(match);
+  const side = (person) => h('div.power-side', crest(personInfo(person), { size: 'sm' }), h('div', h('div.hero-name', person.name), powerBlock(person)));
+  app.overlays.sheet({ title: 'Powers', body: h('div.powers', side(opponent), side(hero)), options: [], cancel: 'Close' });
+}
 
 /** A placed card, small: its art and name. Tap for `onTap`, hold to read it. */
 function slotChip(app, cardId, { onTap }) {
@@ -121,7 +133,7 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: '', onBack: () => app.go('title'), right: opponentBadge(match) }),
+    header({ title: '', onBack: () => app.go('title'), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', trayTitle, tray)),
     h('div.cta.pg-build-cta', h('div.row', clear, autoFill, start)));
   return { el };
@@ -132,6 +144,7 @@ function scoreView(app, match, final) {
   const round = nextRound(match);
   const result = outcome(match);
   const opponent = paigowOpponent(match.opponentId);
+  const hero = heroOf(match);
 
   const roundRows = h('div.pg-rounds', match.decks.map((deck, i) => {
     const played = match.rounds[i];
@@ -156,15 +169,15 @@ function scoreView(app, match, final) {
     h('div.pg-body',
       title,
       h('div.pg-score',
-        h('div.pg-score-side', crest(personInfo(null, 'You'), { size: 'sm' }), h('span', 'You')),
+        h('button.pg-score-side', { type: 'button', onclick: () => showPowers(app, match) }, crest(personInfo(hero), { size: 'sm' }), h('span', hero.name)),
         h('div.pg-score-num', `${won} – ${lost}`, drawn ? h('small', `${drawn} ${drawn === 1 ? 'draw' : 'draws'}`) : null),
-        h('div.pg-score-side', crest(personInfo(opponent), { size: 'sm' }), h('span', opponent.name))),
+        h('button.pg-score-side', { type: 'button', onclick: () => showPowers(app, match) }, crest(personInfo(opponent), { size: 'sm' }), h('span', opponent.name))),
       round !== null ? h('p.pg-help', playerStartsRound(match, round)
         ? `You go first, on ${PAIGOW_RULES.startingLife} life; ${opponent.name} starts on ${PAIGOW_RULES.secondPlayerLife}.`
         : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${PAIGOW_RULES.secondPlayerLife}.`) : null,
       roundRows),
     h('div.cta', final
-      ? [h('button.btn.primary.big', { onclick: () => app.go('paigow', {}) }, 'New match'), h('button.btn.ghost', { onclick: () => app.go('title') }, 'Title')]
+      ? [h('button.btn.primary.big', { onclick: () => app.go('paigow', { heroId: match.heroId ?? DEFAULT_HERO }) }, 'New match'), h('button.btn.ghost', { onclick: () => app.go('title') }, 'Title')]
       : h('button.btn.primary.big', { onclick: () => app.go('battle', { match }) }, `Play round ${round + 1}`)));
   return {
     el,
