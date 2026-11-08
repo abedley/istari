@@ -13,7 +13,9 @@ tuning tools stay there.
 - `index.html` + `app/`: **the game**, a single-page app for phones held upright (see *The app*)
 - `src/engine/`: the rules engine; `src/cards/`: card definitions; `src/ai/`: the CPU players
 - `src/paigow/`: Pai Gow's rules, opponents and fast forward
-- `tools/`: the Scryfall card and token importers (Node only; the site never loads them)
+- `tools/`: the Scryfall card and token importers (Node only; the site never loads them); `tools/title/make-layers.py`
+  cuts the title screen's picture (`tools/title/source.jpg`) into the depth layers in `app/title/` for its
+  parallax zoom (Python, with Pillow, numpy and OpenCV)
 - `test/`: `npm test`; `test/fixtures/` has the made-up sample cards and the few non-LTR cards
   (with three 40-card decks of them) that engine and AI tests play with
 
