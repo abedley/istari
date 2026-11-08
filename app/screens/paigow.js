@@ -11,7 +11,7 @@ import { paigowOpponent } from '../../src/paigow/personas.js';
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
- * Pai Gow (src/paigow/paigow.js): split 15 cards into five decks of three, then a best of five against
+ * Pai Gow (src/paigow/paigow.js): split 15 cards into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Without a `match`, a
  * new one is dealt.
  */
@@ -56,7 +56,7 @@ function slotChip(app, cardId, { onTap }) {
 
 function buildView(app, match) {
   const { decks: count, deckSize } = PAIGOW_RULES;
-  /** Each card's deck (0–4), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
+  /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
   const placed = new Map();
   let selected = 0;
   const indexes = match.cards.map((_, n) => n);
@@ -99,7 +99,7 @@ function buildView(app, match) {
   };
 
   const render = () => {
-    // The five decks side by side, the selected one (where a tapped card goes) highlighted.
+    // The three decks side by side, the selected one (where a tapped card goes) highlighted.
     board.replaceChildren(...[...Array(count).keys()].map((i) => {
       const cards = deckOf(i);
       return h('div.pg-col', { class: i === selected ? 'selected' : '', onclick: (event) => {
@@ -121,7 +121,7 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: 'Pai Gow', onBack: () => app.go('title'), right: opponentBadge(match) }),
+    header({ title: '', onBack: () => app.go('title'), right: opponentBadge(match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', trayTitle, tray)),
     h('div.cta.pg-build-cta', h('div.row', clear, autoFill, start)));
   return { el };

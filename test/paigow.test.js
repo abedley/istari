@@ -183,12 +183,12 @@ test('a booster: 10 different commons, 3 different uncommons, a rare or mythic, 
   assert.ok(wildcards.size > PAIGOW_POOL.length * 0.9, `${wildcards.size} different wildcards`);
 });
 
-test('a match opens a booster for each side and makes five CPU decks of three', () => {
+test('a match opens a booster for each side and makes three CPU decks of five', () => {
   const match = createMatch({ seed: 42 });
   assert.equal(match.cards.length, PAIGOW_RULES.cardsDealt);
   assert.ok(match.cards.every((id) => PAIGOW_POOL.includes(id)));
-  assert.equal(match.cpuDecks.length, 5);
-  assert.ok(match.cpuDecks.every((deck) => deck.length === 3));
+  assert.equal(match.cpuDecks.length, 3);
+  assert.ok(match.cpuDecks.every((deck) => deck.length === 5));
   assert.equal(match.cpuDecks.flat().length, 15);
   assert.ok(PAIGOW_OPPONENTS[match.opponentId]);
   assert.deepEqual(createMatch({ seed: 42 }), match);
@@ -197,10 +197,10 @@ test('a match opens a booster for each side and makes five CPU decks of three', 
 test('a booster with two of a card can still be split into decks', () => {
   const base = createMatch({ seed: 1 });
   const match = { ...base, cards: [...base.cards.slice(0, 14), base.cards[0]] };
-  const decks = [0, 1, 2, 3, 4].map((i) => match.cards.slice(i * 3, i * 3 + 3));
+  const decks = [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5));
   assert.equal(validDecks(match, decks), true);
   const wrong = decks.map((deck) => [...deck]);
-  wrong[4][2] = base.cards[1];
+  wrong[2][4] = base.cards[1];
   assert.equal(validDecks(match, wrong), false);
 });
 
@@ -208,23 +208,23 @@ test('the CPU spreads its strongest cards across its decks', () => {
   const cards = [...PAIGOW_POOL].slice(0, 15);
   const decks = arrangeCpuDecks(cards, seededRandom(1));
   assert.deepEqual(decks.flat().sort(), [...cards].sort());
-  assert.ok(decks.every((deck) => deck.length === 3));
+  assert.ok(decks.every((deck) => deck.length === 5));
 });
 
-test('the player must use each card once, in five decks of three', () => {
+test('the player must use each card once, in three decks of five', () => {
   const match = createMatch({ seed: 7 });
-  const decks = [0, 1, 2, 3, 4].map((i) => match.cards.slice(i * 3, i * 3 + 3));
+  const decks = [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5));
   assert.equal(validDecks(match, decks), true);
-  assert.equal(validDecks(match, [...decks.slice(0, 4), [decks[4][0], decks[4][1], decks[0][0]]]), false);
-  assert.equal(validDecks(match, decks.slice(0, 4)), false);
-  assert.throws(() => setDecks(match, decks.slice(0, 4)));
+  assert.equal(validDecks(match, [...decks.slice(0, 2), [...decks[2].slice(0, 4), decks[0][0]]]), false);
+  assert.equal(validDecks(match, decks.slice(0, 2)), false);
+  assert.throws(() => setDecks(match, decks.slice(0, 2)));
   assert.equal(nextRound(match), null);
   assert.equal(nextRound(setDecks(match, decks)), 0);
 });
 
 const ready = (seed = 3) => {
   const match = createMatch({ seed });
-  return setDecks(match, [0, 1, 2, 3, 4].map((i) => match.cards.slice(i * 3, i * 3 + 3)));
+  return setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5)));
 };
 const play = (match, results) => results.reduce((m, r) => recordRound(m, r), match);
 
@@ -234,7 +234,7 @@ test('round setups: each deck against its counterpart, the variant rules, and tu
   assert.deepEqual(first.game.decks[PLAYER_ID], match.decks[0]);
   assert.deepEqual(first.game.decks[CPU_ID], match.cpuDecks[0]);
   assert.deepEqual(first.game.startingLife, { [PLAYER_ID]: 5, [CPU_ID]: 5 });
-  assert.equal(first.game.openingHandSize, 3);
+  assert.equal(first.game.openingHandSize, 5);
   assert.equal(first.game.infiniteMana, true);
   assert.equal(first.game.deckingLoss, false);
   assert.equal(first.game.stallDraw, true);
@@ -245,20 +245,20 @@ test('round setups: each deck against its counterpart, the variant rules, and tu
   // A real game from it starts.
   const game = new Game(first.game);
   game.start();
-  assert.equal(game.getState().players[0].hand.length, 3);
+  assert.equal(game.getState().players[0].hand.length, 5);
   assert.notEqual(game.getState().pendingDecision?.type, DECISION.MULLIGAN);
 });
 
-test('the match ends at three wins, or after five rounds on the most wins', () => {
+test('the match ends at two wins, or after three rounds on the most wins', () => {
   const { WON, LOST, DRAWN } = ROUND_RESULT;
-  assert.equal(outcome(play(ready(), [WON, WON, WON])), MATCH_OUTCOME.WON);
-  assert.equal(outcome(play(ready(), [LOST, WON, LOST, DRAWN, LOST])), MATCH_OUTCOME.LOST);
-  assert.equal(outcome(play(ready(), [WON, LOST, LOST, LOST])), MATCH_OUTCOME.LOST);
-  assert.equal(outcome(play(ready(), [WON, DRAWN, LOST, WON, DRAWN])), MATCH_OUTCOME.WON);
-  assert.equal(outcome(play(ready(), [WON, DRAWN, LOST, DRAWN, DRAWN])), MATCH_OUTCOME.TIE);
-  assert.equal(outcome(play(ready(), [WON, DRAWN, LOST, DRAWN])), null);
+  assert.equal(outcome(play(ready(), [WON, WON])), MATCH_OUTCOME.WON);
+  assert.equal(outcome(play(ready(), [LOST, WON, LOST])), MATCH_OUTCOME.LOST);
+  assert.equal(outcome(play(ready(), [DRAWN, LOST, LOST])), MATCH_OUTCOME.LOST);
+  assert.equal(outcome(play(ready(), [WON, DRAWN, DRAWN])), MATCH_OUTCOME.WON);
+  assert.equal(outcome(play(ready(), [WON, DRAWN, LOST])), MATCH_OUTCOME.TIE);
+  assert.equal(outcome(play(ready(), [WON, DRAWN])), null);
   assert.deepEqual(score(play(ready(), [WON, DRAWN, LOST])), { won: 1, lost: 1, drawn: 1 });
-  assert.throws(() => recordRound(play(ready(), [WON, WON, WON]), WON));
+  assert.throws(() => recordRound(play(ready(), [WON, WON]), WON));
 });
 
 // Fast forward.

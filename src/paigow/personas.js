@@ -26,7 +26,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     name: 'Gandalf', color: 'blue', ai: search(2000),
     portrait: portrait('c/c/cc9cfcc7-be64-4871-8d52-851e43fe3305.jpg?1783916321', 68, 0, 300, 'Gandalf, Friend of the Shire', 'Dmitry Burmak'),
     banter: {
-      start: ['Three cards each? A small game. Small things have a way of mattering.', 'Shall we? I have fireworks to see to afterwards.', 'Mind your hand. A wizard notices things.'],
+      start: ['Five cards each? A small game. Small things have a way of mattering.', 'Shall we? I have fireworks to see to afterwards.', 'Mind your hand. A wizard notices things.'],
       win: ['Well played, but not well enough. Off you go.', 'There. Even a grey old wanderer can win a round.'],
       lose: ['Ha! You surprised me. That happens less often than you might think.', 'Splendid. I shall think about that one on the road.'],
       comeback: ['Do not count the wizard out just yet.', 'Ah, there is the light I was looking for.'],

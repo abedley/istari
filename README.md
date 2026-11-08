@@ -1,7 +1,7 @@
 # Istari
 
 **Pai Gow** with the cards of *The Lord of the Rings: Tales of Middle-earth* (LTR): open a
-booster, split its 15 cards into five decks of three, and play a best of five against one of the
+booster, split its 15 cards into three decks of five, and play a best of three against one of the
 Wise of Middle-earth. It runs on a subset of the Magic: The Gathering rules, written in plain
 JavaScript (ES modules, no build step) and hosted on GitHub Pages.
 
@@ -28,11 +28,11 @@ round), from *New match* on the title screen:
    land, any LTR card at all, each equally likely (it can repeat a card already in the pack).
    The pool (`PAIGOW_POOL`) is every LTR card in the game but the basic lands, the set's few
    nonbasic lands included; the 8 left out of the game can't be opened. No foils or special editions.
-2. You split yours into five decks of three (tap a card to put it in the highlighted round,
+2. You split yours into three decks of five (tap a card to put it in the highlighted round,
    hold it to read it, or Auto-fill). The CPU shares its cards out by a rough strength
    (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
    its decks.
-3. Round N is your deck N against the CPU's deck N. Both players start with all three cards in
+3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
    hand, 5 life, infinite mana and no emblems, and can't lose by drawing from an empty library.
    A round is won, lost, or drawn when the board stalls (see *Variant rules*); 40 turns is a
    backstop. Who goes first is a coin flip in round 1, then alternates.
@@ -43,7 +43,7 @@ round), from *New match* on the title screen:
    side that still has actions (a win, then a draw, then a loss; sooner is better), and replays
    it on the real game, so the board shows how it ends. If you're the one with actions, the AI
    plays them for you.
-5. The first to win three rounds takes the match. If five rounds pass without that, more round
+5. The first to win two rounds takes the match. If three rounds pass without that, more round
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
@@ -52,7 +52,7 @@ Galadriel. Each has a portrait from their LTR card's art, their own lines, and t
 their own thinking time (1 to 2.5 seconds) and style (Sauron and Théoden race, Saruman, Denethor
 and Elrond grind). The match lives in memory: reloading the page starts a
 new one. As everywhere, the search AI assumes it knows its opponent's deck list, and with
-three-card decks that means it knows your hand.
+five-card decks that means it knows your hand.
 
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each
@@ -181,7 +181,7 @@ Add it to the home screen to play full screen; the service worker (`sw.js`) cach
 card images, so it then works offline. It's registered only when not on localhost, so local
 edits show up on reload.
 
-**Screens:** title → Pai Gow's deck builder (your 15 cards and five decks) → a round (the
+**Screens:** title → Pai Gow's deck builder (your 15 cards and three decks) → a round (the
 battle) → the scoreboard → … → the final score. The title has a settings sheet (sound, animation
 speed, auto-pass). The match lives in memory, so reloading starts a new one.
 

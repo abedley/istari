@@ -1,11 +1,11 @@
 /**
- * Pai Gow: a best-of-five match against the CPU with tiny decks.
+ * Pai Gow: a best-of-three match against the CPU with tiny decks.
  *
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
- * splits its 15 cards into five decks of three. Round N pits deck N against deck N: both players start with all
- * three cards in hand, 5 life and infinite mana, no emblems, and can't lose by drawing from an empty
+ * splits its 15 cards into three decks of five. Round N pits deck N against deck N: both players start with all
+ * five cards in hand, 5 life and infinite mana, no emblems, and can't lose by drawing from an empty
  * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
- * three rounds takes the match; if five rounds pass without that, the one with more wins does, and
+ * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
  *
  * Everything here is pure: a match is a plain object, and each function returns a new one.
@@ -18,9 +18,9 @@ import { weightsFor } from '../ai/evaluate.js';
 
 export const PAIGOW_RULES = Object.freeze({
   cardsDealt: 15,
-  decks: 5,
-  deckSize: 3,
-  roundsToWin: 3,
+  decks: 3,
+  deckSize: 5,
+  roundsToWin: 2,
   startingLife: 5,
   /** A backstop for the stall rule: the round is a draw after this many turns. */
   turnLimit: 40,
@@ -76,7 +76,7 @@ export function openBooster(random) {
 }
 
 /**
- * The CPU's five decks: its cards from strongest to weakest, dealt out snake-wise (1→5, 5→1, 1→5) so
+ * The CPU's three decks: its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
  * each deck gets a fair share, and then the decks in a random order (so its best isn't always first).
  */
 export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = {}) {
@@ -111,7 +111,7 @@ export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32) } = {})
   };
 }
 
-/** Whether `decks` is a legal split of the match's cards: five decks of three, using each card (each copy) once. */
+/** Whether `decks` is a legal split of the match's cards: three decks of five, using each card (each copy) once. */
 export function validDecks(match, decks) {
   if (!Array.isArray(decks) || decks.length !== PAIGOW_RULES.decks) return false;
   if (decks.some((deck) => !Array.isArray(deck) || deck.length !== PAIGOW_RULES.deckSize)) return false;
@@ -121,7 +121,7 @@ export function validDecks(match, decks) {
 /** The match with the player's decks set. */
 export function setDecks(match, decks) {
   if (match.decks) throw new Error('The decks are already set.');
-  if (!validDecks(match, decks)) throw new Error('Make five decks of three cards from your cards.');
+  if (!validDecks(match, decks)) throw new Error('Make three decks of five cards from your cards.');
   return { ...match, decks: decks.map((deck) => [...deck]) };
 }
 
@@ -140,7 +140,7 @@ export function outcome(match) {
   return won > lost ? MATCH_OUTCOME.WON : lost > won ? MATCH_OUTCOME.LOST : MATCH_OUTCOME.TIE;
 }
 
-/** The index of the round to play next (0–4), or null once the match is over. */
+/** The index of the round to play next (0–2), or null once the match is over. */
 export function nextRound(match) {
   return match.decks && outcome(match) === null ? match.rounds.length : null;
 }
