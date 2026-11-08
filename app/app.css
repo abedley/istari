@@ -770,12 +770,17 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .rv-title .logo-big { position: absolute; left: 0; right: 0; top: calc(22% + var(--safe-top)); margin: 0; line-height: 1; text-align: center; }
 /* The tagline, under the name, fades in once the camera has settled (rv-intro's 4.2s). */
 .title-main { position: relative; flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 28px calc(12vh + var(--safe-bottom)); }
-.tagline { position: absolute; left: 16px; right: 16px; top: calc(18.6% + 66px); opacity: 0; }
+.tagline { position: absolute; left: 16px; right: 16px; top: calc(18.6% + 76px); opacity: 0; }
 .screen-title:has(.rv.ready) .tagline { animation: tagline-in 1.4s 4.3s ease-out both; }
 @keyframes tagline-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .logo { display: flex; flex-direction: column; align-items: center; line-height: 1; }
 
-.logo-big { font: 800 52px var(--title); letter-spacing: .06em; background: linear-gradient(180deg, #fff4cf, #e9c46a 55%, #a87a1f); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .7)) drop-shadow(0 4px 14px rgba(233, 196, 106, .35)); }
+/* The name in elven silver: cool against the picture's warm golds, with a dark edge and a moonlit glow. */
+.logo-big {
+  font: 800 60px var(--title); letter-spacing: .08em;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f6fb 38%, #b9c9da 62%, #eef4fa 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 1px rgba(8, 10, 16, .9)) drop-shadow(0 2px 2px rgba(8, 10, 16, .85)) drop-shadow(0 0 10px rgba(10, 14, 24, .55)) drop-shadow(0 0 22px rgba(196, 222, 255, .55));
+}
 .tagline { margin: 0; color: #fbf1d8; font-size: 14px; font-weight: 500; text-align: center; text-shadow: 0 1px 2px rgba(0, 0, 0, .9), 0 0 10px rgba(0, 0, 0, .7); }
 .menu { display: flex; flex-direction: column; gap: 12px; width: min(300px, 80vw); }
 /* The way in: gold words between hairline rules, on nothing but a soft shadow, rather than a solid button. */
