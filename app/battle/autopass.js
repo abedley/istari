@@ -1,7 +1,9 @@
 /**
  * When the app passes priority for the player, and what the main button says.
  * Magic gives priority many times a turn; like MTG Arena's "smart stops", the app
- * only stops when the player could sensibly act.
+ * only stops when the player could sensibly act. On the opponent's turn that's before combat (when
+ * they have a creature that could attack), at attacks, after blocks, at the end step, and whenever
+ * they put something on the stack.
  */
 import { DECISION, CHOICE } from '../../src/engine/Game.js';
 import { PHASE, STEP } from '../../src/engine/turnStructure.js';
@@ -32,7 +34,9 @@ export function shouldAutoPass(state, me, { hasOptions, fullControl = false, end
     if (state.step === STEP.DECLARE_BLOCKERS && !top && state.combat?.attackers?.length) return false;
     return !(isMain(state) && !top);
   }
-  // Their turn: stop when they attack, after blocks, and at their end step.
+  // Their turn: stop before combat if they have a creature that could attack (a last chance to tap
+  // or remove it), when they attack, after blocks, and at their end step.
+  if (state.step === STEP.BEGINNING_OF_COMBAT && !top) return readyAttackers(state, state.activePlayerId).length === 0;
   return !(state.step === STEP.DECLARE_ATTACKERS || state.step === STEP.DECLARE_BLOCKERS || state.step === STEP.END);
 }
 

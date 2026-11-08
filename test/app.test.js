@@ -114,7 +114,13 @@ test('auto-pass stops only where the player could sensibly act', () => {
   assert.equal(pass({ ...myCombat, step: STEP.DECLARE_BLOCKERS, combat: { attackers: [] } }), true, 'no attack');
   assert.equal(pass({ ...myCombat, step: STEP.DECLARE_ATTACKERS }), true);
   const theirs = { activePlayerId: 'p2', phase: PHASE.COMBAT };
-  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT }), true);
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT }), true, 'before combat, nothing of theirs could attack');
+  const theirBear = { controllerId: 'p2', types: ['Creature'], keywords: [], tapped: false, summoningSick: false };
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT, battlefield: [theirBear] }), false, 'before combat: a chance to tap an attacker');
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT, battlefield: [theirBear] }, { hasOptions: false }), true, 'nothing to do about it');
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT, battlefield: [{ ...theirBear, tapped: true }] }), true, 'it can\'t attack');
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT, battlefield: [{ ...theirBear, controllerId: 'p1' }] }), true, 'only my creatures');
+  assert.equal(pass({ ...theirs, step: STEP.BEGINNING_OF_COMBAT, battlefield: [theirBear] }, { endingTurn: true }), false);
   assert.equal(pass({ ...theirs, step: STEP.DECLARE_ATTACKERS }), false, 'they attack');
   assert.equal(pass({ ...theirs, step: STEP.DECLARE_BLOCKERS }), false, 'after blocks');
   assert.equal(pass({ activePlayerId: 'p2', phase: PHASE.ENDING, step: STEP.END }), false, 'their end step');
