@@ -36,7 +36,7 @@ REGIONS = {
     ],
     # The tree overhead.
     'canopy': [
-        [(0, 0), (474, 0), (474, 240), (452, 236), (436, 200), (420, 166), (380, 152), (342, 150), (300, 136), (250, 132), (200, 138), (150, 150), (100, 156), (50, 162), (20, 180), (0, 200)],
+        [(0, 0), (474, 0), (474, 112), (446, 116), (420, 124), (380, 134), (345, 140), (322, 150), (302, 176), (278, 186), (246, 170), (222, 146), (200, 140), (150, 150), (100, 156), (50, 162), (20, 180), (0, 200)],
     ],
 }
 ORDER = ['back', 'cliffs', 'valley', 'near', 'canopy']
@@ -51,6 +51,37 @@ def polygon_mask(shape, polys, k):
     for poly in polys:
         cv2.fillPoly(mask, [np.round(np.array(poly, np.float64) * k).astype(np.int32)], 255)
     return mask
+
+
+def canopy_matte(img, sky, sky_rows, region, px):
+    """
+    The branches overhead, cut soft from the sky: each pixel's opacity from how far its color is from
+    the sky's just behind it, and the sky's color taken back out of the half-covered edge pixels, so
+    no fringe of bright sky comes along with the leaves (it would glow against the darker sky
+    behind them). Returns (BGR, alpha, the sky behind as BGR, what isn't sky in its region).
+    """
+    c = img.astype(np.float32)
+    # Open sky for this, more loosely: by the sun it's warmer and less pale than elsewhere.
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    sky = sky | ((hsv[..., 2] > 180) & (hsv[..., 1] < 95))
+    # The sky just behind each pixel: an average of the open sky nearby, or the row's sky where there's none.
+    weight = cv2.GaussianBlur(sky.astype(np.float32), (0, 0), px(6))
+    near = cv2.GaussianBlur(c * sky[..., None], (0, 0), px(6)) / np.maximum(weight, 1e-3)[..., None]
+    trust = np.clip(weight * 4, 0, 1)[..., None]
+    behind = near * trust + sky_rows.astype(np.float32) * (1 - trust)
+    distance = np.linalg.norm(c - behind, axis=2)
+    alpha = np.clip((distance - 14) / 46, 0, 1) * (region > 0)
+    covered = ((alpha > 0) * 255).astype(np.uint8)
+    # Lone specks (a smudge of cloud, a bird) aren't branches.
+    count, labels, stats, _ = cv2.connectedComponentsWithStats((alpha > 0.5).astype(np.uint8))
+    small = stats[:, cv2.CC_STAT_AREA] < px(5) ** 2
+    small[0] = False
+    alpha[small[labels] & (alpha > 0)] = 0
+    # Unmix: color = a * leaf + (1 - a) * sky, so leaf = sky + (color - sky) / a.
+    leaf = behind + (c - behind) / np.maximum(alpha, 0.08)[..., None]
+    rgb = np.clip(leaf, 0, 255).astype(np.uint8)
+    alpha = cv2.GaussianBlur((alpha * 255).astype(np.uint8), (0, 0), 0.6)
+    return rgb, alpha, np.clip(behind, 0, 255).astype(np.uint8), covered
 
 
 def main():
@@ -82,6 +113,8 @@ def main():
         rows[:, c] = np.interp(ys, ys[known], rows[known, c])
     rows = cv2.GaussianBlur(rows.reshape(h, 1, 3).astype(np.float32), (1, 0), sigmaX=1, sigmaY=12 * k).reshape(h, 3)
     sky_rows = np.repeat(rows[:, None, :], w, axis=1).astype(np.uint8)
+    canopy_rgb, canopy_alpha, canopy_sky, canopy_covered = canopy_matte(img, sky, sky_rows, polygon_mask((h, w), REGIONS['canopy'], k), px)
+    masks['canopy'] = np.where(canopy_alpha > 128, 255, 0).astype(np.uint8)
     # A nearer layer wins where regions overlap.
     for i, name in enumerate(ORDER[1:], 1):
         for nearer in ORDER[i + 1:]:
@@ -97,13 +130,15 @@ def main():
         base = img
         if name == 'back':
             # Behind the canopy is sky: paint it with the sky's own colors, row by row, before inpainting the rest.
-            under = cv2.dilate(masks['canopy'], np.ones((px(9), px(9)), np.uint8)) > 0
+            under = cv2.dilate(masks['canopy'] | canopy_covered, np.ones((px(5), px(5)), np.uint8)) > 0
             base = img.copy()
-            base[under] = sky_rows[under]
+            base[under] = canopy_sky[under]
             fill[under] = 0
         content = cv2.inpaint(base, fill, px(9), cv2.INPAINT_TELEA) if fill.any() else base
         if name == 'back':
             alpha = np.full((h, w), 255, np.uint8)
+        elif name == 'canopy':
+            content, alpha = canopy_rgb, canopy_alpha
         else:
             # Its own region, plus a margin carried on under the layers in front.
             alpha = masks[name] | (cv2.dilate(masks[name], kernel) & in_front)
