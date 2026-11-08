@@ -3,7 +3,7 @@
  *
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
  * splits its 15 cards into three decks of five. Round N pits deck N against deck N: both players start with all
- * five cards in hand, 5 life and infinite mana, no emblems, and can't lose by drawing from an empty
+ * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), no emblems, and can't lose by drawing from an empty
  * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
  * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
@@ -22,6 +22,8 @@ export const PAIGOW_RULES = Object.freeze({
   deckSize: 5,
   roundsToWin: 2,
   startingLife: 5,
+  /** The player who goes second starts with more life, to make up for it. */
+  secondPlayerLife: 8,
   /** A backstop for the stall rule: the round is a draw after this many turns. */
   turnLimit: 40,
 });
@@ -165,15 +167,16 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
   if (round === null) throw new Error('No round to play.');
   const opponent = paigowOpponent(match.opponentId);
   const players = [{ id: PLAYER_ID, name: playerName }, { id: CPU_ID, name: opponent.name }];
-  const life = PAIGOW_RULES.startingLife;
+  const playerFirst = playerStartsRound(match, round);
+  const { startingLife: first, secondPlayerLife: second } = PAIGOW_RULES;
   return {
     game: {
       players,
-      startingPlayerId: playerStartsRound(match, round) ? PLAYER_ID : CPU_ID,
+      startingPlayerId: playerFirst ? PLAYER_ID : CPU_ID,
       seed: (match.seed + round * 7919) >>> 0,
       decks: { [PLAYER_ID]: [...match.decks[round]], [CPU_ID]: [...match.cpuDecks[round]] },
       emblems: { [PLAYER_ID]: [], [CPU_ID]: [] },
-      startingLife: { [PLAYER_ID]: life, [CPU_ID]: life },
+      startingLife: { [PLAYER_ID]: playerFirst ? first : second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,
       openingHandSize: PAIGOW_RULES.deckSize,

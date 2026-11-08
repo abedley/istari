@@ -159,7 +159,9 @@ function scoreView(app, match, final) {
         h('div.pg-score-side', crest(personInfo(null, 'You'), { size: 'sm' }), h('span', 'You')),
         h('div.pg-score-num', `${won} – ${lost}`, drawn ? h('small', `${drawn} ${drawn === 1 ? 'draw' : 'draws'}`) : null),
         h('div.pg-score-side', crest(personInfo(opponent), { size: 'sm' }), h('span', opponent.name))),
-      round !== null ? h('p.pg-help', playerStartsRound(match, round) ? 'You go first.' : `${opponent.name} goes first.`) : null,
+      round !== null ? h('p.pg-help', playerStartsRound(match, round)
+        ? `You go first, on ${PAIGOW_RULES.startingLife} life; ${opponent.name} starts on ${PAIGOW_RULES.secondPlayerLife}.`
+        : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${PAIGOW_RULES.secondPlayerLife}.`) : null,
       roundRows),
     h('div.cta', final
       ? [h('button.btn.primary.big', { onclick: () => app.go('paigow', {}) }, 'New match'), h('button.btn.ghost', { onclick: () => app.go('title') }, 'Title')]

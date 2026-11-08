@@ -233,7 +233,9 @@ test('round setups: each deck against its counterpart, the variant rules, and tu
   const first = roundSetup(match);
   assert.deepEqual(first.game.decks[PLAYER_ID], match.decks[0]);
   assert.deepEqual(first.game.decks[CPU_ID], match.cpuDecks[0]);
-  assert.deepEqual(first.game.startingLife, { [PLAYER_ID]: 5, [CPU_ID]: 5 });
+  const firstId = first.game.startingPlayerId;
+  const secondId = firstId === PLAYER_ID ? CPU_ID : PLAYER_ID;
+  assert.deepEqual(first.game.startingLife, { [firstId]: 5, [secondId]: 8 });
   assert.equal(first.game.openingHandSize, 5);
   assert.equal(first.game.infiniteMana, true);
   assert.equal(first.game.deckingLoss, false);
@@ -241,6 +243,7 @@ test('round setups: each deck against its counterpart, the variant rules, and tu
   const second = roundSetup(recordRound(match, ROUND_RESULT.DRAWN));
   assert.deepEqual(second.game.decks[PLAYER_ID], match.decks[1]);
   assert.notEqual(second.game.startingPlayerId, first.game.startingPlayerId);
+  assert.deepEqual(second.game.startingLife, { [firstId]: 8, [secondId]: 5 });
   assert.equal(playerStartsRound(match, 2), playerStartsRound(match, 0));
   // A real game from it starts.
   const game = new Game(first.game);

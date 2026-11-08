@@ -33,7 +33,8 @@ round), from *New match* on the title screen:
    (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
    its decks.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
-   hand, 5 life, infinite mana and no emblems, and can't lose by drawing from an empty library.
+   hand, infinite mana and no emblems, and can't lose by drawing from an empty library. The player
+   who goes first starts at 5 life, the other at 8.
    A round is won, lost, or drawn when the board stalls (see *Variant rules*); 40 turns is a
    backstop. Who goes first is a coin flip in round 1, then alternates.
 4. **Fast forward:** once a player is out of actions (no cards in hand, no creatures, and no
