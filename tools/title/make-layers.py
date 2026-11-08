@@ -3,7 +3,8 @@
 Cuts the title screen's picture (tools/title/source.jpg) into depth layers for its parallax zoom,
 as app/title/layer-N.webp (0 farthest). Dev-only; needs Pillow, numpy and opencv-python-headless.
 
-Each layer is a hand-drawn region (REGIONS, in the source's 474×1024 pixels), refined in places by
+The picture is scaled to WIDTH pixels wide. Each layer is a hand-drawn region (REGIONS, in pixels of the
+picture at 474 wide, scaled to fit), refined in places by
 brightness (the canopy against the bright sky). Where a nearer layer covers a farther one, the
 farther one is filled in (inpainted) a little way under the nearer layer's edge, so the gap a
 camera move opens shows scenery rather than a hole.
@@ -39,72 +40,77 @@ REGIONS = {
     ],
 }
 ORDER = ['back', 'cliffs', 'valley', 'near', 'canopy']
-FEATHER = 5   # px of soft edge
-UNDER = 24    # px a layer is filled in under the edge of the layers in front of it
+WIDTH = 900    # the layers' width in pixels (sharp on a phone at 2x, and not too heavy)
+REF = 474      # the width REGIONS are drawn at
+FEATHER = 5    # px of soft edge, at REF
+UNDER = 24     # px a layer is filled in under the edge of the layers in front of it, at REF
 
 
-def polygon_mask(shape, polys):
+def polygon_mask(shape, polys, k):
     mask = np.zeros(shape, np.uint8)
     for poly in polys:
-        cv2.fillPoly(mask, [np.array(poly, np.int32)], 255)
+        cv2.fillPoly(mask, [np.round(np.array(poly, np.float64) * k).astype(np.int32)], 255)
     return mask
 
 
 def main():
     img = cv2.imread(str(SRC))
+    img = cv2.resize(img, (WIDTH, round(img.shape[0] * WIDTH / img.shape[1])), interpolation=cv2.INTER_AREA)
     h, w = img.shape[:2]
-    masks = {name: polygon_mask((h, w), polys) for name, polys in REGIONS.items()}
+    k = w / REF
+    px = lambda n: max(1, round(n * k))
+    masks = {name: polygon_mask((h, w), polys, k) for name, polys in REGIONS.items()}
     # The canopy is only its leaves and branches: inside its region, what isn't bright, pale sky.
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     sky = (hsv[..., 2] > 200) & (hsv[..., 1] < 60)
     leaves = np.where(sky, 0, 255).astype(np.uint8)
-    leaves = cv2.morphologyEx(leaves, cv2.MORPH_OPEN, np.ones((2, 2), np.uint8))
-    leaves = cv2.dilate(leaves, np.ones((3, 3), np.uint8))
+    leaves = cv2.morphologyEx(leaves, cv2.MORPH_OPEN, np.ones((px(2), px(2)), np.uint8))
+    leaves = cv2.dilate(leaves, np.ones((px(3), px(3)), np.uint8))
     masks['canopy'] = cv2.bitwise_and(masks['canopy'], leaves)
     # The cliffs' sky edge works the same way: their region minus the bright haze above them.
     haze = (hsv[..., 2] > 215) & (hsv[..., 1] < 70)
-    masks['cliffs'][haze & (np.arange(h)[:, None] < 300)] = 0
+    masks['cliffs'][haze & (np.arange(h)[:, None] < 300 * k)] = 0
     # The sky's color in each row (from its open patches), for what the canopy hides.
     rows = np.zeros((h, 3), np.float64)
     known = np.zeros(h, bool)
     for y in range(h):
-        if sky[y].sum() > 6:
+        if sky[y].sum() > px(6):
             rows[y] = img[y][sky[y]].mean(axis=0)
             known[y] = True
     ys = np.arange(h)
     for c in range(3):
         rows[:, c] = np.interp(ys, ys[known], rows[known, c])
-    rows = cv2.GaussianBlur(rows.reshape(h, 1, 3).astype(np.float32), (1, 0), sigmaX=1, sigmaY=12).reshape(h, 3)
+    rows = cv2.GaussianBlur(rows.reshape(h, 1, 3).astype(np.float32), (1, 0), sigmaX=1, sigmaY=12 * k).reshape(h, 3)
     sky_rows = np.repeat(rows[:, None, :], w, axis=1).astype(np.uint8)
     # A nearer layer wins where regions overlap.
     for i, name in enumerate(ORDER[1:], 1):
         for nearer in ORDER[i + 1:]:
             masks[name] = cv2.bitwise_and(masks[name], cv2.bitwise_not(masks[nearer]))
     OUT.mkdir(parents=True, exist_ok=True)
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * UNDER + 1, 2 * UNDER + 1))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * px(UNDER) + 1, 2 * px(UNDER) + 1))
     for i, name in enumerate(ORDER):
         in_front = np.zeros((h, w), np.uint8)
         for nearer in ORDER[i + 1:]:
             in_front |= masks[nearer]
         # This layer's picture, with what's in front of it filled in.
-        fill = cv2.dilate(in_front, np.ones((5, 5), np.uint8))
+        fill = cv2.dilate(in_front, np.ones((px(5), px(5)), np.uint8))
         base = img
         if name == 'back':
             # Behind the canopy is sky: paint it with the sky's own colors, row by row, before inpainting the rest.
-            under = cv2.dilate(masks['canopy'], np.ones((9, 9), np.uint8)) > 0
+            under = cv2.dilate(masks['canopy'], np.ones((px(9), px(9)), np.uint8)) > 0
             base = img.copy()
             base[under] = sky_rows[under]
             fill[under] = 0
-        content = cv2.inpaint(base, fill, 9, cv2.INPAINT_TELEA) if fill.any() else base
+        content = cv2.inpaint(base, fill, px(9), cv2.INPAINT_TELEA) if fill.any() else base
         if name == 'back':
             alpha = np.full((h, w), 255, np.uint8)
         else:
             # Its own region, plus a margin carried on under the layers in front.
             alpha = masks[name] | (cv2.dilate(masks[name], kernel) & in_front)
-            alpha = cv2.GaussianBlur(alpha, (0, 0), FEATHER / 2)
+            alpha = cv2.GaussianBlur(alpha, (0, 0), FEATHER * k / 2)
         rgba = cv2.cvtColor(content, cv2.COLOR_BGR2RGBA)
         rgba[..., 3] = alpha
-        Image.fromarray(rgba).save(OUT / f'layer-{i}.webp', quality=88, method=6)
+        Image.fromarray(rgba).save(OUT / f'layer-{i}.webp', quality=84, method=6)
         print(f'layer-{i}.webp ({name})')
 
 
