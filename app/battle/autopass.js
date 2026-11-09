@@ -9,7 +9,7 @@ import { DECISION, CHOICE } from '../../src/engine/Game.js';
 import { PHASE, STEP } from '../../src/engine/turnStructure.js';
 import { ACTION } from '../../src/engine/actions.js';
 import {
-  isCreature, hasKeyword, cantAttack, KEYWORD, TARGET,
+  isCreature, hasKeyword, cantAttack, KEYWORD, GRAVEYARD_TARGETS, targetKindOf,
 } from '../../src/cards/cards.js';
 
 const isMain = (state) => state.phase === PHASE.PRECOMBAT_MAIN || state.phase === PHASE.POSTCOMBAT_MAIN;
@@ -77,7 +77,7 @@ export function primaryAction(state, me) {
       case DECISION.CHOOSE_TARGETS: {
         // "You may": the button declines. A card in a graveyard is chosen from a sheet.
         const decline = mine.find((a) => a.type === ACTION.CHOOSE_TARGETS && a.targets.length === 0);
-        if (decision.targetKind === TARGET.PERMANENT_CARD_IN_YOUR_GRAVEYARD) return { label: 'Choose a card', reopen: true };
+        if (GRAVEYARD_TARGETS.has(targetKindOf(decision.targetKind))) return { label: 'Choose a card', reopen: true };
         return decline ? { label: 'Don\'t', action: decline } : { label: 'Choose a target' };
       }
       case DECISION.CHOOSE_MODE:

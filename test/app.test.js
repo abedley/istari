@@ -263,6 +263,9 @@ test('the main button and prompt for modes, optional targets, graveyard cards an
   assert.deepEqual(primaryAction(at({ type: DECISION.CHOOSE_TARGETS, optional: true, targetKind: TARGET.ARTIFACT }, [decline]), 'p1'),
     { label: 'Don\'t', action: decline });
   assert.equal(primaryAction(at({ type: DECISION.CHOOSE_TARGETS, targetKind: TARGET.PERMANENT_CARD_IN_YOUR_GRAVEYARD }, []), 'p1').reopen, true);
+  // Tale of Tinúviel: "target creature card from your graveyard", a target spec with a filter.
+  const creatureCard = { kind: TARGET.CARD_IN_YOUR_GRAVEYARD, filter: { types: ['Creature'] } };
+  assert.equal(primaryAction(at({ type: DECISION.CHOOSE_TARGETS, targetKind: creatureCard }, []), 'p1').reopen, true);
   assert.equal(primaryAction(at({ type: DECISION.CHOOSE_MODE }, []), 'p1').reopen, true);
   assert.equal(primaryAction(at({ type: DECISION.LEGEND_RULE }, []), 'p1').reopen, true);
   assert.equal(promptFor(at({ type: DECISION.CHOOSE_MODE, sourceName: 'Inspiring Bard' }, []), 'p1'), 'Choose one: Inspiring Bard');

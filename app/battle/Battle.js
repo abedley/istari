@@ -32,7 +32,9 @@ import { PlayHistory, historyView } from './history.js';
 import { boardCard, fullCard, typeLine } from '../cardView.js';
 import { relRect } from './fx.js';
 import { inlineSymbols } from '../symbols.js';
-import { isLand, castsAtInstantSpeed, TARGET } from '../../src/cards/cards.js';
+import {
+  isLand, castsAtInstantSpeed, GRAVEYARD_TARGETS, targetKindOf,
+} from '../../src/cards/cards.js';
 import { formatMana } from '../../src/engine/mana.js';
 import { canFastForward, planFastForward } from '../../src/paigow/fastForward.js';
 
@@ -262,7 +264,7 @@ export class Battle {
       case DECISION.CHOOSE_MODE: this.#chooseMode(state); break;
       case DECISION.LEGEND_RULE: this.#keepLegend(state); break;
       case DECISION.CHOOSE_TARGETS:
-        if (decision.targetKind === TARGET.PERMANENT_CARD_IN_YOUR_GRAVEYARD) this.#chooseGraveyardCard(state);
+        if (GRAVEYARD_TARGETS.has(targetKindOf(decision.targetKind))) this.#chooseGraveyardCard(state);
         else if (this.#severalTargets(state)) this.#chooseTriggerTargets(state);
         break;
       case DECISION.CHOOSE:
@@ -445,7 +447,7 @@ export class Battle {
     });
   }
 
-  /** A card in your graveyard as a target (Elvish Regrower): a sheet of the cards. */
+  /** A card in a graveyard as a target (Elvish Regrower, Tale of Tinúviel): a sheet of the cards. */
   #chooseGraveyardCard(state) {
     const decision = state.pendingDecision;
     const mine = state.validActions.filter((a) => a.playerId === this.#me && a.type === ACTION.CHOOSE_TARGETS);
