@@ -1,9 +1,9 @@
 /**
  * Pai Gow's CPU opponents: figures of Middle-earth, each with a portrait from their LTR card's art,
  * what they say (see src/ai/banter.js), and how they play: the search AI with their own
- * thinking time and evaluation (an archetype from src/ai/evaluate.js), and their planeswalker power
- * (`emblem`, an id in EMBLEMS, src/cards/emblems.js). PAIGOW_HEROES are the player's characters to choose
- * from, each with a portrait and a power of their own.
+ * thinking time and evaluation (an archetype from src/ai/evaluate.js), and their Ring of Power
+ * (`emblem`, an id in EMBLEMS, src/cards/emblems.js: a planeswalker power). PAIGOW_HEROES are the player's
+ * characters to choose from, each with a portrait and a ring of their own.
  */
 import { AI_KIND } from '../ai/cpu.js';
 
@@ -15,15 +15,37 @@ const deepFreeze = (value) => {
 /**
  * A portrait: a card's art crop on Scryfall's CDN (`path` after art_crop/front/), where the face is
  * (`x`, `y`: background-position percentages), how far to zoom in (`zoom`: background-size
- * percentage), and the card and artist it comes from.
+ * percentage), and the card and artist it comes from. `set`: the card's set, when it isn't an LTR card in the game.
  */
-const portrait = (path, x, y, zoom, card, artist) => ({
-  art: `https://cards.scryfall.io/art_crop/front/${path}`, x, y, zoom, card, artist,
+const portrait = (path, x, y, zoom, card, artist, set = null) => ({
+  art: `https://cards.scryfall.io/art_crop/front/${path}`, x, y, zoom, card, artist, ...(set ? { set } : {}),
 });
 
 const search = (budgetMs, weights) => ({ kind: AI_KIND.SEARCH, budgetMs, ...(weights ? { weights } : {}) });
 
 export const PAIGOW_OPPONENTS = deepFreeze({
+  birthdayBilbo: {
+    name: 'Birthday Bilbo', color: 'gold', emblem: 'birthdayBilbo', ai: search(1000, 'aggro'),
+    portrait: portrait('3/8/38d39cac-e6df-4b3a-826b-b040d80a5fde.jpg?1783915984', 50, 6, 300, 'Bilbo, Birthday Celebrant', 'Billy Christian', 'ltc'),
+    banter: {
+      start: ['A game! At my party! Splendid. Have some cake first.', 'I am eleventy-one today, and I mean to win at least one thing.', 'Sit, sit! There are presents for everyone. Even you.'],
+      win: ['Ha! A birthday win. The best kind.', 'Another round of cake for the winner. That is me.'],
+      lose: ['I like less than half of you half as well as you deserve. Well played.', 'Well! I shall have to make a speech about that.'],
+      comeback: ['The party is not over yet!', 'Fireworks! I knew I had some left.'],
+      collapse: ['Oh dear. Too much cake.', 'Somebody has eaten my good cards.'],
+    },
+  },
+  burglarBilbo: {
+    name: 'Burglar Bilbo', color: 'gold', emblem: 'burglarBilbo', ai: search(1500, 'aggro'),
+    portrait: portrait('6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194', 48, 0, 300, 'Bilbo Baggins, Burglar', 'Kieran Yanner', 'hob'),
+    banter: {
+      start: ['What have I got in my pocket? You will find out.', 'A burglar is hired for his quiet hands. Watch them.', 'Riddles first? No? Cards, then.'],
+      win: ['Burgled! Fair and square. Well, mostly square.', 'In and out, and nobody the wiser.'],
+      lose: ['Caught red-handed. It does happen.', 'You would make a fine burglar yourself.'],
+      comeback: ['Now you see me...', 'A lucky number, that one.'],
+      collapse: ['Oh, bother. I was spotted.', 'Thorin would never let me hear the end of this.'],
+    },
+  },
   gandalf: {
     name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: search(2000),
     portrait: portrait('c/c/cc9cfcc7-be64-4871-8d52-851e43fe3305.jpg?1783916321', 68, 0, 300, 'Gandalf, Friend of the Shire', 'Dmitry Burmak'),

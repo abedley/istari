@@ -100,8 +100,9 @@ export class Battle {
 
   /**
    * `setup`: matchSetup()'s result (`game` options, `cpu`, `encounter`), or the
-   * same shape for a quick match. `meInfo`/`oppInfo`: `{ name, color?, art?, portrait?, power? }`
-   * (`power`: `{ name, text }`, a planeswalker power shown on the intro).
+   * same shape for a quick match. `meInfo`/`oppInfo`: `{ name, color?, art?, portrait?, power?, powers? }`
+   * (`power`: `{ name, text }`, a Ring of Power, that is a planeswalker power, shown on the intro;
+   * `powers`: several, for a campaign's player, shown by name when there's more than one).
    * `onEnd({ won, drawn, turns })` is called after the final banner (`drawn`: nobody won, as when a
    * Pai Gow round stalls). With `fastForward`, a button plays the game out at once when a player is out
    * of actions (src/paigow/fastForward.js). `resultText({ won, drawn })`: the result banner's text, when
@@ -163,8 +164,12 @@ export class Battle {
     const tokens = Object.keys(defs).filter((id) => id.startsWith('token:'));
     const urls = [...setup.game.decks[this.#me], ...setup.game.decks[this.#opp], ...tokens].map((id) => defs[id]?.image?.art)
       .concat(meInfo.portrait?.art, oppInfo.portrait?.art);
-    // A side's planeswalker power, when it has one: `{ name, text }`.
-    const power = (info) => (info.power ? h('div.vs-power', h('b', info.power.name), ' ', info.power.text) : null);
+    // A side's Rings of Power, when it has any (`{ name, text }` each): one in full, several by name.
+    const power = (info) => {
+      const rings = (info.powers ?? [info.power]).filter(Boolean);
+      if (rings.length > 1) return h('div.vs-power', h('b', rings.map((r) => r.name).join(' · ')));
+      return rings.length ? h('div.vs-power', h('b', rings[0].name), ' ', rings[0].text) : null;
+    };
     const intro = h('div.versus',
       h('div.vs-side.vs-opp', crest(oppInfo, { size: 'lg' }), h('div.vs-name', oppInfo.name), subtitle ? h('div.vs-sub', subtitle) : null, power(oppInfo)),
       h('div.vs-mark', 'VS'),

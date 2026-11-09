@@ -23,9 +23,10 @@ tuning tools stay there.
 
 A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain match object), with
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
-scoreboard) and `app/screens/battle.js` (a round), from *New match* on the title screen:
+scoreboard) and `app/screens/battle.js` (a round), from *Quick match* on the title screen (or as a
+campaign's match, see *The campaign*):
 0. You choose your hero, Frodo, Aragorn or Bilbo (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
-   with a planeswalker power of their own (see *Planeswalker powers*). The app remembers the last one.
+   with a Ring of Power of their own (see *Rings of Power*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
@@ -37,7 +38,7 @@ scoreboard) and `app/screens/battle.js` (a round), from *New match* on the title
    (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
    its decks.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
-   hand, infinite mana and their character's planeswalker power, and can't lose by drawing from an empty library. The player
+   hand, infinite mana and their character's Ring of Power, and can't lose by drawing from an empty library. The player
    who goes first starts at 5 life, the other at 8.
    A round is won, lost, or drawn when the board stalls (see *Variant rules*); 40 turns is a
    backstop. Who goes first is a coin flip in round 1; after that, the loser of the
@@ -53,39 +54,56 @@ scoreboard) and `app/screens/battle.js` (a round), from *New match* on the title
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Gandalf, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
-Galadriel. Each has a portrait from their LTR card's art, their own lines, and the search AI with
+picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
+Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit), their own lines, and the search AI with
 their own thinking time (1 to 2.5 seconds) and style (Sauron and Théoden race, Saruman, Denethor
 and Elrond grind). The match lives in memory: reloading the page starts a
 new one. As everywhere, the search AI assumes it knows its opponent's deck list, and with
 five-card decks that means it knows your hand.
 
-**Planeswalker powers:** every hero and every opponent has one power, an emblem in
-`src/cards/emblems.js` (see *Emblems*) named by their `emblem` in `src/paigow/personas.js`. A power can be
-used once a turn, uses the stack, and costs nothing or a little life (mana means nothing here). They're
-placeholders to tune:
+**Rings of Power:** every hero and every opponent has one planeswalker power, shown in the app as
+a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in
+`src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
+`power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
+and the One Ring under its names: Bilbo's Ring, *the magic ring* of The Hobbit, Gollum's *birthday
+present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn, uses the stack,
+and costs nothing or a little life (mana means nothing here). They're placeholders to tune:
 
-| Who | Power | What it does |
-| --- | --- | --- |
-| Frodo | The Burden | Pay 1 life: The Ring tempts you. Sorcery speed. |
-| Aragorn | Andúril | 0: Target creature you control gets +1/+1 and first strike until end of turn. |
-| Bilbo | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
-| Gandalf | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
-| Tom Bombadil | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
-| Sauron | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
-| Saruman | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
-| Théoden | Ride Now! | 0: Target creature you control gets +1/+0 and haste until end of turn. Sorcery speed. |
-| Denethor | Despair | Pay 1 life: Each opponent discards a card. Sorcery speed. |
-| Elrond | Vilya | 0: Target creature you control gains hexproof and indestructible until end of turn. |
-| Galadriel | Light of Eärendil | 0: Put a +1/+1 counter on target creature you control. Sorcery speed. |
+| Who | Ring | Power | What it does |
+| --- | --- | --- | --- |
+| Frodo | The One Ring | The Burden | Pay 1 life: The Ring tempts you. Sorcery speed. |
+| Aragorn | The Ring of Barahir | Heir of Isildur | 0: Target creature you control gets +1/+1 and first strike until end of turn. |
+| Bilbo | Bilbo's Ring | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
+| Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: Create a Food token. Sorcery speed. |
+| Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
+| Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
+| Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
+| Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
+| Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
+| Théoden | The Ring of Eorl *(made up)* | Ride Now! | 0: Target creature you control gets +1/+0 and haste until end of turn. Sorcery speed. |
+| Denethor | The Steward's Ring *(made up)* | Despair | Pay 1 life: Each opponent discards a card. Sorcery speed. |
+| Elrond | Vilya | Ring of Air | 0: Target creature you control gains hexproof and indestructible until end of turn. |
+| Galadriel | Nenya | Light of Eärendil | 0: Put a +1/+1 counter on target creature you control. Sorcery speed. |
 
-Each is written with `power(id, name, { text, cost, effects, target, timing })`: change the effects
+Each is written with `power(id, ring, powerName, { text, cost, effects, target, timing })`: change the effects
 (any card effect works), the cost (`{ life: n }`), the timing (`SORCERY`, or leave it out for any time),
 and the `text` to match. Your power is a button beside your portrait in a round; the opponent's shows
 its cost by theirs (hold it to read it). The *vs* screen before a round shows both, and so does tapping
 the opponent on the deck builder or either side on the scoreboard. For fast forward, a power that
 targets your own creature, or one that can do nothing more (no creature of theirs to target, no cards
 for them to discard, the Ring at its last level), doesn't count as an action.
+
+**The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
+the title screen): you choose a hero, then play a Pai Gow match against each opponent in
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, then Gandalf; later they may be
+drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
+with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
+may take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of
+starting every round with 1 less life (`playerLife` in `src/paigow/paigow.js`: 5 and 8, less one per
+ring, at least 1), up to 4 rings. Beat them all to win; run out of lives and it's lost. The campaign
+is saved in `localStorage` (`istari.campaign`) after every step, its current match with it after each
+round, so a reload picks it up where it was (a round in progress starts over).
 
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each

@@ -63,7 +63,15 @@ test('every hero and opponent has a power of their own, once a turn', () => {
     assert.equal(emblem.activationsPerTurn, 1);
     assert.equal(emblem.abilities.length, 1);
     assert.ok(emblem.abilities[0].name && emblem.abilities[0].text);
+    // Each is a Ring of Power, with a name of its own and a name for what it does.
+    assert.equal(emblem.ring, true);
+    assert.ok(emblem.power);
   }
+  assert.equal(new Set(emblems.map((id) => EMBLEMS[id].name)).size, people.length);
+  assert.equal(EMBLEMS.gandalf.name, 'Narya');
+  assert.equal(EMBLEMS.elrond.name, 'Vilya');
+  assert.equal(EMBLEMS.galadriel.name, 'Nenya');
+  assert.equal(EMBLEMS.frodo.name, 'The One Ring');
   assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Aragorn', 'Bilbo']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
@@ -112,6 +120,11 @@ test('each power does what it says', () => {
   assert.equal(p1Bear(s).power, 3);
   s = usePower(powerGame('tomBombadil'));
   assert.equal(p1Bear(s).toughness, 4);
+  s = usePower(powerGame('birthdayBilbo'));
+  assert.ok(s.battlefield.some((p) => p.controllerId === 'p1' && p.subtypes?.includes('Food')));
+  s = usePower(powerGame('burglarBilbo'));
+  assert.equal(p1Bear(s).power, 3);
+  assert.ok(p1Bear(s).keywords.includes('menace'));
 });
 
 test('a power can be used once a turn', () => {

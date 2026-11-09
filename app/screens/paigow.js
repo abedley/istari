@@ -3,18 +3,20 @@ import { crest } from '../art.js';
 import { fullCard, cardBack } from '../cardView.js';
 import { header, personInfo } from './common.js';
 import {
-  createMatch, setDecks, score, outcome, nextRound, playerStartsRound,
+  createMatch, setDecks, score, outcome, nextRound, playerStartsRound, playerLife,
   PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, DEFAULT_HERO } from '../../src/paigow/personas.js';
-import { powerBlock } from './heroes.js';
+import { powerBlock, ringBlock } from './heroes.js';
+import { saveCampaignMatch, finishCampaignMatch } from './campaign.js';
 
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
  * Pai Gow (src/paigow/paigow.js): split 15 cards into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Without a `match`, a
- * new one is dealt, for the hero `heroId` (see the heroes screen).
+ * new one is dealt, for the hero `heroId` (see the heroes screen). A campaign's match (`match.campaign`,
+ * see the campaign screen) is saved after each round, and its outcome recorded in the campaign.
  */
 export function paigowScreen(app, { match: given = null, view = null, heroId = DEFAULT_HERO } = {}) {
   const match = given ?? createMatch({ heroId });
@@ -39,18 +41,22 @@ function miniCard(app, cardId, { onTap = null, full = false } = {}) {
 /** The match's hero, or the default for a match from before heroes. */
 export const heroOf = (match) => paigowHero(match.heroId ?? DEFAULT_HERO);
 
-/** The opponent, for the header: their portrait and name. Tap to read their power. */
+/** Where Back goes: a campaign's match back to the campaign (it's saved), any other to the title. */
+const backTo = (app, match) => app.go(match.campaign ? 'campaign' : 'title');
+
+/** The opponent, for the header: their portrait and name. Tap to read the Rings of Power. */
 const opponentBadge = (app, match) => {
   const opponent = paigowOpponent(match.opponentId);
   return h('button.pg-head-opp', { type: 'button', onclick: () => showPowers(app, match) }, h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
 };
 
-/** Both sides' planeswalker powers, on a sheet. */
+/** Both sides' Rings of Power (planeswalker powers), on a sheet: yours are your hero's and any taken in a campaign. */
 function showPowers(app, match) {
   const opponent = paigowOpponent(match.opponentId);
   const hero = heroOf(match);
-  const side = (person) => h('div.power-side', crest(personInfo(person), { size: 'sm' }), h('div', h('div.hero-name', person.name), powerBlock(person)));
-  app.overlays.sheet({ title: 'Powers', body: h('div.powers', side(opponent), side(hero)), options: [], cancel: 'Close' });
+  const side = (person, extra = []) => h('div.power-side', crest(personInfo(person), { size: 'sm' }),
+    h('div.power-list', h('div.hero-name', person.name), powerBlock(person), extra.map((id) => ringBlock(id))));
+  app.overlays.sheet({ title: 'Rings of Power', body: h('div.powers', side(opponent), side(hero, match.rings ?? [])), options: [], cancel: 'Close' });
 }
 
 /** A placed card, small: its art and name. Tap for `onTap`, hold to read it. */
@@ -107,7 +113,9 @@ function buildView(app, match) {
   };
   const play = () => {
     const decks = [...Array(count).keys()].map((i) => deckOf(i).map((n) => match.cards[n]));
-    app.go('battle', { match: setDecks(match, decks) });
+    const ready = setDecks(match, decks);
+    saveCampaignMatch(app, ready);
+    app.go('battle', { match: ready });
   };
 
   const render = () => {
@@ -133,7 +141,7 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: '', onBack: () => app.go('title'), right: opponentBadge(app, match) }),
+    header({ title: '', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', trayTitle, tray)),
     h('div.cta.pg-build-cta', h('div.row', clear, autoFill, start)));
   return { el };
@@ -145,6 +153,9 @@ function scoreView(app, match, final) {
   const result = outcome(match);
   const opponent = paigowOpponent(match.opponentId);
   const hero = heroOf(match);
+  const life = playerLife(match);
+  // A campaign's match: saved as it goes, and its outcome counted once it's over.
+  const campaign = !match.campaign ? null : final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
 
   const roundRows = h('div.pg-rounds', match.decks.map((deck, i) => {
     const played = match.rounds[i];
@@ -162,7 +173,8 @@ function scoreView(app, match, final) {
     ? h(`div.result-title.${result === MATCH_OUTCOME.WON ? 'victory' : 'defeat'}`, { WON: 'Victory', LOST: 'Defeat', TIE: 'Tie' }[result.toUpperCase()])
     : null;
   const leave = async () => {
-    if (final || await app.overlays.confirm({ title: 'Leave the match?', text: 'This match will be lost.', yes: 'Leave', danger: true })) app.go('title');
+    if (match.campaign) backTo(app, match);
+    else if (final || await app.overlays.confirm({ title: 'Leave the match?', text: 'This match will be lost.', yes: 'Leave', danger: true })) app.go('title');
   };
   const el = h('div',
     header({ title: '', onBack: leave }),
@@ -173,10 +185,13 @@ function scoreView(app, match, final) {
         h('div.pg-score-num', `${won} – ${lost}`, drawn ? h('small', `${drawn} ${drawn === 1 ? 'draw' : 'draws'}`) : null),
         h('button.pg-score-side', { type: 'button', onclick: () => showPowers(app, match) }, crest(personInfo(opponent), { size: 'sm' }), h('span', opponent.name))),
       round !== null ? h('p.pg-help', playerStartsRound(match, round)
-        ? `You go first, on ${PAIGOW_RULES.startingLife} life; ${opponent.name} starts on ${PAIGOW_RULES.secondPlayerLife}.`
-        : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${PAIGOW_RULES.secondPlayerLife}.`) : null,
+        ? `You go first, on ${life.first} life; ${opponent.name} starts on ${PAIGOW_RULES.secondPlayerLife}.`
+        : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${life.second}.`) : null,
+      final && campaign ? h('p.pg-help', campaignNote(result, campaign)) : null,
       roundRows),
-    h('div.cta', final
+    h('div.cta', final && match.campaign
+      ? h('button.btn.primary.big', { onclick: () => app.go('campaign') }, 'Continue')
+      : final
       ? [h('button.btn.primary.big', { onclick: () => app.go('paigow', { heroId: match.heroId ?? DEFAULT_HERO }) }, 'New match'), h('button.btn.ghost', { onclick: () => app.go('title') }, 'Title')]
       : h('button.btn.primary.big', { onclick: () => app.go('battle', { match }) }, `Play round ${round + 1}`)));
   return {
@@ -185,4 +200,13 @@ function scoreView(app, match, final) {
       el.querySelector('.result-title')?.animate([{ transform: 'scale(1.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
     },
   };
+}
+
+/** What a campaign match's outcome meant for the campaign. */
+function campaignNote(result, campaign) {
+  if (result === MATCH_OUTCOME.LOST) {
+    return campaign.lives > 0 ? `You lose a life: ${campaign.lives} left. Try again.` : 'You have no lives left.';
+  }
+  if (result === MATCH_OUTCOME.TIE) return 'A tie costs no life, but you must face them again.';
+  return 'On to the next.';
 }

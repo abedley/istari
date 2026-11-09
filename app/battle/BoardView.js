@@ -617,14 +617,14 @@ export class BoardView {
     }
   }
 
-  /** Planeswalker abilities: buttons for us, small badges for the opponent. */
+  /** Planeswalker abilities (Rings of Power): buttons for us, small badges for the opponent. */
   #renderAbilities(player, side) {
     const parts = this.#parts[side];
     const abilities = player.emblems.flatMap((emblem) => emblem.abilities.map((ability) => ({ emblem, ability })));
     const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}`).join();
     if (parts.abilities.dataset.key === key) return;
     parts.abilities.dataset.key = key;
-    const buttons = abilities.slice(0, 4).map(({ emblem, ability }) => {
+    const buttons = abilities.slice(0, 5).map(({ emblem, ability }) => {
       const left = Number.isFinite(emblem.activationsPerTurn) ? emblem.activationsPerTurn - emblem.activationsThisTurn : null;
       const cost = ability.cost ?? {};
       // A short name: the ability's own, or its emblem's ("Warden's Growth" → "Growth").

@@ -4,7 +4,7 @@
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
  * splits its 15 cards into three decks of five. Round N pits deck N against deck N: both players start with all
  * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), their
- * character's planeswalker power (an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
+ * character's Ring of Power (a planeswalker power: an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
  * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
  * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
@@ -98,19 +98,27 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
 /**
  * A new match: a booster opened for each side, the CPU's decks arranged, its opponent picked from
  * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
- * `heroId`: the player's character, from PAIGOW_HEROES.
+ * `heroId`: the player's character, from PAIGOW_HEROES. `opponentId`: the opponent, when not left to chance.
+ * `rings`: Rings of Power (emblem ids) the player has besides their hero's, as a campaign's (see
+ * src/paigow/campaign.js); each costs them a life at the start of every round. `campaign`: whether the
+ * match is a campaign's.
  */
-export function createMatch({ seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO } = {}) {
+export function createMatch({
+  seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO, opponentId: chosen = null, rings = [], campaign = false,
+} = {}) {
   if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
+  if (chosen && !PAIGOW_OPPONENTS[chosen]) throw new Error(`Unknown opponent: ${chosen}`);
   const random = seededRandom(seed);
   const cards = openBooster(random);
   const cpuCards = openBooster(random);
   const candidates = Object.keys(PAIGOW_OPPONENTS);
-  const opponentId = candidates[Math.floor(random() * candidates.length)];
+  const drawn = candidates[Math.floor(random() * candidates.length)];
   return {
     seed,
     heroId,
-    opponentId,
+    opponentId: chosen ?? drawn,
+    rings: [...rings],
+    ...(campaign ? { campaign: true } : {}),
     cards,
     decks: null,
     cpuDecks: arrangeCpuDecks(cpuCards, random),
@@ -131,6 +139,15 @@ export function setDecks(match, decks) {
   if (match.decks) throw new Error('The decks are already set.');
   if (!validDecks(match, decks)) throw new Error('Make three decks of five cards from your cards.');
   return { ...match, decks: decks.map((deck) => [...deck]) };
+}
+
+/** The player's starting life in each round, going first and going second: one less for each extra ring. */
+export function playerLife(match) {
+  const penalty = match.rings?.length ?? 0;
+  return {
+    first: Math.max(1, PAIGOW_RULES.startingLife - penalty),
+    second: Math.max(1, PAIGOW_RULES.secondPlayerLife - penalty),
+  };
 }
 
 /** Wins, losses and draws so far. */
@@ -188,14 +205,15 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
   const players = [{ id: PLAYER_ID, name: playerName }, { id: CPU_ID, name: opponent.name }];
   const playerFirst = playerStartsRound(match, round);
   const { startingLife: first, secondPlayerLife: second } = PAIGOW_RULES;
+  const mine = playerLife(match);
   return {
     game: {
       players,
       startingPlayerId: playerFirst ? PLAYER_ID : CPU_ID,
       seed: (match.seed + round * 7919) >>> 0,
       decks: { [PLAYER_ID]: [...match.decks[round]], [CPU_ID]: [...match.cpuDecks[round]] },
-      emblems: { [PLAYER_ID]: [hero.emblem], [CPU_ID]: [opponent.emblem] },
-      startingLife: { [PLAYER_ID]: playerFirst ? first : second, [CPU_ID]: playerFirst ? second : first },
+      emblems: { [PLAYER_ID]: [hero.emblem, ...(match.rings ?? [])], [CPU_ID]: [opponent.emblem] },
+      startingLife: { [PLAYER_ID]: playerFirst ? mine.first : mine.second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,
       openingHandSize: PAIGOW_RULES.deckSize,

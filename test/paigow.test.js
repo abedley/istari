@@ -331,10 +331,11 @@ test('fast forward with nothing on either side is a draw', () => {
 
 test('Pai Gow has its own opponents, each with a portrait, banter and the search AI', () => {
   const names = Object.values(PAIGOW_OPPONENTS).map((o) => o.name);
-  assert.deepEqual(names, ['Gandalf', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
+  assert.deepEqual(names, ['Birthday Bilbo', 'Burglar Bilbo', 'Gandalf', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
   for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
     assert.match(opponent.portrait.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
-    assert.ok(Object.values(CARDS).some((c) => c.name === opponent.portrait.card), `${id}'s portrait card`);
+    // A portrait from another set's card (the Bilbos) names its set; the rest are LTR cards in the game.
+    if (!opponent.portrait.set) assert.ok(Object.values(CARDS).some((c) => c.name === opponent.portrait.card), `${id}'s portrait card`);
     assert.deepEqual(banterProblems(id, opponent.banter), []);
     assert.deepEqual(Object.keys(opponent.banter).sort(), ['collapse', 'comeback', 'lose', 'start', 'win']);
     assert.equal(opponent.ai.kind, 'search');
