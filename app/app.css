@@ -927,7 +927,8 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-chip { position: relative; display: block; width: 100%; aspect-ratio: 5 / 2; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #111 center / cover no-repeat; cursor: pointer; -webkit-touch-callout: none; user-select: none; }
 .pg-chip span { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 3px 2px; background: linear-gradient(transparent, rgba(0, 0, 0, .88) 45%); color: #fff; font: 600 10px/1.1 var(--ui); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pg-chip.empty { background: none; border: 1.5px dashed rgba(233, 196, 106, .3); cursor: inherit; }
-.pg-tray { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.pg-tray { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pg-board { position: relative; z-index: 1; }
 .pg-card.full { width: 100%; }
 .pg-build-cta { padding-top: 10px; }
 .pg-build-cta .row { gap: 8px; }
@@ -939,8 +940,10 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-card .cf-name { font-size: 7px; }
 .pg-card.back { cursor: default; }
 .pg-card.back .card-back { width: 100%; height: 100%; }
-.pg-tray-wrap { flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 4px; }
-.pg-tray-wrap h4 { margin: 4px 0 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+/* The decks stay pinned at the top; only the pack's cards scroll. */
+.pg-tray-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pg-tray-wrap .pg-tray { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; align-content: start; padding-bottom: 4px; }
+.pg-tray-wrap h4 { flex: none; margin: 4px 0 8px; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .pg-score { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 4px; }
 .pg-score-side { appearance: none; background: none; border: 0; padding: 0; color: inherit; cursor: pointer; width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; text-align: center; }
 .pg-score-num { display: flex; flex-direction: column; align-items: center; font: 900 34px var(--title); color: var(--gold); }

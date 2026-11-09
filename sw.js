@@ -3,7 +3,7 @@
  * cache and refreshed in the background (so a new version shows on the next
  * visit); card images from Scryfall's CDN and fonts are cached once and kept.
  */
-const VERSION = 'istari-v14';
+const VERSION = 'istari-v15';
 const SHELL = [
   './', 'index.html', 'app/app.css', 'app/main.js', 'manifest.webmanifest', 'app/icons/icon.svg',
   'app/vendor/symbols.css', 'app/vendor/mana.woff2', 'app/vendor/keyrune.woff2',
