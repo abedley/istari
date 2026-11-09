@@ -4946,14 +4946,15 @@ export class Game extends EventEmitter {
   }
 
   /**
-   * Whether this turn could end the game in a draw: 'turnLimit' on the last turn, 'stall' when the last turn
-   * changed nothing lasting (so this one ending without a change too would be a stall, see #checkForDraw), else null.
+   * Whether this turn could end the game in a draw: 'turnLimit' on the last turn, 'stall' while nothing lasting
+   * has changed since two turns ago (so ending the turn as things stand would be a stall, see #checkForDraw), else
+   * null. It's live: once something changes during the turn, the warning goes away.
    */
   #drawWarning() {
     if (this.#status !== GAME_STATUS.IN_PROGRESS || !this.#turn) return null;
     if (this.#turn >= this.#variant.turnLimit) return 'turnLimit';
     const prints = this.#stallPrints;
-    return this.#variant.stallDraw && prints.length >= 2 && prints.at(-1) === prints.at(-2) ? 'stall' : null;
+    return this.#variant.stallDraw && prints.length >= 2 && this.#stallFingerprint() === prints.at(-2) ? 'stall' : null;
   }
 
   /** At the end of a turn: ends the game in a draw if it has stalled or reached the turn limit. */

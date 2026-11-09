@@ -390,6 +390,21 @@ test('a warning when this turn could end in a draw: after a turn with no change,
   assert.equal(seen[3], null);
   assert.equal(seen[4], 'stall');
 
+  // The warning goes away during the turn as soon as something changes: p1 casts a Bear on warned turn 3.
+  const late = newGame({ p1: ['bear'], p2: [] }, { stallDraw: true, startingPlayerId: 'p1' });
+  let before; let after;
+  passUntil(late, (s) => {
+    if (s.turn === 3 && s.phase === 'precombatMain' && s.priorityPlayerId === 'p1' && before === undefined) {
+      before = s.drawWarning;
+      late.dispatch({ type: ACTION.CAST_SPELL, playerId: 'p1', cardId: s.players[0].hand[0].id });
+      after = late.getState().drawWarning;
+    }
+    return s.turn === 4;
+  });
+  assert.equal(before, 'stall');
+  assert.equal(after, null);
+  assert.notEqual(late.getState().endReason, 'stall');
+
   // The turn limit's last turn.
   const limited = newGame({ p1: ['bear'], p2: ['bear'] }, { turnLimit: 2 });
   assert.equal(limited.getState().drawWarning, null);
