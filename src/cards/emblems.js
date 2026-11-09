@@ -72,8 +72,9 @@ export const EMBLEMS = deepFreeze({
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {
-    text: '0: You gain 1 life.',
+    text: '0: You gain 1 life. Activate only as a sorcery.',
     effects: [{ type: EFFECT.GAIN_LIFE, amount: 1 }],
+    timing: SORCERY,
   }),
   burglarBilbo: power('burglarBilbo', 'The Magic Ring', 'Burglar’s Stealth', {
     text: '0: Target creature you control gets +1/+0 and gains menace until end of turn. Activate only as a sorcery.',

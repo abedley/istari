@@ -75,7 +75,7 @@ and costs nothing or a little life (mana means nothing here). They're placeholde
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
 | Aragorn | The Ring of Barahir | Heir of Isildur | 0: Target creature you control gets +1/+1 and first strike until end of turn. |
 | Bilbo | Bilbo's Ring | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
-| Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. |
+| Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
@@ -765,7 +765,9 @@ Options that change the rules, all off unless asked (Pai Gow uses them all):
   changed: at the end of each turn the engine takes a fingerprint of life totals, hands,
   graveyards, exile, library sizes, the Ring, and each permanent's controller, characteristics,
   counters and attachments (not whether it's tapped, nor damage, mana, or "this turn" effects),
-  and if it matches the one from two turns before, the game ends.
+  and if it matches the one from two turns before, the game ends. Life gained counts as no change
+  (the fingerprint takes each life total less all the life that player has gained), so a free
+  life-gain power used each turn doesn't keep a stalled game going; life lost still counts.
 - `turnLimit`: the game is a draw when that turn ends.
 - The state's `drawWarning` says when the current turn could end in a draw: `'stall'` when the
   last turn changed nothing lasting (so this one ending without a change too is a stall), and

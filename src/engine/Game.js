@@ -355,6 +355,8 @@ export class Game extends EventEmitter {
         // 114.1: emblems live in the command zone.
         emblems: (emblems[id] ?? DEFAULT_EMBLEMS).map((emblemId, i) => this.#createEmblem(emblemId, id, i + 1)),
         life: startingLife[id] ?? STARTING_LIFE,
+        // All the life this player has gained this game: for stallDraw, gaining life isn't a change.
+        lifeGained: 0,
         landsPlayedThisTurn: 0,
         // What the other players have seen of the cards in this hand (see #noteHand).
         handNotes: {},
@@ -3565,6 +3567,7 @@ export class Game extends EventEmitter {
     if (amount <= 0) return;
     const zone = this.#zones.get(playerId);
     zone.life += amount;
+    zone.lifeGained = (zone.lifeGained ?? 0) + amount;
     this.#emitEvent('lifeGained', { playerId, amount, life: zone.life });
   }
 
@@ -4781,7 +4784,9 @@ export class Game extends EventEmitter {
         continue;
       }
       lifeGained[playerId] = gained;
-      this.#zones.get(playerId).life += gained;
+      const zone = this.#zones.get(playerId);
+      zone.life += gained;
+      zone.lifeGained = (zone.lifeGained ?? 0) + gained;
     }
 
     this.#emitEvent('combatDamageDealt', {
@@ -4915,7 +4920,8 @@ export class Game extends EventEmitter {
   }
 
   /**
-   * The lasting state, as a string, for `stallDraw`: life totals, the cards in each zone (library sizes
+   * The lasting state, as a string, for `stallDraw`: life totals (less all life gained, so gaining life
+   * alone, as from a free power each turn, doesn't keep a stalled game going), the cards in each zone (library sizes
    * only), the Ring, and each permanent's controller, characteristics, counters and attachments. Whether
    * permanents are tapped, damage, mana and "this turn" bookkeeping are left out: they come and go each turn.
    */
@@ -4923,7 +4929,7 @@ export class Game extends EventEmitter {
     const ids = (cards) => cards.map((c) => c.cardId).sort().join(',');
     const players = this.#players.map(({ id }) => {
       const zone = this.#zones.get(id);
-      return [id, zone.life, zone.library.length, ids(zone.hand), ids(zone.graveyard), ids(zone.exile), zone.ring.level, zone.ring.bearerId ?? ''].join('|');
+      return [id, zone.life - (zone.lifeGained ?? 0), zone.library.length, ids(zone.hand), ids(zone.graveyard), ids(zone.exile), zone.ring.level, zone.ring.bearerId ?? ''].join('|');
     });
     const permanents = this.#battlefield.map((p) => [
       p.id, p.controllerId, p.power ?? '', p.toughness ?? '', (p.types ?? []).join('+'),

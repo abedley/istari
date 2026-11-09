@@ -104,6 +104,24 @@ test('a full turn cycle with nothing changed is a draw', () => {
   assert.equal(state.turn, 3);
 });
 
+test('gaining life alone is no change: a free life-gain power each turn still stalls', () => {
+  const game = newGame({ p1: [], p2: [] }, { stallDraw: true, turnLimit: 40, emblems: { p1: ['birthdayBilbo'], p2: [] } });
+  let gained = 0;
+  const state = passUntil(game, (s) => {
+    const power = s.validActions.find((a) => a.type === ACTION.ACTIVATE_ABILITY && a.playerId === 'p1' && a.cardId === 'p1-emblem-1');
+    if (power && s.stack.length === 0) {
+      game.dispatch(power);
+      gained += 1;
+    }
+    return false;
+  });
+  assert.ok(gained >= 1);
+  assert.equal(state.endReason, 'stall');
+  assert.ok(state.turn < 10);
+  // Losing life is still a change.
+  assert.ok(state.players[0].life > 20);
+});
+
 test('a board that keeps changing is no stall', () => {
   const game = newGame({ p1: ['bear'], p2: [] }, { stallDraw: true, startingLife: { p1: 5, p2: 5 } });
   const ais = { p1: new BasicAIController({ game: null, playerId: 'p1' }), p2: new BasicAIController({ game: null, playerId: 'p2' }) };
