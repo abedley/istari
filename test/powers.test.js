@@ -95,7 +95,7 @@ test('each power does what it says', () => {
   const p1Bear = (s) => s.battlefield.find((p) => p.controllerId === 'p1');
   const p2Bears = (s) => s.battlefield.filter((p) => p.controllerId === 'p2');
   let s = usePower(powerGame('frodo'));
-  assert.equal(s.players[0].life, 19);
+  assert.equal(s.players[0].life, 20);
   assert.equal(s.players[0].ring.level, 1);
   s = usePower(powerGame('aragorn'));
   assert.equal(p1Bear(s).power, 3);
@@ -121,7 +121,7 @@ test('each power does what it says', () => {
   s = usePower(powerGame('tomBombadil'));
   assert.equal(p1Bear(s).toughness, 4);
   s = usePower(powerGame('birthdayBilbo'));
-  assert.ok(s.battlefield.some((p) => p.controllerId === 'p1' && p.subtypes?.includes('Food')));
+  assert.equal(s.players[0].life, 21);
   s = usePower(powerGame('burglarBilbo'));
   assert.equal(p1Bear(s).power, 3);
   assert.ok(p1Bear(s).keywords.includes('menace'));
@@ -142,6 +142,7 @@ test('fast forward ignores powers that could do nothing more', () => {
   assert.equal(outOfActions(powerGame('sauron', null, empty).getState(), 'p1'), false);
   assert.equal(outOfActions(powerGame('denethor', null, empty).getState(), 'p1'), true);
   assert.equal(outOfActions(powerGame('frodo', null, empty).getState(), 'p1'), false);
+  assert.equal(outOfActions(powerGame('birthdayBilbo', null, empty).getState(), 'p1'), true);
 });
 
 test('two basic AIs play rounds with every pair of powers', () => {

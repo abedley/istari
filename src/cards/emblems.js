@@ -54,8 +54,7 @@ export const EMBLEMS = deepFreeze({
 
   // Pai Gow's heroes, one for the player to choose (PAIGOW_HEROES in src/paigow/personas.js).
   frodo: power('frodo', 'The One Ring', 'The Burden', {
-    text: 'Pay 1 life: The Ring tempts you. Activate only as a sorcery.',
-    cost: { life: 1 },
+    text: '0: The Ring tempts you. Activate only as a sorcery.',
     effects: [{ type: EFFECT.RING_TEMPTS }],
     timing: SORCERY,
   }),
@@ -73,9 +72,8 @@ export const EMBLEMS = deepFreeze({
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {
-    text: '0: Create a Food token. Activate only as a sorcery.',
-    effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: 'food' }],
-    timing: SORCERY,
+    text: '0: You gain 1 life.',
+    effects: [{ type: EFFECT.GAIN_LIFE, amount: 1 }],
   }),
   burglarBilbo: power('burglarBilbo', 'The Magic Ring', 'Burglar’s Stealth', {
     text: '0: Target creature you control gets +1/+0 and gains menace until end of turn. Activate only as a sorcery.',

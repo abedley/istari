@@ -23,6 +23,8 @@ function powerLeft(state, player, ability) {
   const effects = ability.effects ?? [];
   if (effects.length && effects.every((e) => e.type === EFFECT.DISCARD)) return opponents.some((p) => (p.hand?.length ?? p.handSize ?? 0) > 0);
   if (effects.length && effects.every((e) => e.type === EFFECT.RING_TEMPTS)) return (player.ring?.level ?? 0) < 4;
+  // Gaining life on an otherwise empty side changes nothing worth waiting for.
+  if (effects.length && effects.every((e) => e.type === EFFECT.GAIN_LIFE)) return false;
   return true;
 }
 
