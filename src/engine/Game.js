@@ -3313,9 +3313,16 @@ export class Game extends EventEmitter {
   /** 701.22: scry `count`: the player looks at the top cards and decides which stay on top, in what order. */
   #scry(playerId, count) {
     const { library } = this.#zones.get(playerId);
+    // 701.22b: scrying 0 isn't scrying, so nothing triggers.
+    if (!(count > 0)) return;
     const n = Math.min(count, library.length);
-    // 701.22b: scrying 0 cards isn't scrying, so nothing triggers.
-    if (n === 0) return;
+    // With fewer cards than that, the player scries with what there is; with none, there's nothing to
+    // look at, but they still scry, and "whenever you scry" abilities trigger (having looked at 0 cards).
+    if (n === 0) {
+      this.#emitEvent('scried', { playerId, count: 0, top: 0, bottom: 0 });
+      this.#triggerWatchers(TRIGGER.SCRY, { id: null, controllerId: playerId, count: 0 });
+      return;
+    }
     const looked = library.slice(0, n);
     this.#ask({
       type: DECISION.CHOOSE_MANY, kind: CHOICE.SCRY, playerId, options: looked.map((c) => c.id), cards: structuredClone(looked),

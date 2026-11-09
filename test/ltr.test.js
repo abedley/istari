@@ -209,6 +209,31 @@ test('scry: chosen cards stay on top in order, the rest go to the bottom, and "w
   assert.equal(elves.counters['+1/+1'], 1);
 });
 
+test('scrying with too few cards, or none, still scries: "whenever you scry" triggers', () => {
+  // The same game with p1's library cut down to `size` cards.
+  const withLibrary = (size) => {
+    const { game } = start({ p1: ['chanceMetElves', 'galadhrimGuide'], cards: ['chanceMetElves', 'galadhrimGuide'] });
+    const snapshot = game.serialize();
+    snapshot.zones.p1.library = snapshot.zones.p1.library.slice(0, size);
+    return Game.deserialize(snapshot);
+  };
+  // One card for a scry 2: the player looks at just that one.
+  const short = withLibrary(1);
+  cast(short, 'p1', 'chanceMetElves');
+  cast(short, 'p1', 'galadhrimGuide');
+  assert.equal(decision(short).options.length, 1);
+  ok(short, confirmChoice('p1'));
+  resolveAll(short);
+  assert.equal(named(short, 'Chance-Met Elves')[0].counters['+1/+1'], 1);
+  // An empty library: nothing to look at, but it's still a scry.
+  const empty = withLibrary(0);
+  cast(empty, 'p1', 'chanceMetElves');
+  cast(empty, 'p1', 'galadhrimGuide');
+  assert.notEqual(decision(empty)?.kind, CHOICE.SCRY);
+  resolveAll(empty);
+  assert.equal(named(empty, 'Chance-Met Elves')[0].counters['+1/+1'], 1);
+});
+
 test('amass Orcs: creates an Orc Army, then grows it', () => {
   const { game } = start({ p1: ['dunlandCrebain', 'easterlingVanguard', 'mordorMuster'], cards: ['dunlandCrebain', 'mordorMuster'] });
   cast(game, 'p1', 'dunlandCrebain');
