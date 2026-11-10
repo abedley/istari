@@ -129,14 +129,14 @@ export const EMBLEMS = deepFreeze({
     ring: true,
     passive: true,
     power: 'Hunting the Ring',
-    text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature’s power.',
+    text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
     abilities: [],
     triggeredAbilities: [{
       id: 'hunt',
       trigger: TRIGGER.END_STEP,
-      text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature’s power.',
-      // Counted for each opponent: their own Ring-bearer's power (none, no life lost).
-      effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringBearerPower' } }],
+      text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
+      // Counted for each opponent: their own Ring's abilities, 1 to 4 (no Ring-bearer, no life lost).
+      effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringAbilities' } }],
     }],
   },
   tomBombadil: power('tomBombadil', 'Goldberry’s Ring', 'Hey Dol! Merry Dol!', {

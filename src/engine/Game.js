@@ -2323,6 +2323,9 @@ export class Game extends EventEmitter {
       case 'sourceX': return this.#currentOrLastKnown(context.sourceId, context)?.xPaid ?? 0;
       // One Ring to Rule Them All: "your Ring-bearer's power".
       case 'ringBearerPower': return Math.max(0, this.#ringBearer(controllerId)?.power ?? 0);
+      // The Rider in Black: "the number of abilities their Ring has" (701.54c: one more each time it tempts them, up to
+      // four), counted only while they have a Ring-bearer.
+      case 'ringAbilities': return this.#ringBearer(controllerId) ? this.#zones.get(controllerId).ring.level : 0;
       // The Balrog: "each permanent sacrificed this turn" (by anyone).
       case 'permanentsSacrificedThisTurn': return [...this.#zones.values()].reduce((sum, z) => sum + z.turnTally.sacrificed, 0);
       // Shagrat: "the number of Equipment attached to Shagrat".

@@ -84,7 +84,7 @@ turn begins, after the opening hands. They're placeholders to tune:
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
-| Rider in Black | A Ring of the Nine | Hunting the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature's power. |
+| Rider in Black | A Ring of the Nine | Hunting the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
