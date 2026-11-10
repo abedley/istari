@@ -68,6 +68,18 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       collapse: ['Creak... crack... no, no, that is not how it goes.', 'You have woken the old tree. Unwise.'],
     },
   },
+  gildor: {
+    name: 'Gildor', color: 'green', emblem: 'gildor', ai: search(1500),
+    // No card shows Gildor himself: his company of wandering Elves.
+    portrait: portrait('0/a/0aa57431-39e2-4152-8a30-1c1e8faef153.jpg?1783916273', 75, 4, 300, 'Chance-Met Elves', 'Irvin Rodriguez'),
+    banter: {
+      start: ['Elen síla lúmenn’ omentielvo. A star shines on the hour of our meeting.', 'Well met, wanderer. Will you play a while under the stars?', 'My kin are never far. You may meet some of them before we are done.'],
+      win: ['The road goes ever on, and so must you. Farewell.', 'Do not be troubled. Even the wise lose to the Elves.'],
+      lose: ['Well played. The Elves will remember it in song.', 'You have more courage than you know, and more skill.'],
+      comeback: ['Here come my companions, out of the trees.', 'The Elves are never so few as they seem.'],
+      collapse: ['The shadow lengthens. We must be going.', 'Even the Firstborn may be caught on the road.'],
+    },
+  },
   tomBombadil: {
     name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: search(1000),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),

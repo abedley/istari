@@ -112,6 +112,17 @@ export const EMBLEMS = deepFreeze({
       effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: { colors: ['green'], subtypes: ['Treefolk'], power: 2, toughness: 2 } }],
     }],
   },
+  // A passive power that adds cards to the library as the game starts (`shufflesIn`; see Game's #startFirstTurn).
+  gildor: {
+    id: 'gildor',
+    name: 'The Starlit Ring',
+    ring: true,
+    passive: true,
+    power: 'A Star Shines on Our Meeting',
+    text: 'At the start of the game, shuffle two Forests and a Chance-Met Elves into your library.',
+    shufflesIn: ['forest', 'forest', 'chanceMetElves'],
+    abilities: [],
+  },
   tomBombadil: power('tomBombadil', 'Goldberry’s Ring', 'Hey Dol! Merry Dol!', {
     text: '0: Untap target creature you control. It gets +0/+2 until end of turn.',
     target: TARGET.CREATURE_YOU_CONTROL,

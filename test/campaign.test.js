@@ -14,8 +14,8 @@ const { WON, LOST, TIE } = MATCH_OUTCOME;
 /** The campaign after its next match ends with `outcome`. */
 const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
-test('a campaign faces Birthday Bilbo, Burglar Bilbo, Gandalf and Old Man Willow in turn, with three lives', () => {
-  assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow']);
+test('a campaign faces Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow and Gildor in turn, with three lives', () => {
+  assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow', 'gildor']);
   const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);
   assert.equal(currentOpponent(campaign), 'birthdayBilbo');

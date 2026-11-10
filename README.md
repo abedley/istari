@@ -54,9 +54,9 @@ campaign's match, see *The campaign*):
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
-Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit), their own lines, and the search AI with
+Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the search AI with
 their own thinking time (1 to 2.5 seconds) and style (Sauron and Théoden race, Saruman, Denethor
 and Elrond grind). The match lives in memory: reloading the page starts a
 new one. As everywhere, the search AI assumes it knows its opponent's deck list, and with
@@ -71,7 +71,8 @@ present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a
 and costs nothing or a little life (mana means nothing here). Samwise's is passive instead: the emblem's
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's is passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
-from the command zone. They're placeholders to tune:
+from the command zone. So is Gildor's: the emblem's `shufflesIn` cards are shuffled into the library as the first
+turn begins, after the opening hands. They're placeholders to tune:
 
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
@@ -82,6 +83,7 @@ from the command zone. They're placeholders to tune:
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
+| Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
@@ -100,7 +102,7 @@ for them to discard, the Ring at its last level), doesn't count as an action.
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, then Old Man Willow; later they may be
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, then Gildor; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
 may take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of

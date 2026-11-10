@@ -66,8 +66,8 @@ test('every hero and opponent has a power of their own, once a turn', () => {
     // A passive power has no ability, just its text and what the game starts with.
     if (emblem.passive) {
       assert.equal(emblem.abilities.length, 0);
-      assert.ok(emblem.text && (emblem.startsWith ?? []).every((id) => CARDS[id]));
-      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length, `${person.name}'s passive power does something`);
+      assert.ok(emblem.text && [...(emblem.startsWith ?? []), ...(emblem.shufflesIn ?? [])].every((id) => CARDS[id]));
+      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length, `${person.name}'s passive power does something`);
       continue;
     }
     assert.equal(emblem.activationsPerTurn, 1);
@@ -313,4 +313,20 @@ test("Old Man Willow's power: at your end step, if a creature you controlled die
   // The next end step of p1's, with nothing dying, makes none.
   passUntil((st) => st.turn === 6);
   assert.equal(treefolk().length, 1);
+});
+
+test("Gildor's power: as the game starts, after the opening hand, two Forests and a Chance-Met Elves are shuffled into the library", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 2,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['gildor'], p2: [] }, startingPlayerId: 'p2', seed: 7,
+  });
+  game.start();
+  const s = game.getState();
+  const [mine, theirs] = s.players;
+  // The opening hand is still the deck's own.
+  assert.deepEqual(mine.hand.map((c) => c.cardId), ['bear', 'bear']);
+  assert.deepEqual(mine.library.map((c) => c.cardId).sort(), ['chanceMetElves', 'forest', 'forest']);
+  assert.equal(theirs.library.length, 0);
+  // There's nothing to activate.
+  assert.equal(activation(s, 'p1'), undefined);
 });

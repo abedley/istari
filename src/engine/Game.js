@@ -1653,6 +1653,19 @@ export class Game extends EventEmitter {
           const permanent = this.#putOntoBattlefield(card, id, { triggers: false });
           this.#emitEvent('startedWith', { playerId: id, card: this.#forEvent(permanent), sourceId: emblem.id });
         }
+        // Emblems that add cards to the library as the game starts (Gildor's Chance-Met Elves), after the opening
+        // hands, so the hand is still the deck's own; then the library is shuffled.
+        const added = this.#emblemDefinitions[emblem.emblemId].shufflesIn ?? [];
+        if (added.length) {
+          const zone = this.#zones.get(id);
+          const cards = added.map((cardId) => {
+            if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for emblem ${emblem.emblemId}: ${cardId}`);
+            return this.#createCard(cardId, id, `${id}-added-${this.#nextTokenNumber++}`);
+          });
+          zone.library.push(...cards);
+          if (this.#shuffleLibraries) shuffle(zone.library, this.#random);
+          this.#emitEvent('cardsShuffledIntoLibrary', { playerId: id, cardIds: cards.map((c) => c.id), sourceId: emblem.id });
+        }
       }
     }
     this.#beginTurn(this.#startingPlayerId);
