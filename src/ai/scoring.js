@@ -185,6 +185,9 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           if (isPlayer) score += lifeScore(id, effect.amount);
           else if (isCreature(permanent) && permanent.toughness - permanent.damage <= effect.amount) {
             score -= side(id) * worth(permanent);
+          } else if (isCreature(permanent) && side(id) > 0) {
+            // Hurting our own creature for nothing.
+            score -= 1 + 0.5 * effect.amount;
           }
           break;
         case EFFECT.DESTROY:
@@ -216,6 +219,10 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           if (effect.keywordChoice) score += side(id) * 1;
           const toughness = permanent.toughness + (effect.toughness ?? 0);
           const granted = effect.keywords ?? [];
+          // Bigger is better for its controller: pumping an opponent's creature helps them, shrinking it hurts them.
+          score += side(id) * 0.3 * ((effect.power ?? 0) + (effect.toughness ?? 0));
+          // Keywords help their creature (but "can't block").
+          score += side(id) * 0.5 * granted.filter((k) => k !== KEYWORD.CANT_BLOCK).length;
           if (toughness - permanent.damage <= 0) score -= side(id) * permanentValue(permanent);
           else if (side(id) > 0 && preCombat && canAttack(permanent) && (effect.power ?? 0) > 0) score += 2;
           // Before combat: a blocker that can't block, like a tapped one; an attacker that can't be blocked.

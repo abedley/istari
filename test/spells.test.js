@@ -20,6 +20,8 @@ const CARDS = {
   Growth: spell('Growth', CARD_TYPE.INSTANT, [{ type: EFFECT.PUMP, power: 3, toughness: 3, keywords: [KEYWORD.TRAMPLE] }], TARGET.CREATURE),
   Remedy: spell('Remedy', CARD_TYPE.INSTANT, [{ type: EFFECT.GAIN_LIFE, amount: 3 }]),
   Doom: spell('Doom', CARD_TYPE.SORCERY, [{ type: EFFECT.DESTROY }], TARGET.CREATURE),
+  Rally: spell('Rally', CARD_TYPE.SORCERY, [{ type: EFFECT.PUMP, power: 2, toughness: 2 }], TARGET.CREATURE),
+  Singe: spell('Singe', CARD_TYPE.SORCERY, [{ type: EFFECT.DEAL_DAMAGE, amount: 1 }], TARGET.CREATURE),
   Insight: spell('Insight', CARD_TYPE.SORCERY, [{ type: EFFECT.DRAW_CARDS, count: 2 }]),
   Might: {
     id: 'Might', name: 'Might', manaCost: {}, types: [CARD_TYPE.ENCHANTMENT], subtypes: [SUBTYPE.AURA], enchant: TARGET.CREATURE,
@@ -299,4 +301,29 @@ test('"target attacking or blocking creature" means a creature in combat', () =>
   assert.deepEqual(kinds(wall), [false, true]);
   assert.deepEqual(kinds(idle), [false, false]);
   assert.equal(matchesPermanentKind(bear, TARGET.ATTACKING_CREATURE, 'p2'), false); // outside combat
+});
+
+test("the AIs don't pump the opponent's creatures, or destroy or burn their own", async () => {
+  const { listMacros } = await import('../src/ai/macroActions.js');
+  const { scoreEffects } = await import('../src/ai/scoring.js');
+  const { game, mine: [bear], theirs: [ox] } = withCreatures({ p1: ['Bear'], p2: ['Ox'], p1Hand: ['Rally', 'Doom', 'Singe'] });
+  const s = state(game);
+  const targetsOf = (name) => listMacros(s, 'p1').filter((m) => m.kind === 'cast' && m.cardId === inHand(game, 'p1', name).id).map((m) => m.targetId);
+  const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;
+  const oxId = s.battlefield.find((p) => p.controllerId === 'p2').id;
+  assert.ok(bear && ox);
+  // Pumping theirs helps them; burning ours for nothing hurts us.
+  assert.ok(scoreEffects(s, 'p1', CARDS.Rally.effects, [oxId], null) < 0);
+  assert.ok(scoreEffects(s, 'p1', CARDS.Rally.effects, [bearId], null) > 0);
+  assert.ok(scoreEffects(s, 'p1', CARDS.Singe.effects, [bearId], null) < 0);
+  // The search only considers the sensible targets.
+  assert.deepEqual(targetsOf('Rally'), [bearId]);
+  assert.deepEqual(targetsOf('Doom'), [oxId]);
+  assert.deepEqual(targetsOf('Singe'), []);
+  // And so does the basic AI.
+  const action = new BasicAIController({ game: null, playerId: 'p1' }).chooseAction(s);
+  if (action.type === ACTION.CAST_SPELL) {
+    const name = s.players[0].hand.find((c) => c.id === action.cardId).name;
+    assert.deepEqual(action.targets, name === 'Rally' ? [bearId] : [oxId], name);
+  }
 });

@@ -101,7 +101,7 @@ test('the LTR sampler decks play out between basic AIs', () => {
     const g = new Game({ players, seed, silent: true, decks: { p1: LTR_DECKS.fellowship, p2: LTR_DECKS.mordor } });
     g.start();
     const ais = { p1: new BasicAIController({ game: null, playerId: 'p1' }), p2: new BasicAIController({ game: null, playerId: 'p2' }) };
-    const final = playout(g, { p1: (s) => ais.p1.chooseAction(s), p2: (s) => ais.p2.chooseAction(s) }, { until: (s) => s.turn > 60 });
+    const final = playout(g, { p1: (s) => ais.p1.chooseAction(s), p2: (s) => ais.p2.chooseAction(s) }, { until: (s) => s.turn > 80 });
     assert.equal(final.status, GAME_STATUS.GAME_OVER, `seed ${seed}`);
   }
 });

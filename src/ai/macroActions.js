@@ -70,8 +70,25 @@ export function listMacros(state, me, { heuristicPlans = false, attacking = 'bas
   const decision = state.pendingDecision;
   if (decision?.type === DECISION.DECLARE_ATTACKERS) return attackMacros(state, me, mine, heuristicPlans, attacking);
   if (decision?.type === DECISION.DECLARE_BLOCKERS) return blockMacros(state, me, mine, heuristicPlans);
+  if (decision?.type === DECISION.CHOOSE_TARGETS || decision?.type === DECISION.CHOOSE_MODE) return targetMacros(state, me, mine);
   if (decision) return mine.map((action) => keyed({ kind: 'raw', action }));
   return priorityMacros(state, me, mine);
+}
+
+/**
+ * A triggered ability's targets (or mode): only the choices that aren't bad for us, or the
+ * least bad one if every choice is.
+ */
+function targetMacros(state, me, mine) {
+  const decision = state.pendingDecision;
+  const scored = mine.map((action) => ({
+    action,
+    score: scoreEffects(state, me, decision.type === DECISION.CHOOSE_MODE ? decision.modes[action.mode]?.effects ?? [] : decision.effects ?? [],
+      action.targets ?? [], decision.sourceId),
+  }));
+  const good = scored.filter((s) => s.score >= 0);
+  const kept = good.length ? good : [scored.reduce((a, b) => (b.score > a.score ? b : a))];
+  return kept.map(({ action }) => keyed({ kind: 'raw', action }));
 }
 
 function attackMacros(state, me, mine, heuristicPlans, attacking) {
@@ -132,6 +149,8 @@ function priorityMacros(state, me, mine) {
   const topTargets = (kind, effects, sourceId, killsOnly = false) => candidateTargets(state, me, kind)
     .filter((id) => !killsOnly || !wastedDamage(state, me, effects, [id], sourceId))
     .map((id) => ({ id, score: scoreEffects(state, me, effects, [id], sourceId) }))
+    // Never a target that's bad for us (pumping their creature, burning our own).
+    .filter((t) => t.score >= 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, TARGETS_PER_SPELL)
     .map((t) => t.id);
@@ -163,6 +182,7 @@ function priorityMacros(state, me, mine) {
         targetCombos(state, me, targetList(holder), card.id, 200, x)
           .map((targets) => ({ targets, score: scoreEffects(state, me, holder.effects ?? [], targets, card.id, { x }) }))
           .filter(({ targets }) => timely(holder.effects ?? [], targets.filter(Boolean).at(-1) ?? null))
+          .filter(({ score }) => score >= 0)
           .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
           .forEach(({ targets }) => macros.push(keyed({
             kind: 'cast', cardId: card.id, targetId: null, targets, ...(mode !== undefined ? { mode } : {}), ...(x !== undefined ? { x } : {}),
@@ -200,7 +220,8 @@ function priorityMacros(state, me, mine) {
         for (let x = 0; x <= max; x++) {
           targetCombos(state, me, targetList(ability), source.id, 200, x)
             .map((targets) => ({ targets, score: scoreEffects(state, me, ability.effects, targets, source.id, { x }) }))
-            .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
+            .filter(({ score }) => score >= 0)
+          .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
             .forEach(({ targets }) => macros.push(keyed({
               kind: 'activate', cardId: source.id, abilityId: ability.id, targetId: null, targets, ...(ability.cost.mana?.X ? { x } : {}),
             })));
