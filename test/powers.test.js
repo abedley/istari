@@ -61,11 +61,17 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   for (const person of people) {
     const emblem = EMBLEMS[person.emblem];
     assert.ok(emblem, `${person.name}'s power`);
+    assert.equal(emblem.ring, true);
+    // A passive power has no ability, just its text and what the game starts with.
+    if (emblem.passive) {
+      assert.equal(emblem.abilities.length, 0);
+      assert.ok(emblem.text && emblem.startsWith.every((id) => CARDS[id]));
+      continue;
+    }
     assert.equal(emblem.activationsPerTurn, 1);
     assert.equal(emblem.abilities.length, 1);
     assert.ok(emblem.abilities[0].name && emblem.abilities[0].text);
     // Each is a Ring of Power, with a name of its own and a name for what it does.
-    assert.equal(emblem.ring, true);
     assert.ok(emblem.power);
   }
   assert.equal(new Set(emblems.map((id) => EMBLEMS[id].name)).size, people.length);
@@ -73,7 +79,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Aragorn', 'Bilbo']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Aragorn', 'Samwise the Gardener']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -87,7 +93,8 @@ test('a round gives each side its power', () => {
     assert.deepEqual(game.emblems, { [PLAYER_ID]: [heroId], [CPU_ID]: [PAIGOW_OPPONENTS[match.opponentId].emblem] });
     const started = new Game({ ...game, cards: CARDS });
     started.start();
-    assert.equal(started.getState().players[0].emblems[0].abilities[0].name, EMBLEMS[heroId].name);
+    assert.equal(started.getState().players[0].emblems[0].emblemId, heroId);
+    if (!EMBLEMS[heroId].passive) assert.equal(started.getState().players[0].emblems[0].abilities[0].name, EMBLEMS[heroId].name);
   }
   assert.throws(() => createMatch({ heroId: 'gollum' }));
 });
@@ -101,8 +108,6 @@ test('each power does what it says', () => {
   s = usePower(powerGame('aragorn'));
   assert.equal(p1Bear(s).power, 2);
   assert.ok(p1Bear(s).keywords.includes('first strike'));
-  s = usePower(powerGame('bilbo'));
-  assert.ok(p1Bear(s).keywords.includes("can't be blocked"));
   s = usePower(powerGame('gandalf'));
   assert.equal(p2Bears(s).filter((p) => p.tapped).length, 1);
   s = usePower(powerGame('sauron'));
@@ -209,4 +214,51 @@ test('every power has a symbol of its own, to tell several apart', () => {
   }
   const symbols = Object.values(POWER_ICONS);
   assert.equal(new Set(symbols).size, symbols.length);
+});
+
+test("Samwise's power: the game starts with Field-Tested Frying Pan, which makes Food and a Halfling to carry it", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, shuffleLibraries: false, openingHandSize: 1,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['samwise'], p2: [] }, startingPlayerId: 'p2',
+  });
+  game.start();
+  let s = game.getState();
+  const pan = s.battlefield.find((p) => p.cardId === 'fieldTestedFryingPan');
+  assert.equal(pan?.controllerId, 'p1');
+  // Its "when this enters" ability resolves before anything else happens.
+  for (let i = 0; i < 20 && (s.stack.length || s.phase === 'beginning'); i++) {
+    const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+    game.dispatch(s.validActions.find((a) => a.playerId === actor && a.type === ACTION.PASS_PRIORITY) ?? s.validActions.find((a) => a.playerId === actor));
+    s = game.getState();
+  }
+  const mine = s.battlefield.filter((p) => p.controllerId === 'p1');
+  const halfling = mine.find((p) => p.subtypes?.includes('Halfling'));
+  assert.ok(mine.some((p) => p.subtypes?.includes('Food')));
+  assert.equal(halfling?.power, 1);
+  assert.equal(s.battlefield.find((p) => p.id === pan.id).attachedTo, halfling.id);
+  // There's nothing to activate.
+  assert.equal(activation(s, 'p1'), undefined);
+});
+
+test('Field-Tested Frying Pan: equipped creature gets +X/+X whenever you gain life', () => {
+  const game = new Game({
+    players, decks: { p1: ['bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, shuffleLibraries: false, openingHandSize: 1,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['samwise', 'birthdayBilbo'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  let s = game.getState();
+  for (let i = 0; i < 50 && !(s.phase === 'precombatMain' && !s.stack.length && s.priorityPlayerId === 'p1'); i++) {
+    const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+    game.dispatch(s.validActions.find((a) => a.playerId === actor && a.type === ACTION.PASS_PRIORITY) ?? s.validActions.find((a) => a.playerId === actor));
+    s = game.getState();
+  }
+  const halfling = () => game.getState().battlefield.find((p) => p.subtypes?.includes('Halfling'));
+  assert.equal(halfling().power, 1);
+  // Birthday Bilbo's power: gain 1 life, so the Halfling gets +1/+1.
+  const gain = s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.ACTIVATE_ABILITY && a.cardId === 'p1-emblem-2');
+  assert.equal(game.dispatch(gain).ok, true);
+  for (let i = 0; i < 20 && game.getState().stack.length; i++) game.dispatch(passPriority(game.getState().priorityPlayerId));
+  assert.equal(game.getState().players[0].life, 21);
+  assert.equal(halfling().power, 2);
+  assert.equal(halfling().toughness, 2);
 });

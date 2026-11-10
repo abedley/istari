@@ -310,6 +310,17 @@ export const OVERRIDES = {
       damage(1, { affected: AFFECTED.EACH_CREATURE, controlledByTarget: 0, otherThanTarget: 0 }),
     ],
   },
+  'Field-Tested Frying Pan': {
+    triggeredAbilities: [
+      when(TRIGGER.ENTERS_BATTLEFIELD, 'When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.', [
+        food(), tokens({ colors: ['white'], subtypes: ['Halfling'], power: 1, toughness: 1 }, 1, { attachSource: true }),
+      ]),
+      when(TRIGGER.EQUIPPED_CONTROLLER_GAINS_LIFE, 'Equipped creature has "Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained."', [
+        pump(1, 1, { ...subject, per: { of: 'eventCount' } }),
+      ]),
+    ],
+    abilities: [equip(2)],
+  },
   'Fiery Inscription': {
     triggeredAbilities: [
       when(TRIGGER.ENTERS_BATTLEFIELD, 'When this enchantment enters, the Ring tempts you.', [ringTempts]),

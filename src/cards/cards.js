@@ -250,6 +250,7 @@ export const EFFECT = Object.freeze({
   /**
    * `{ count, token }`: tokens (111). `token` is a TOKEN name such as `'treasure'`,
    * or a creature token: `{ name?, colors?, subtypes?, power, toughness, keywords? }`.
+   * With `attachSource`, the source (an Equipment) is attached to the token (Field-Tested Frying Pan).
    */
   CREATE_TOKEN: 'createToken',
   // Players or creatures
@@ -508,6 +509,11 @@ export const TRIGGER = Object.freeze({
   EQUIPPED_ATTACKS: 'equippedAttacks',
   /** On Equipment: "Whenever equipped creature deals combat damage to a player" (the subject's `count` is the damage). */
   EQUIPPED_DEALS_COMBAT_DAMAGE_TO_PLAYER: 'equippedDealsCombatDamageToPlayer',
+  /**
+   * On Equipment: equipped creature has "Whenever you gain life, …" (Field-Tested Frying Pan). It triggers when that
+   * creature's controller gains life; the subject is the creature, and its `count` is the life gained.
+   */
+  EQUIPPED_CONTROLLER_GAINS_LIFE: 'equippedControllerGainsLife',
   /** "Whenever one or more creatures deal combat damage to you" (once per combat damage step). */
   COMBAT_DAMAGE_TO_YOU: 'combatDamageToYou',
   /** "Whenever you put one or more counters on Aragorn": the subject's `counters` are the kinds put on. */

@@ -1641,6 +1641,18 @@ export class Game extends EventEmitter {
   // Mulligans (103.5, the London mulligan)
 
   #startFirstTurn() {
+    // Emblems that start the game with a card on the battlefield (Samwise's Field-Tested Frying Pan). It enters, so
+    // its "when this enters" abilities trigger, and go on the stack the first time a player gets priority.
+    for (const { id } of this.#players) {
+      for (const emblem of this.#zones.get(id).emblems) {
+        for (const cardId of this.#emblemDefinitions[emblem.emblemId].startsWith ?? []) {
+          if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for emblem ${emblem.emblemId}: ${cardId}`);
+          const card = this.#createCard(cardId, id, `${id}-start-${this.#nextTokenNumber++}`);
+          const permanent = this.#putOntoBattlefield(card, id);
+          this.#emitEvent('startedWith', { playerId: id, card: this.#forEvent(permanent), sourceId: emblem.id });
+        }
+      }
+    }
     this.#beginTurn(this.#startingPlayerId);
     this.#advance();
   }
@@ -2706,7 +2718,12 @@ export class Game extends EventEmitter {
         }
         break;
       case EFFECT.CREATE_TOKEN:
-        for (const playerId of players) this.#createTokens(effect, playerId, sourceId);
+        for (const playerId of players) {
+          const [token] = this.#createTokens(effect, playerId, sourceId);
+          // "create a 1/1 white Halfling creature token and attach this Equipment to it" (701.3a).
+          const source = effect.attachSource ? this.#permanent(sourceId) : null;
+          if (source && token && isCreature(token) && source.controllerId === playerId) this.#attach(source, token.id);
+        }
         break;
       case EFFECT.SCRY:
         for (const playerId of players) this.#scry(playerId, effect.count);
@@ -3576,6 +3593,12 @@ export class Game extends EventEmitter {
     zone.life += amount;
     zone.lifeGained = (zone.lifeGained ?? 0) + amount;
     this.#emitEvent('lifeGained', { playerId, amount, life: zone.life });
+    // Equipped creature has "Whenever you gain life, …": the creature's controller is "you".
+    for (const equipment of [...this.#battlefield]) {
+      const host = this.#permanent(equipment.attachedTo);
+      if (!host || host.controllerId !== playerId) continue;
+      this.#trigger(equipment, TRIGGER.EQUIPPED_CONTROLLER_GAINS_LIFE, playerId, () => true, { id: host.id, controllerId: playerId, count: amount });
+    }
   }
 
   /** Noncombat damage from a spell or ability (120.3). */

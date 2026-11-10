@@ -2,7 +2,7 @@ import { h } from '../dom.js';
 import { crest } from '../art.js';
 import { powerIcon } from '../icons.js';
 import { header, personInfo } from './common.js';
-import { PAIGOW_HEROES, DEFAULT_HERO } from '../../src/paigow/personas.js';
+import { PAIGOW_HEROES, DEFAULT_HERO, currentHeroId } from '../../src/paigow/personas.js';
 import { EMBLEMS } from '../../src/cards/emblems.js';
 
 const HERO_KEY = 'istari.hero';
@@ -11,6 +11,8 @@ const HERO_KEY = 'istari.hero';
 export function ringOf(emblemId) {
   const emblem = EMBLEMS[emblemId];
   const ability = emblem?.abilities[0];
+  // A passive power has no ability, just its text.
+  if (emblem?.passive) return { name: emblem.name, power: emblem.power ?? null, text: emblem.text };
   // A power that costs nothing doesn't show its "0: ".
   return ability ? { name: emblem.name, power: emblem.power ?? null, text: ability.text.replace(/^0:\s*/, '') } : null;
 }
@@ -35,7 +37,7 @@ export const powerBlock = (person) => ringBlock(person?.emblem);
  * src/paigow/personas.js): each has a portrait and a Ring of Power. The last one chosen is remembered.
  */
 export function heroesScreen(app, { mode = 'match' } = {}) {
-  let chosen = app.storage.getItem(HERO_KEY);
+  let chosen = currentHeroId(app.storage.getItem(HERO_KEY));
   if (!PAIGOW_HEROES[chosen]) chosen = DEFAULT_HERO;
   const cards = Object.entries(PAIGOW_HEROES).map(([id, hero]) => {
     const el = h('button.hero', { type: 'button', dataset: { hero: id }, onclick: () => pick(id) },

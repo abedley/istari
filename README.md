@@ -25,7 +25,7 @@ A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain m
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
 scoreboard) and `app/screens/battle.js` (a round), from *Quick match* on the title screen (or as a
 campaign's match, see *The campaign*):
-0. You choose your hero, Frodo, Aragorn or Bilbo (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
+0. You choose your hero, Frodo, Aragorn or Samwise the Gardener (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
    with a Ring of Power of their own (see *Rings of Power*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
@@ -66,15 +66,17 @@ five-card decks that means it knows your hand.
 a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in
 `src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
 `power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
-and the One Ring under its names: Bilbo's Ring, *the magic ring* of The Hobbit, Gollum's *birthday
+and the One Ring under its names: *the magic ring* of The Hobbit, Gollum's *birthday
 present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn, uses the stack,
-and costs nothing or a little life (mana means nothing here). They're placeholders to tune:
+and costs nothing or a little life (mana means nothing here). Samwise's is passive instead: the emblem's
+`startsWith` cards are put onto the battlefield before the first turn (so their "when this enters"
+abilities trigger). They're placeholders to tune:
 
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
 | Aragorn | The Ring of Barahir | Heir of Isildur | 0: Target creature you control gains first strike until your next turn. Activate only as a sorcery. |
-| Bilbo | Bilbo's Ring | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
+| Samwise the Gardener | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |

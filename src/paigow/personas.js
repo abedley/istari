@@ -148,18 +148,24 @@ export const PAIGOW_HEROES = deepFreeze({
     blurb: 'Heir of Isildur, with the sword that was broken, reforged.',
     portrait: portrait('7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260', 50, 10, 260, 'Aragorn, Company Leader', 'Anna Steinbauer'),
   },
-  bilbo: {
-    name: 'Bilbo', color: 'gold', emblem: 'bilbo',
-    blurb: 'A burglar, retired. Mostly.',
-    portrait: portrait('5/2/527df93e-cc2b-4216-909a-4ada1abcbfd3.jpg?1783916260', 50, 10, 260, 'Bilbo, Retired Burglar', 'Anna Pavleeva'),
+  samwise: {
+    name: 'Samwise the Gardener', color: 'gold', emblem: 'samwise',
+    blurb: 'A gardener of the Shire, and a pan that has seen some use.',
+    portrait: portrait('a/1/a1b6f13e-63d0-46bf-aa57-23c2dbdf62dd.jpg?1783916249', 36, 8, 300, 'Samwise Gamgee', 'Ekaterina Burmak'),
   },
 });
 
 /** The hero a match starts with when none is chosen. */
 export const DEFAULT_HERO = 'frodo';
 
+/** Heroes that were renamed, by their old id: a saved choice or campaign still finds them. */
+export const RENAMED_HEROES = Object.freeze({ bilbo: 'samwise' });
+
+/** A hero id, as it is now (see RENAMED_HEROES). */
+export const currentHeroId = (id) => RENAMED_HEROES[id] ?? id;
+
 /** A Pai Gow hero by id. */
-export const paigowHero = (id) => PAIGOW_HEROES[id];
+export const paigowHero = (id) => PAIGOW_HEROES[currentHeroId(id)];
 
 /** A Pai Gow opponent by id. */
 export const paigowOpponent = (id) => PAIGOW_OPPONENTS[id];

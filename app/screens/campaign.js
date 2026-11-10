@@ -7,7 +7,7 @@ import {
   CAMPAIGN_RULES, CAMPAIGN_STATUS,
 } from '../../src/paigow/campaign.js';
 import { playerLife } from '../../src/paigow/paigow.js';
-import { paigowOpponent, paigowHero } from '../../src/paigow/personas.js';
+import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
 
@@ -15,6 +15,9 @@ const CAMPAIGN_KEY = 'istari.campaign';
 export function loadCampaign(app) {
   try {
     const campaign = JSON.parse(app.storage.getItem(CAMPAIGN_KEY) ?? 'null');
+    // A hero that has been renamed since (Bilbo became Samwise).
+    if (campaign?.heroId) campaign.heroId = currentHeroId(campaign.heroId);
+    if (campaign?.match?.heroId) campaign.match.heroId = currentHeroId(campaign.match.heroId);
     return campaign && paigowHero(campaign.heroId) && campaign.opponents?.every(paigowOpponent) ? campaign : null;
   } catch {
     return null;

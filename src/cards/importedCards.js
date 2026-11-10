@@ -4389,6 +4389,98 @@ export const IMPORTED_CARDS = {
     "scryfallId": "37be98a4-0cba-46b4-be93-a9805fe77160",
     "scryfallUri": "https://scryfall.com/card/ltr/125/fear-fire-foes!?utm_source=api"
   },
+  "fieldTestedFryingPan": {
+    "id": "fieldTestedFryingPan",
+    "name": "Field-Tested Frying Pan",
+    "manaCost": {
+      "generic": 2,
+      "W": 1
+    },
+    "supertypes": [],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "abilities": [
+      {
+        "id": "equip",
+        "text": "Equip {2}",
+        "cost": {
+          "mana": {
+            "generic": 2
+          }
+        },
+        "timing": "sorcery",
+        "target": "creatureYouControl",
+        "effect": {
+          "type": "attach"
+        }
+      }
+    ],
+    "triggeredAbilities": [
+      {
+        "id": "entersBattlefield1",
+        "trigger": "entersBattlefield",
+        "text": "When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.",
+        "effects": [
+          {
+            "type": "createToken",
+            "count": 1,
+            "token": "food"
+          },
+          {
+            "type": "createToken",
+            "count": 1,
+            "token": {
+              "colors": [
+                "white"
+              ],
+              "subtypes": [
+                "Halfling"
+              ],
+              "power": 1,
+              "toughness": 1
+            },
+            "attachSource": true
+          }
+        ]
+      },
+      {
+        "id": "equippedControllerGainsLife2",
+        "trigger": "equippedControllerGainsLife",
+        "text": "Equipped creature has \"Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.\"",
+        "effects": [
+          {
+            "type": "pump",
+            "power": 1,
+            "toughness": 1,
+            "affected": "subject",
+            "per": {
+              "of": "eventCount"
+            }
+          }
+        ]
+      }
+    ],
+    "text": "When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.\nEquipped creature has \"Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.\"\nEquip {2}",
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/1/d/1d770a59-1c54-407e-9c58-8d8b6f44c90a.jpg?1783916036",
+      "card": "https://cards.scryfall.io/normal/front/1/d/1d770a59-1c54-407e-9c58-8d8b6f44c90a.jpg?1783916036"
+    },
+    "artist": "Nino Is",
+    "colors": [
+      "W"
+    ],
+    "rarity": "rare",
+    "set": "ltc",
+    "collectorNumber": "11",
+    "typeLine": "Artifact — Equipment",
+    "oracleText": "When this Equipment enters, create a Food token, then create a 1/1 white Halfling creature token and attach this Equipment to it.\nEquipped creature has \"Whenever you gain life, this creature gets +X/+X until end of turn, where X is the amount of life you gained.\"\nEquip {2}",
+    "scryfallId": "1d770a59-1c54-407e-9c58-8d8b6f44c90a",
+    "scryfallUri": "https://scryfall.com/card/ltc/11/field-tested-frying-pan?utm_source=api"
+  },
   "fieryInscription": {
     "id": "fieryInscription",
     "name": "Fiery Inscription",

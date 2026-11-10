@@ -39,6 +39,18 @@ export const TOKEN_PRESENTATION = {
     "typeLine": "Token Artifact — Food",
     "scryfallId": "39389acc-cfa7-4a44-9d46-45be7dd72564"
   },
+  "token:Halfling Token:1/1:white:": {
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/b/b/bbd9ff58-4d38-4d34-9dfc-6f788830297e.jpg?1783916062",
+      "card": "https://cards.scryfall.io/normal/front/b/b/bbd9ff58-4d38-4d34-9dfc-6f788830297e.jpg?1783916062"
+    },
+    "artist": "Wangjie Li",
+    "rarity": "common",
+    "set": "tltc",
+    "collectorNumber": "3",
+    "typeLine": "Token Creature — Halfling",
+    "scryfallId": "bbd9ff58-4d38-4d34-9dfc-6f788830297e"
+  },
   "token:Human Soldier Token:1/1:white:": {
     "image": {
       "art": "https://cards.scryfall.io/art_crop/front/a/6/a6181330-7521-4ec6-be6c-b35487c2d2d4.jpg?1783916047",

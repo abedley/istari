@@ -64,12 +64,17 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.FIRST_STRIKE], untilYourNextTurn: true }],
     timing: SORCERY,
   }),
-  bilbo: power('bilbo', 'Bilbo’s Ring', 'Put on the Ring', {
-    text: "0: Target creature you control can't be blocked this turn. Activate only as a sorcery.",
-    target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.CANT_BE_BLOCKED] }],
-    timing: SORCERY,
-  }),
+  // A passive power: no ability to activate, just something the game starts with (`startsWith`, card ids put onto
+  // the battlefield before the first turn; see Game's #startFirstTurn).
+  samwise: {
+    id: 'samwise',
+    name: 'Field-Tested Frying Pan',
+    ring: true,
+    passive: true,
+    text: 'Start the game with Field-Tested Frying Pan on the battlefield.',
+    startsWith: ['fieldTestedFryingPan'],
+    abilities: [],
+  },
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {
