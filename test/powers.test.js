@@ -330,3 +330,29 @@ test("Gildor's power: as the game starts, after the opening hand, two Forests an
   // There's nothing to activate.
   assert.equal(activation(s, 'p1'), undefined);
 });
+
+test("the Rider in Black's power: at his end step, each opponent with a Ring-bearer loses life equal to its power", () => {
+  /** p1's life as the Rider's (p2's) next end step begins, and once it's over. */
+  const endStepLoss = (game) => {
+    let before = null;
+    for (let i = 0; i < 500; i++) {
+      const s = game.getState();
+      if (s.activePlayerId === 'p2' && s.step === 'end' && before === null) before = s.players[0].life;
+      if (before !== null && s.activePlayerId === 'p1') return before - s.players[0].life;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const acts = s.validActions.filter((a) => a.playerId === actor);
+      // Nobody attacks or casts anything: just the power.
+      assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]).ok, true);
+    }
+    throw new Error('Too many steps.');
+  };
+  // Frodo's power makes one of p1's Bears (2/2) the Ring-bearer.
+  const tempted = powerGame('frodo', 'riderInBlack');
+  const s = usePower(tempted);
+  const bearer = s.battlefield.find((p) => p.id === s.players[0].ring.bearerId);
+  assert.equal(bearer?.power, 2);
+  assert.equal(endStepLoss(tempted), 2);
+  // No Ring-bearer, no life lost.
+  assert.equal(endStepLoss(powerGame(null, 'riderInBlack')), 0);
+  assert.equal(EMBLEMS.riderInBlack.text, 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature’s power.');
+});

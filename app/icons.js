@@ -89,6 +89,7 @@ export const POWER_ICONS = Object.freeze({
   gandalf: 'staff',
   oldManWillow: 'willow',
   gildor: 'star',
+  riderInBlack: 'hooded',
   tomBombadil: 'leaf',
   sauron: 'eye',
   saruman: 'tower',

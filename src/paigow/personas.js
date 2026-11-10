@@ -80,6 +80,17 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       collapse: ['The shadow lengthens. We must be going.', 'Even the Firstborn may be caught on the road.'],
     },
   },
+  riderInBlack: {
+    name: 'Rider in Black', color: 'black', emblem: 'riderInBlack', ai: search(1500, 'aggro'),
+    portrait: portrait('4/0/4023a6de-3ac7-488a-b1a9-b1e26681d9bc.jpg?1783916195', 45, 0, 300, 'Nazgûl', 'Lorenzo Mastroianni'),
+    banter: {
+      start: ['Shire... Baggins...', 'Where is the one you hide? I smell it on you.', 'Give it to me. Then you may go.'],
+      win: ['The hunt ends here.', 'You cannot hide from the Nine.'],
+      lose: ['Ssss... this is not finished.', 'Run, then. We will follow.'],
+      comeback: ['I can feel it. It calls to me.', 'Closer now. Much closer.'],
+      collapse: ['The light... it burns.', 'Fire, and Elves. We withdraw. For now.'],
+    },
+  },
   tomBombadil: {
     name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: search(1000),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),

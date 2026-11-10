@@ -123,6 +123,22 @@ export const EMBLEMS = deepFreeze({
     shufflesIn: ['forest', 'forest', 'chanceMetElves'],
     abilities: [],
   },
+  riderInBlack: {
+    id: 'riderInBlack',
+    name: 'A Ring of the Nine',
+    ring: true,
+    passive: true,
+    power: 'Hunting the Ring',
+    text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature’s power.',
+    abilities: [],
+    triggeredAbilities: [{
+      id: 'hunt',
+      trigger: TRIGGER.END_STEP,
+      text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to that creature’s power.',
+      // Counted for each opponent: their own Ring-bearer's power (none, no life lost).
+      effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringBearerPower' } }],
+    }],
+  },
   tomBombadil: power('tomBombadil', 'Goldberry’s Ring', 'Hey Dol! Merry Dol!', {
     text: '0: Untap target creature you control. It gets +0/+2 until end of turn.',
     target: TARGET.CREATURE_YOU_CONTROL,

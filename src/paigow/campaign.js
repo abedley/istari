@@ -24,7 +24,7 @@ export const CAMPAIGN_RULES = Object.freeze({
  * The opponents, in the order they're faced (ids in PAIGOW_OPPONENTS). Later this may be drawn from
  * buckets of opponents instead.
  */
-export const CAMPAIGN_OPPONENTS = Object.freeze(['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow', 'gildor']);
+export const CAMPAIGN_OPPONENTS = Object.freeze(['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow', 'gildor', 'riderInBlack']);
 
 export const CAMPAIGN_STATUS = Object.freeze({ PLAYING: 'playing', WON: 'won', LOST: 'lost' });
 
