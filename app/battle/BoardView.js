@@ -8,7 +8,7 @@
  * opponent's hand only as a count: the app never shows hidden cards.
  */
 import { h, setText, toggle, reconcile } from '../dom.js';
-import { icon } from '../icons.js';
+import { icon, powerIcon } from '../icons.js';
 import { crest, frameOf } from '../art.js';
 import { fit } from '../fit.js';
 import { fullCard, boardCard, chipFace, abilityFace, boardSignature, manaPips, cardBack } from '../cardView.js';
@@ -224,13 +224,14 @@ export class BoardView {
   /**
    * An ability on the stack, showing what it comes from: the source card's art
    * (wherever the card is now, e.g. in the graveyard for a "dies" trigger), or the
-   * planeswalker's crest for an emblem's ability. `big` for inspecting it.
+   * planeswalker's crest (and the power's symbol) for an emblem's ability. `big` for inspecting it.
    */
   abilityFace(object, state, { big = false } = {}) {
     const owner = state.players.find((p) => p.emblems.some((e) => e.id === object.sourceId));
+    const emblem = owner?.emblems.find((e) => e.id === object.sourceId);
     const portrait = owner && this.#info[owner.id] ? crest(this.#info[owner.id], { size: big ? 'md' : 'sm' }) : null;
     const source = portrait ? null : object.sourceSnapshot ?? findCard(state, object.sourceId);
-    return abilityFace(object, { source: source?.cardId ? source : null, portrait, definitions: this.#app.definitions, big });
+    return abilityFace(object, { source: source?.cardId ? source : null, portrait, symbol: emblem ? powerIcon(emblem.emblemId) : null, definitions: this.#app.definitions, big });
   }
 
   #signature(zone, entry, state) {
@@ -629,8 +630,10 @@ export class BoardView {
       const cost = ability.cost ?? {};
       // A short name: the ability's own, or its emblem's ("Warden's Growth" → "Growth").
       const label = ability.name ?? (emblem.abilities.length === 1 ? emblem.name.replace(/^.*['’]s\s+/, '') : ability.text.replace(/^[^:]*:\s*/, ''));
-      const button = h(`button.ability-btn.${side}`, { dataset: { emblem: emblem.id, ability: ability.id } },
-        h('span.ab-cost', cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : '0'),
+      const button = h(`button.ability-btn.${side}`, { dataset: { emblem: emblem.id, ability: ability.id }, title: emblem.name },
+        // Its symbol, which tells it from the others at a glance, then its cost.
+        h('span.ab-head', powerIcon(emblem.emblemId, 'ab-sym'),
+          h('span.ab-cost', cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : '0')),
         side === 'me' ? h('span.ab-text.fit', { dataset: { min: 6.5 } }, label) : null,
         left !== null ? h('span.ab-uses', '•'.repeat(Math.max(0, left))) : null);
       this.#abilityButtons.set(`${emblem.id}/${ability.id}`, button);

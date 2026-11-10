@@ -4,6 +4,7 @@ import { Game, GAME_STATUS } from '../src/engine/Game.js';
 import { ACTION, passPriority } from '../src/engine/actions.js';
 import { CARDS } from '../src/cards/cards.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
+import { POWER_ICONS, hasIcon } from '../app/icons.js';
 import { PAIGOW_OPPONENTS, PAIGOW_HEROES } from '../src/paigow/personas.js';
 import {
   createMatch, setDecks, roundSetup, PLAYER_ID, CPU_ID,
@@ -199,4 +200,13 @@ test("Aragorn's power: sorcery speed, and first strike until your next turn", ()
   for (let i = 0; i < 500 && game.getState().activePlayerId === 'p2'; i++) step();
   assert.equal(game.getState().activePlayerId, 'p1');
   assert.ok(!bear().keywords.includes('first strike'));
+});
+
+test('every power has a symbol of its own, to tell several apart', () => {
+  for (const id of Object.keys(EMBLEMS)) {
+    assert.ok(POWER_ICONS[id], `${id} has a symbol`);
+    assert.ok(hasIcon(POWER_ICONS[id]), `${id}'s symbol is drawn`);
+  }
+  const symbols = Object.values(POWER_ICONS);
+  assert.equal(new Set(symbols).size, symbols.length);
 });

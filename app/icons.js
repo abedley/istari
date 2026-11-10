@@ -49,20 +49,60 @@ const PATHS = {
   // Exile: a portal.
   exile: 'M12 2a10 10 0 1 0 0 20 10 10 0 1 0 0-20zm0 3a7 7 0 1 1 0 14 7 7 0 1 1 0-14zm0 3.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z',
   ring: 'M12 6c5 0 9 2.7 9 6s-4 6-9 6-9-2.7-9-6 4-6 9-6zm0 3c-3.6 0-6 1.4-6 3s2.4 3 6 3 6-1.4 6-3-2.4-3-6-3z',
+  // Planeswalker powers' symbols (POWER_ICONS).
+  eyeOff: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6zM3 3l18 18',
+  cake: 'M4 21h16M5 21v-7h14v7M5 17c2 1.5 4 1.5 7 0s5-1.5 7 0M12 14v-4M12 4c1 1.2 1 2.4 0 3-1-.6-1-1.8 0-3z',
+  key: 'M3 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0M11 12h10M17 12v4M20 12v3',
+  staff: 'M11 22V7a3 3 0 1 1 5 2.2M4 16h14',
+  leaf: 'M4 20C4 10 10 4 20 4c0 10-6 16-16 16zM4 20 14 10',
+  eye: 'M2 12c3-5 7-7 10-7s7 2 10 7c-3 5-7 7-10 7s-7-2-10-7zm10-5c-1 1.5-1.5 3.3-1.5 5s.5 3.5 1.5 5c1-1.5 1.5-3.3 1.5-5S13 8.5 12 7z',
+  tower: 'M8 22V9L6 2l3.5 3L12 2l2.5 3L18 2l-2 7v13z',
+  horn: 'M4 10 17 4v15L4 13zM4 10v3M17 8.5c2 0 3.5 1.4 3.5 3s-1.5 3-3.5 3',
+  flame: 'M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z',
+  wind: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8',
+  sparkle: 'M12 2l2 7 7-2-5 5 5 5-7-2-2 7-2-7-7 2 5-5-5-5 7 2z',
   // A hooded figure: the portrait of someone without art.
   hooded: 'M12 2C8 2 5.5 5 5.5 9.5c0 2.6.8 4.6 1.8 6L4 22h16l-3.3-6.5c1-1.4 1.8-3.4 1.8-6C18.5 5 16 2 12 2zm0 5.5c1.9 0 3.2 1.7 3.2 4 0 1.6-.7 3-1.6 3.8L12 17l-1.6-1.7c-.9-.8-1.6-2.2-1.6-3.8 0-2.3 1.3-4 3.2-4z',
 };
 
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
-  'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace']);
+  'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
+  'eyeOff', 'cake', 'key', 'staff', 'leaf', 'horn', 'wind']);
+
+/** Icons whose inner shapes are holes. */
+const EVEN_ODD = new Set(['eye']);
+
+/**
+ * Each planeswalker power's symbol (by emblem id), so several side by side can be told apart at a glance.
+ * Each is its own.
+ */
+export const POWER_ICONS = Object.freeze({
+  planeswalker: 'heart',
+  frodo: 'ring',
+  aragorn: 'crown',
+  bilbo: 'eyeOff',
+  birthdayBilbo: 'cake',
+  burglarBilbo: 'key',
+  gandalf: 'staff',
+  tomBombadil: 'leaf',
+  sauron: 'eye',
+  saruman: 'tower',
+  theoden: 'horn',
+  denethor: 'flame',
+  elrond: 'wind',
+  galadriel: 'sparkle',
+});
+
+/** A planeswalker power's symbol (see POWER_ICONS), or null for an emblem without one. */
+export const powerIcon = (emblemId, extraClass = '') => (POWER_ICONS[emblemId] ? icon(POWER_ICONS[emblemId], extraClass) : null);
 
 export function installIcons() {
   if (document.getElementById('icon-sprite')) return;
   const symbols = Object.entries(PATHS).map(([name, d]) => {
     const style = STROKED.has(name)
       ? 'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
-      : 'fill="currentColor"';
+      : `fill="currentColor"${EVEN_ODD.has(name) ? ' fill-rule="evenodd"' : ''}`;
     return `<symbol id="i-${name}" viewBox="0 0 24 24"><path d="${d}" ${style}/></symbol>`;
   }).join('');
   const holder = document.createElement('div');

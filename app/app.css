@@ -367,6 +367,9 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .ability-btn.selected { opacity: 1; border-color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 16px 4px rgba(255, 255, 255, .6); }
 .ability-btn.selected::after { animation: none; opacity: 0; }
 .ability-btn.ready::after { content: ''; position: absolute; inset: -3px; border-radius: 12px; box-shadow: 0 0 10px 1px rgba(233, 196, 106, .7); animation: glow 1.6s ease-in-out infinite; pointer-events: none; }
+.ab-head { display: flex; align-items: center; gap: 3px; }
+.ab-sym { width: 14px; height: 14px; flex: none; color: #f3e3b4; filter: drop-shadow(0 0 3px rgba(233, 196, 106, .55)); }
+.abilities.many .ab-sym { width: 17px; height: 17px; }
 .ab-cost { font: 700 10px var(--ui); color: var(--gold); display: flex; }
 .ab-cost .pips { font-size: 10px; }
 .ab-text { width: 100%; font: 700 10px/1.1 var(--display); max-height: 2.2em; overflow: hidden; text-align: center; color: #e4def5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
@@ -1010,6 +1013,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .cp-offer-lead { margin: 0; font: italic 17px/1.35 var(--rules); color: var(--ink); max-width: 340px; }
 .screen-campaign .result-title { justify-content: center; font-size: 40px; }
 /* A Ring of Power: a small gold ring before its name. */
+.power-sym { width: 1em; height: 1em; margin-right: .4em; vertical-align: -.14em; color: var(--gold); filter: drop-shadow(0 0 3px rgba(233, 196, 106, .5)); }
 .ring-mark { display: inline-block; width: .8em; height: .8em; margin-right: .45em; vertical-align: -.08em; border-radius: 50%; border: 2px solid currentColor; box-shadow: 0 0 5px rgba(233, 196, 106, .6); }
 .power-note { margin-top: 4px; font-size: 13px; color: var(--muted); }
 .power-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }

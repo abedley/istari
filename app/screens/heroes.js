@@ -1,5 +1,6 @@
 import { h } from '../dom.js';
 import { crest } from '../art.js';
+import { powerIcon } from '../icons.js';
 import { header, personInfo } from './common.js';
 import { PAIGOW_HEROES, DEFAULT_HERO } from '../../src/paigow/personas.js';
 import { EMBLEMS } from '../../src/cards/emblems.js';
@@ -20,7 +21,7 @@ export const powerOf = (person) => ringOf(person?.emblem);
 export const ringBlock = (emblemId, { note = null } = {}) => {
   const ring = ringOf(emblemId);
   return ring ? h('div.power',
-    h('div.power-name', h('span.ring-mark', { 'aria-hidden': 'true' }), ring.name),
+    h('div.power-name', powerIcon(emblemId, 'power-sym') ?? h('span.ring-mark', { 'aria-hidden': 'true' }), ring.name),
     h('div.power-text', ring.power ? h('i', `${ring.power}. `) : null, ring.text),
     note ? h('div.power-note', note) : null) : null;
 };

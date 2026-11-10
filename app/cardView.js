@@ -159,14 +159,14 @@ export function chipFace(permanent, definitions) {
  * under a "Trigger" or "Ability" tag, the source's name, then the cost paid and the
  * effect. `big` for inspecting it.
  */
-export function abilityFace(object, { source = null, portrait = null, definitions, big = false } = {}) {
+export function abilityFace(object, { source = null, portrait = null, symbol = null, definitions, big = false } = {}) {
   const card = source ? presentationOf(source, definitions) : null;
   const [, cost, effect] = object.text?.match(/^([^:]+):\s*(.*)$/s) ?? [null, null, object.text ?? ''];
   const triggered = object.kind === 'triggeredAbility';
   const frame = card ? frameOf(card) : 'colorless';
   return h(`div.ability-face.f-${frame}${big ? '.big' : ''}`,
     h('div.sa-art', portrait ? h('div.sa-crest', portrait) : cardArt(card ?? { name: object.sourceName })),
-    h('div.sa-kind', icon(triggered ? 'bolt' : 'gear'), triggered ? 'Trigger' : 'Ability'),
+    h('div.sa-kind', symbol ?? icon(triggered ? 'bolt' : 'gear'), triggered ? 'Trigger' : 'Ability'),
     h('div.sa-name.fit', object.sourceName),
     h('div.sa-text.fit', withCost(symbolText(effect), cost)));
 }
