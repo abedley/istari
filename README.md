@@ -73,7 +73,7 @@ and costs nothing or a little life (mana means nothing here). They're placeholde
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
-| Aragorn | The Ring of Barahir | Heir of Isildur | 0: Target creature you control gets +1/+1 and first strike until end of turn. |
+| Aragorn | The Ring of Barahir | Heir of Isildur | 0: Target creature you control gains first strike until your next turn. Activate only as a sorcery. |
 | Bilbo | Bilbo's Ring | Put on the Ring | 0: Target creature you control can't be blocked this turn. Sorcery speed. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |

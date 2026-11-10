@@ -59,9 +59,10 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   aragorn: power('aragorn', 'The Ring of Barahir', 'Heir of Isildur', {
-    text: '0: Target creature you control gets +1/+1 and gains first strike until end of turn.',
+    text: '0: Target creature you control gains first strike until your next turn. Activate only as a sorcery.',
     target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, power: 1, toughness: 1, keywords: [KEYWORD.FIRST_STRIKE] }],
+    effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.FIRST_STRIKE], untilYourNextTurn: true }],
+    timing: SORCERY,
   }),
   bilbo: power('bilbo', 'Bilbo’s Ring', 'Put on the Ring', {
     text: "0: Target creature you control can't be blocked this turn. Activate only as a sorcery.",

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, GAME_STATUS } from '../src/engine/Game.js';
-import { ACTION } from '../src/engine/actions.js';
+import { ACTION, passPriority } from '../src/engine/actions.js';
 import { CARDS } from '../src/cards/cards.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
 import { PAIGOW_OPPONENTS, PAIGOW_HEROES } from '../src/paigow/personas.js';
@@ -98,7 +98,7 @@ test('each power does what it says', () => {
   assert.equal(s.players[0].life, 20);
   assert.equal(s.players[0].ring.level, 1);
   s = usePower(powerGame('aragorn'));
-  assert.equal(p1Bear(s).power, 3);
+  assert.equal(p1Bear(s).power, 2);
   assert.ok(p1Bear(s).keywords.includes('first strike'));
   s = usePower(powerGame('bilbo'));
   assert.ok(p1Bear(s).keywords.includes("can't be blocked"));
@@ -165,4 +165,38 @@ test('two basic AIs play rounds with every pair of powers', () => {
     }
     assert.equal(game.getState().status, GAME_STATUS.GAME_OVER, opponentId);
   }
+});
+
+test("Aragorn's power: sorcery speed, and first strike until your next turn", () => {
+  const game = powerGame('aragorn');
+  const s = usePower(game);
+  const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;
+  const bear = () => game.getState().battlefield.find((p) => p.id === bearId);
+  assert.equal(bear().power, 2);
+  // Only as a sorcery: not in combat, on a fresh turn's power.
+  const fresh = powerGame('aragorn');
+  assert.ok(activation(fresh.getState(), 'p1'));
+  for (let i = 0; i < 50 && fresh.getState().phase === 'precombatMain'; i++) fresh.dispatch(passPriority('p1'));
+  let st = fresh.getState();
+  for (let i = 0; i < 50 && st.priorityPlayerId !== 'p1'; i++) {
+    const actor = st.pendingDecision?.playerId ?? st.priorityPlayerId;
+    fresh.dispatch(st.validActions.find((a) => a.playerId === actor));
+    st = fresh.getState();
+  }
+  assert.notEqual(st.phase, 'precombatMain');
+  assert.equal(st.priorityPlayerId, 'p1');
+  assert.equal(activation(st, 'p1'), undefined);
+  // Through the opponent's turn, and gone at the start of p1's next.
+  const step = () => {
+    const st = game.getState();
+    const actor = st.pendingDecision?.playerId ?? st.priorityPlayerId;
+    const acts = st.validActions.filter((a) => a.playerId === actor);
+    game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts.find((a) => a.type === ACTION.CONFIRM_ATTACKERS || a.type === ACTION.CONFIRM_BLOCKERS) ?? acts[0]);
+  };
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) step();
+  assert.equal(game.getState().activePlayerId, 'p2');
+  assert.ok(bear().keywords.includes('first strike'));
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p2'; i++) step();
+  assert.equal(game.getState().activePlayerId, 'p1');
+  assert.ok(!bear().keywords.includes('first strike'));
 });
