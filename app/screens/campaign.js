@@ -15,7 +15,7 @@ const CAMPAIGN_KEY = 'istari.campaign';
 export function loadCampaign(app) {
   try {
     const campaign = JSON.parse(app.storage.getItem(CAMPAIGN_KEY) ?? 'null');
-    // A hero that has been renamed since (Bilbo became Samwise).
+    // A hero that has been renamed since (Bilbo became Samwise, Aragorn became Strider).
     if (campaign?.heroId) campaign.heroId = currentHeroId(campaign.heroId);
     if (campaign?.match?.heroId) campaign.match.heroId = currentHeroId(campaign.match.heroId);
     return campaign && paigowHero(campaign.heroId) && campaign.opponents?.every(paigowOpponent) ? campaign : null;

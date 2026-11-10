@@ -80,7 +80,7 @@ const EVEN_ODD = new Set(['eye']);
 export const POWER_ICONS = Object.freeze({
   planeswalker: 'heart',
   frodo: 'ring',
-  aragorn: 'crown',
+  strider: 'sword',
   samwise: 'pan',
   birthdayBilbo: 'cake',
   burglarBilbo: 'key',

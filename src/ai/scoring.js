@@ -209,7 +209,7 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           if (!isCreature(permanent)) break;
           // "Has base power and toughness 5/5": like a pump by the difference.
           if (effect.setBase) {
-            score += side(id) * 0.3 * ((effect.setBase.power - permanent.power) + (effect.setBase.toughness - permanent.toughness));
+            score += side(id) * 0.3 * (((effect.setBase.power ?? permanent.power) - permanent.power) + ((effect.setBase.toughness ?? permanent.toughness) - permanent.toughness));
             break;
           }
           if (effect.loseAbilities) score -= side(id) * 0.3 * (permanent.keywords?.length ?? 0);

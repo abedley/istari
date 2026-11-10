@@ -143,10 +143,10 @@ export const PAIGOW_HEROES = deepFreeze({
     blurb: 'The Ring-bearer. Carries the burden, and it carries him.',
     portrait: portrait('d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257', 50, 10, 260, 'Frodo Baggins', 'Ekaterina Burmak'),
   },
-  aragorn: {
-    name: 'Aragorn', color: 'gold', emblem: 'aragorn',
-    blurb: 'Heir of Isildur, with the sword that was broken, reforged.',
-    portrait: portrait('7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260', 50, 10, 260, 'Aragorn, Company Leader', 'Anna Steinbauer'),
+  strider: {
+    name: 'Strider', color: 'gold', emblem: 'strider',
+    blurb: 'A Ranger of the North, grim and weathered, who knows the wild paths.',
+    portrait: portrait('5/4/54461d61-a745-467f-9fbe-b5e7a8edbdbf.jpg?1783916244', 5, 39, 300, 'Strider, Ranger of the North', 'Jarel Threat'),
   },
   samwise: {
     name: 'Samwise the Gardener', color: 'gold', emblem: 'samwise',
@@ -159,7 +159,7 @@ export const PAIGOW_HEROES = deepFreeze({
 export const DEFAULT_HERO = 'frodo';
 
 /** Heroes that were renamed, by their old id: a saved choice or campaign still finds them. */
-export const RENAMED_HEROES = Object.freeze({ bilbo: 'samwise' });
+export const RENAMED_HEROES = Object.freeze({ bilbo: 'samwise', aragorn: 'strider' });
 
 /** A hero id, as it is now (see RENAMED_HEROES). */
 export const currentHeroId = (id) => RENAMED_HEROES[id] ?? id;

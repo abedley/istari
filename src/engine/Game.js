@@ -4415,12 +4415,12 @@ export class Game extends EventEmitter {
       source.power = n;
       source.toughness = n;
     }
-    // Layer 7b: "has base power and toughness 5/5 until end of turn".
+    // Layer 7b: "has base power and toughness 5/5 until end of turn", or just one ("its power is 4", Strider's power).
     for (const effect of this.#temporaryEffects) {
       const target = effect.setBase && this.#permanent(effect.targetId);
       if (!target) continue;
-      target.power = effect.setBase.power;
-      target.toughness = effect.setBase.toughness;
+      target.power = effect.setBase.power ?? target.power;
+      target.toughness = effect.setBase.toughness ?? target.toughness;
     }
     const grant = (permanent, effect) => {
       if (isCreature(permanent)) {

@@ -79,7 +79,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Aragorn', 'Samwise the Gardener']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise the Gardener']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -105,9 +105,9 @@ test('each power does what it says', () => {
   let s = usePower(powerGame('frodo'));
   assert.equal(s.players[0].life, 20);
   assert.equal(s.players[0].ring.level, 1);
-  s = usePower(powerGame('aragorn'));
-  assert.equal(p1Bear(s).power, 2);
-  assert.ok(p1Bear(s).keywords.includes('first strike'));
+  s = usePower(powerGame('strider'));
+  assert.equal(p1Bear(s).power, 4);
+  assert.equal(p1Bear(s).toughness, 2);
   s = usePower(powerGame('gandalf'));
   assert.equal(p2Bears(s).filter((p) => p.tapped).length, 1);
   s = usePower(powerGame('sauron'));
@@ -173,14 +173,15 @@ test('two basic AIs play rounds with every pair of powers', () => {
   }
 });
 
-test("Aragorn's power: sorcery speed, and first strike until your next turn", () => {
-  const game = powerGame('aragorn');
+test("Strider's power: sorcery speed, and the creature's power is 4 until end of turn", () => {
+  const game = powerGame('strider');
   const s = usePower(game);
   const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;
   const bear = () => game.getState().battlefield.find((p) => p.id === bearId);
-  assert.equal(bear().power, 2);
+  assert.equal(bear().power, 4);
+  assert.equal(bear().toughness, 2);
   // Only as a sorcery: not in combat, on a fresh turn's power.
-  const fresh = powerGame('aragorn');
+  const fresh = powerGame('strider');
   assert.ok(activation(fresh.getState(), 'p1'));
   for (let i = 0; i < 50 && fresh.getState().phase === 'precombatMain'; i++) fresh.dispatch(passPriority('p1'));
   let st = fresh.getState();
@@ -192,19 +193,15 @@ test("Aragorn's power: sorcery speed, and first strike until your next turn", ()
   assert.notEqual(st.phase, 'precombatMain');
   assert.equal(st.priorityPlayerId, 'p1');
   assert.equal(activation(st, 'p1'), undefined);
-  // Through the opponent's turn, and gone at the start of p1's next.
-  const step = () => {
-    const st = game.getState();
-    const actor = st.pendingDecision?.playerId ?? st.priorityPlayerId;
-    const acts = st.validActions.filter((a) => a.playerId === actor);
-    game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts.find((a) => a.type === ACTION.CONFIRM_ATTACKERS || a.type === ACTION.CONFIRM_BLOCKERS) ?? acts[0]);
-  };
-  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) step();
+  // Gone by the opponent's turn.
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) {
+    const now = game.getState();
+    const actor = now.pendingDecision?.playerId ?? now.priorityPlayerId;
+    const acts = now.validActions.filter((a) => a.playerId === actor);
+    game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]);
+  }
   assert.equal(game.getState().activePlayerId, 'p2');
-  assert.ok(bear().keywords.includes('first strike'));
-  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p2'; i++) step();
-  assert.equal(game.getState().activePlayerId, 'p1');
-  assert.ok(!bear().keywords.includes('first strike'));
+  assert.equal(bear().power, 2);
 });
 
 test('every power has a symbol of its own, to tell several apart', () => {

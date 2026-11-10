@@ -58,10 +58,10 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.RING_TEMPTS }],
     timing: SORCERY,
   }),
-  aragorn: power('aragorn', 'The Ring of Barahir', 'Heir of Isildur', {
-    text: '0: Target creature you control gains first strike until your next turn. Activate only as a sorcery.',
+  strider: power('strider', 'The Ring of Barahir', 'Ranger of the North', {
+    text: "0: Target creature you control's power is 4 until end of turn. Activate only as a sorcery.",
     target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.FIRST_STRIKE], untilYourNextTurn: true }],
+    effects: [{ type: EFFECT.PUMP, setBase: { power: 4 } }],
     timing: SORCERY,
   }),
   // A passive power: no ability to activate, just something the game starts with (`startsWith`, card ids put onto

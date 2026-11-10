@@ -16,12 +16,12 @@ const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
 test('a campaign faces Birthday Bilbo, Burglar Bilbo and Gandalf in turn, with three lives', () => {
   assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf']);
-  const campaign = createCampaign({ heroId: 'aragorn', seed: 1 });
+  const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);
   assert.equal(currentOpponent(campaign), 'birthdayBilbo');
   const started = startMatch(campaign);
   assert.equal(started.match.opponentId, 'birthdayBilbo');
-  assert.equal(started.match.heroId, 'aragorn');
+  assert.equal(started.match.heroId, 'strider');
   assert.equal(started.match.campaign, true);
   assert.equal(startMatch(started), started, 'a match in progress carries on');
   assert.throws(() => createCampaign({ heroId: 'gollum' }));
