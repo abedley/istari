@@ -1363,7 +1363,7 @@ export class Game extends EventEmitter {
    * attacks" doesn't trigger).
    */
   #putOntoBattlefield(card, controllerId, {
-    tapped = false, attacking = false, x = undefined, cast = false,
+    tapped = false, attacking = false, x = undefined, cast = false, triggers = true,
   } = {}) {
     const { extraCounters, ...rest } = card;
     const tappedUnless = card.entersTappedUnless && !this.#checkCondition(card.entersTappedUnless, controllerId, { sourceId: card.id });
@@ -1401,6 +1401,8 @@ export class Game extends EventEmitter {
       });
     }
     this.#applyContinuousEffects();
+    // Without `triggers` (a permanent the game starts with, like a Leyline's), nothing triggers on it entering.
+    if (!triggers) return permanent;
     // 603.6a: "When this enters" triggers, and so do abilities watching for it ("Whenever
     // another creature you control enters", landfall).
     this.#trigger(permanent, TRIGGER.ENTERS_BATTLEFIELD, controllerId);
@@ -1641,14 +1643,14 @@ export class Game extends EventEmitter {
   // Mulligans (103.5, the London mulligan)
 
   #startFirstTurn() {
-    // Emblems that start the game with a card on the battlefield (Samwise's Field-Tested Frying Pan). It enters, so
-    // its "when this enters" abilities trigger, and go on the stack the first time a player gets priority.
+    // Emblems that start the game with a card on the battlefield (Samwise's Field-Tested Frying Pan). Like a Leyline's
+    // "begin the game with it on the battlefield" (103.6), it's just there: its "when this enters" abilities don't trigger.
     for (const { id } of this.#players) {
       for (const emblem of this.#zones.get(id).emblems) {
         for (const cardId of this.#emblemDefinitions[emblem.emblemId].startsWith ?? []) {
           if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for emblem ${emblem.emblemId}: ${cardId}`);
           const card = this.#createCard(cardId, id, `${id}-start-${this.#nextTokenNumber++}`);
-          const permanent = this.#putOntoBattlefield(card, id);
+          const permanent = this.#putOntoBattlefield(card, id, { triggers: false });
           this.#emitEvent('startedWith', { playerId: id, card: this.#forEvent(permanent), sourceId: emblem.id });
         }
       }

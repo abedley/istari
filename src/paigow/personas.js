@@ -149,7 +149,7 @@ export const PAIGOW_HEROES = deepFreeze({
     portrait: portrait('5/4/54461d61-a745-467f-9fbe-b5e7a8edbdbf.jpg?1783916244', 5, 39, 300, 'Strider, Ranger of the North', 'Jarel Threat'),
   },
   samwise: {
-    name: 'Samwise the Gardener', color: 'gold', emblem: 'samwise',
+    name: 'Samwise', color: 'gold', emblem: 'samwise',
     blurb: 'A gardener of the Shire, and a pan that has seen some use.',
     portrait: portrait('a/1/a1b6f13e-63d0-46bf-aa57-23c2dbdf62dd.jpg?1783916249', 36, 8, 300, 'Samwise Gamgee', 'Ekaterina Burmak'),
   },
