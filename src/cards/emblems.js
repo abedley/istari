@@ -1,5 +1,5 @@
 import {
-  EFFECT, ACTIVATION_TIMING, TARGET, KEYWORD, COUNTER, AFFECTED,
+  EFFECT, ACTIVATION_TIMING, TARGET, KEYWORD, COUNTER, AFFECTED, TRIGGER,
 } from './cards.js';
 
 /**
@@ -94,6 +94,24 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.TAP }],
     timing: SORCERY,
   }),
+  // A passive power with a triggered ability: emblems' `triggeredAbilities` trigger like a permanent's (see Game's
+  // #triggerAtBeginningOf).
+  oldManWillow: {
+    id: 'oldManWillow',
+    name: 'The Withywindle Ring',
+    ring: true,
+    passive: true,
+    power: 'Roots of the Old Forest',
+    text: 'At the beginning of your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token.',
+    abilities: [],
+    triggeredAbilities: [{
+      id: 'roots',
+      trigger: TRIGGER.END_STEP,
+      text: 'At the beginning of your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token.',
+      condition: { creatureDiedThisTurn: true },
+      effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: { colors: ['green'], subtypes: ['Treefolk'], power: 2, toughness: 2 } }],
+    }],
+  },
   tomBombadil: power('tomBombadil', 'Goldberry’s Ring', 'Hey Dol! Merry Dol!', {
     text: '0: Untap target creature you control. It gets +0/+2 until end of turn.',
     target: TARGET.CREATURE_YOU_CONTROL,

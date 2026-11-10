@@ -5134,6 +5134,12 @@ export class Game extends EventEmitter {
       const yours = permanent.controllerId === this.#activePlayerId;
       this.#trigger(permanent, type, permanent.controllerId, (ability) => yours || ability.eachTurn);
     }
+    // The active player's emblems (114.4: an emblem's abilities work from the command zone): Old Man Willow's ring.
+    for (const emblem of this.#zones.get(this.#activePlayerId).emblems) {
+      for (const ability of this.#emblemDefinitions[emblem.emblemId].triggeredAbilities ?? []) {
+        if (triggersOn(ability, type)) this.#triggerAbility(ability, { sourceId: emblem.id, sourceName: emblem.name, controllerId: emblem.controllerId, subject: null });
+      }
+    }
   }
 
   #performTurnBasedActions({ phase, step }) {

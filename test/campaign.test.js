@@ -14,8 +14,8 @@ const { WON, LOST, TIE } = MATCH_OUTCOME;
 /** The campaign after its next match ends with `outcome`. */
 const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
-test('a campaign faces Birthday Bilbo, Burglar Bilbo and Gandalf in turn, with three lives', () => {
-  assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf']);
+test('a campaign faces Birthday Bilbo, Burglar Bilbo, Gandalf and Old Man Willow in turn, with three lives', () => {
+  assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow']);
   const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);
   assert.equal(currentOpponent(campaign), 'birthdayBilbo');
@@ -57,6 +57,7 @@ test('a win moves on and offers the beaten opponent’s ring; beating them all w
   assert.equal(campaign.offer, null);
   campaign = leaveRing(play(campaign, WON));
   assert.deepEqual(campaign.rings, ['birthdayBilbo']);
+  while (currentOpponent(campaign) !== CAMPAIGN_OPPONENTS.at(-1)) campaign = leaveRing(play(campaign, WON));
   campaign = play(campaign, WON);
   // No ring is offered after the last opponent: there's no one left to use it on.
   assert.equal(campaign.offer, null);
