@@ -173,7 +173,7 @@ test('two basic AIs play rounds with every pair of powers', () => {
   }
 });
 
-test("Strider's power: sorcery speed, and the creature's power is 4 until end of turn", () => {
+test("Strider's power: sorcery speed, and the creature's power becomes 4 until end of turn", () => {
   const game = powerGame('strider');
   const s = usePower(game);
   const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;

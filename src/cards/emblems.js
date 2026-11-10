@@ -59,7 +59,7 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   strider: power('strider', 'The Ring of Barahir', 'Ranger of the North', {
-    text: "0: Target creature you control's power is 4 until end of turn. Activate only as a sorcery.",
+    text: "0: Target creature you control's power becomes 4 until end of turn. Activate only as a sorcery.",
     target: TARGET.CREATURE_YOU_CONTROL,
     effects: [{ type: EFFECT.PUMP, setBase: { power: 4 } }],
     timing: SORCERY,
