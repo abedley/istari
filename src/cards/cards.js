@@ -795,12 +795,14 @@ export const isToken = (card) => Boolean(card.token);
  * - `enteredThisTurn`, `dealtDamageThisTurn`, `blockedByOrBlockedLegendaryThisTurn`, `hasCounter` (a COUNTER kind)
  * - `diedThisTurn`: a card put into a graveyard from the battlefield this turn (`turn` from the context)
  * - `attacking`, `blocking` (`combat` from the context)
- * - `anyOf`: a list of filters, one of which must match
+ * - `anyOf`: a list of filters, one of which must match (each matching anyone's, unless it gives a `controller`)
  */
 export function matchesFilter(object, filter = {}, {
   controllerId, sourceId, combat = null, x = null, turn = null,
 } = {}) {
-  if (filter.anyOf && !filter.anyOf.some((f) => matchesFilter(object, f, { controllerId, sourceId, combat, x, turn }))) return false;
+  // The filter itself says whose (its `controller`), so a branch matches anyone's unless it says otherwise:
+  // "target artifact, enchantment, or creature with flying" (Shower of Arrows) can be an opponent's.
+  if (filter.anyOf && !filter.anyOf.some((f) => matchesFilter(object, { controller: 'any', ...f }, { controllerId, sourceId, combat, x, turn }))) return false;
   if (filter.other && object.id === sourceId) return false;
   // "target creature you own"
   if (filter.owner === 'you' && object.ownerId !== controllerId) return false;

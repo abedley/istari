@@ -822,3 +822,18 @@ test('Ioreth untaps another permanent, or two other legendary creatures', () => 
   resolveAll(game);
   assert.equal(permanent(game, forest.id).tapped, false);
 });
+
+test("Shower of Arrows can target an opponent's artifact (anyOf filters match anyone's permanents)", async () => {
+  const { CARDS: all, matchesFilter } = await import('../src/cards/cards.js');
+  const { filter } = all.showerOfArrows.target;
+  const grond = { id: 'g', controllerId: 'p2', types: ['Artifact'], subtypes: ['Vehicle'], keywords: [] };
+  const wolf = { id: 'w', controllerId: 'p2', types: ['Creature'], keywords: [] };
+  const crow = { id: 'c', controllerId: 'p2', types: ['Creature'], keywords: ['flying'] };
+  const at = (object) => matchesFilter(object, { controller: 'any', ...filter }, { controllerId: 'p1' });
+  assert.equal(at(grond), true);
+  assert.equal(at(crow), true);
+  assert.equal(at(wolf), false);
+  // A filter that says "you control" still means it, with or without anyOf.
+  assert.equal(matchesFilter(grond, { anyOf: [{ types: ['Artifact'] }] }, { controllerId: 'p1' }), false);
+  assert.equal(matchesFilter(grond, { anyOf: [{ types: ['Artifact'] }] }, { controllerId: 'p2' }), true);
+});
