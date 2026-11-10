@@ -11,6 +11,7 @@ import {
 } from '../src/paigow/paigow.js';
 import { outOfActions } from '../src/paigow/fastForward.js';
 import { BasicAIController } from '../src/ai/BasicAIController.js';
+import { SHOCK } from './helpers/ltrGame.js';
 
 const BEAR = { id: 'bear', name: 'Bear', manaCost: { generic: 1 }, types: ['Creature'], power: 2, toughness: 2 };
 const players = [{ id: 'p1' }, { id: 'p2' }];
@@ -65,7 +66,8 @@ test('every hero and opponent has a power of their own, once a turn', () => {
     // A passive power has no ability, just its text and what the game starts with.
     if (emblem.passive) {
       assert.equal(emblem.abilities.length, 0);
-      assert.ok(emblem.text && emblem.startsWith.every((id) => CARDS[id]));
+      assert.ok(emblem.text && (emblem.startsWith ?? []).every((id) => CARDS[id]));
+      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length, `${person.name}'s passive power does something`);
       continue;
     }
     assert.equal(emblem.activationsPerTurn, 1);
@@ -263,4 +265,52 @@ test('Field-Tested Frying Pan: equipped creature gets +X/+X whenever you gain li
   assert.equal(game.getState().players[0].life, 21);
   assert.equal(bear().power, 3);
   assert.equal(bear().toughness, 3);
+});
+
+test("Old Man Willow's power: at your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'shock'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR, shock: SHOCK }, shuffleLibraries: false,
+    openingHandSize: 2, deckingLoss: false, infiniteMana: true, emblems: { p1: ['oldManWillow'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  const treefolk = () => game.getState().battlefield.filter((p) => p.controllerId === 'p1' && p.subtypes?.includes('Treefolk'));
+  /** Passes until `done`, resolving whatever triggers. */
+  const passUntil = (done) => {
+    for (let i = 0; i < 200; i++) {
+      const s = game.getState();
+      if (done(s)) return s;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const acts = s.validActions.filter((a) => a.playerId === actor);
+      // No attacks: confirm combat decisions as they are.
+      assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]).ok, true);
+    }
+    const s = game.getState();
+    throw new Error(`Too many steps: turn ${s.turn}, ${s.phase}/${s.step}, ${s.status}, decision ${JSON.stringify(s.pendingDecision)?.slice(0, 200)}`);
+  };
+  // Turn 1: nothing died, so no Treefolk.
+  passUntil((s) => s.turn === 2);
+  assert.equal(treefolk().length, 0);
+  // Turn 3: p1 casts a Bear, then Shocks it.
+  let s = passUntil((st) => st.turn === 3 && st.phase === 'precombatMain' && st.priorityPlayerId === 'p1' && !st.stack.length);
+  const hand = s.players[0].hand;
+  const castCard = (cardId, targets) => s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.CAST_SPELL
+    && a.cardId === hand.find((c) => c.cardId === cardId).id && (!targets || a.targets?.[0] === targets[0]));
+  assert.equal(game.dispatch(castCard('bear')).ok, true);
+  s = passUntil((st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  const bear = s.battlefield.find((p) => p.controllerId === 'p1' && p.cardId === 'bear');
+  assert.ok(bear);
+  const shock = castCard('shock', [bear.id]);
+  assert.ok(shock, 'p1 can Shock its own Bear');
+  assert.equal(game.dispatch(shock).ok, true);
+  passUntil((st) => !st.stack.length && !st.battlefield.some((p) => p.id === bear.id));
+  // Its end step: the ring makes a Treefolk.
+  s = passUntil((st) => st.turn === 4);
+  const [token] = treefolk();
+  assert.equal(treefolk().length, 1);
+  assert.equal(token.power, 2);
+  assert.equal(token.toughness, 2);
+  assert.deepEqual(token.colors, ['green']);
+  // The next end step of p1's, with nothing dying, makes none.
+  passUntil((st) => st.turn === 6);
+  assert.equal(treefolk().length, 1);
 });

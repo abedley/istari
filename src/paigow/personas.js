@@ -57,6 +57,17 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       collapse: ['Hm. I seem to have walked into that.', 'No, no. That one was my own doing.'],
     },
   },
+  oldManWillow: {
+    name: 'Old Man Willow', color: 'green', emblem: 'oldManWillow', ai: search(2000, 'control'),
+    portrait: portrait('0/3/0362b7c4-fff5-4bc2-b32d-913f85c23cc4.jpg?1783916248', 86, 38, 300, 'Old Man Willow', 'Miklós Ligeti'),
+    banter: {
+      start: ['Sit down, little one. Rest by the river. There is no hurry.', 'Sleepy, are you? Lie down among my roots, and we shall play.', 'The Old Forest remembers every footstep. Yours too.'],
+      win: ['Down you go, into the roots. Sleep now.', 'The river sings, and you stay. That is how it goes here.'],
+      lose: ['Go, then. Go, before the branches close.', 'Hmm. You found the path out. Few do.'],
+      comeback: ['What falls feeds the roots. And the roots grow.', 'Every fallen thing makes the forest stronger.'],
+      collapse: ['Creak... crack... no, no, that is not how it goes.', 'You have woken the old tree. Unwise.'],
+    },
+  },
   tomBombadil: {
     name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: search(1000),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),

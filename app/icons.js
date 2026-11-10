@@ -61,6 +61,8 @@ const PATHS = {
   wind: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8',
   sparkle: 'M12 2l2 7 7-2-5 5 5 5-7-2-2 7-2-7-7 2 5-5-5-5 7 2z',
   pan: 'M3 13a6 6 0 1 0 12 0 6 6 0 1 0-12 0M14.2 9.6 21 5',
+  // A willow: a trunk, its drooping boughs, and roots.
+  willow: 'M12 21V10M12 10c-3-4-7-4-9 0v8M12 10c3-4 7-4 9 0v8M12 13c-2-2-4-1-5 1v5M12 13c2-2 4-1 5 1v5M9 21h6',
   // A hooded figure: the portrait of someone without art.
   hooded: 'M12 2C8 2 5.5 5 5.5 9.5c0 2.6.8 4.6 1.8 6L4 22h16l-3.3-6.5c1-1.4 1.8-3.4 1.8-6C18.5 5 16 2 12 2zm0 5.5c1.9 0 3.2 1.7 3.2 4 0 1.6-.7 3-1.6 3.8L12 17l-1.6-1.7c-.9-.8-1.6-2.2-1.6-3.8 0-2.3 1.3-4 3.2-4z',
 };
@@ -68,7 +70,7 @@ const PATHS = {
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
   'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
-  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'pan']);
+  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'pan', 'willow']);
 
 /** Icons whose inner shapes are holes. */
 const EVEN_ODD = new Set(['eye']);
@@ -85,6 +87,7 @@ export const POWER_ICONS = Object.freeze({
   birthdayBilbo: 'cake',
   burglarBilbo: 'key',
   gandalf: 'staff',
+  oldManWillow: 'willow',
   tomBombadil: 'leaf',
   sauron: 'eye',
   saruman: 'tower',
