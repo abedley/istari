@@ -11,7 +11,8 @@ const HERO_KEY = 'istari.hero';
 export function ringOf(emblemId) {
   const emblem = EMBLEMS[emblemId];
   const ability = emblem?.abilities[0];
-  return ability ? { name: emblem.name, power: emblem.power ?? null, text: ability.text } : null;
+  // A power that costs nothing doesn't show its "0: ".
+  return ability ? { name: emblem.name, power: emblem.power ?? null, text: ability.text.replace(/^0:\s*/, '') } : null;
 }
 
 /** A character's Ring of Power (their planeswalker power): see ringOf. */

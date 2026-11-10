@@ -1109,7 +1109,8 @@ export class Battle {
     const option = this.#options.find((o) => o.sourceId === target.emblem && o.abilityId === target.ability);
     this.#app.overlays.sheet({
       title: emblem.name,
-      text: ability.text,
+      // A power that costs nothing doesn't show its "0: ".
+      text: ability.text.replace(/^0:\s*/, ''),
       options: target.kind === 'ability' && option ? [{ label: 'Activate', primary: true, onPick: () => this.#begin(option) }] : [],
       cancel: 'Close',
     });

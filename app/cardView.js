@@ -161,7 +161,9 @@ export function chipFace(permanent, definitions) {
  */
 export function abilityFace(object, { source = null, portrait = null, symbol = null, definitions, big = false } = {}) {
   const card = source ? presentationOf(source, definitions) : null;
-  const [, cost, effect] = object.text?.match(/^([^:]+):\s*(.*)$/s) ?? [null, null, object.text ?? ''];
+  const [, parsed, effect] = object.text?.match(/^([^:]+):\s*(.*)$/s) ?? [null, null, object.text ?? ''];
+  // A planeswalker power that costs nothing doesn't show its "0".
+  const cost = symbol && parsed?.trim() === '0' ? null : parsed;
   const triggered = object.kind === 'triggeredAbility';
   const frame = card ? frameOf(card) : 'colorless';
   return h(`div.ability-face.f-${frame}${big ? '.big' : ''}`,

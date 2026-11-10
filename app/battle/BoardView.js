@@ -631,9 +631,12 @@ export class BoardView {
       // A short name: the ability's own, or its emblem's ("Warden's Growth" → "Growth").
       const label = ability.name ?? (emblem.abilities.length === 1 ? emblem.name.replace(/^.*['’]s\s+/, '') : ability.text.replace(/^[^:]*:\s*/, ''));
       const button = h(`button.ability-btn.${side}`, { dataset: { emblem: emblem.id, ability: ability.id }, title: emblem.name },
-        // Its symbol, which tells it from the others at a glance, then its cost.
-        h('span.ab-head', powerIcon(emblem.emblemId, 'ab-sym'),
-          h('span.ab-cost', cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : '0')),
+        // Its symbol, which tells it from the others at a glance, then its cost (none shown when it's free).
+        h('span.ab-head', ...(() => {
+          const symbol = powerIcon(emblem.emblemId, 'ab-sym');
+          const shown = cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : symbol ? null : '0';
+          return [symbol, shown ? h('span.ab-cost', shown) : null];
+        })()),
         side === 'me' ? h('span.ab-text.fit', { dataset: { min: 6.5 } }, label) : null,
         left !== null ? h('span.ab-uses', '•'.repeat(Math.max(0, left))) : null);
       this.#abilityButtons.set(`${emblem.id}/${ability.id}`, button);
