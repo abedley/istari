@@ -77,16 +77,21 @@ export const EMBLEMS = deepFreeze({
     startsWith: ['fieldTestedFryingPan'],
     abilities: [],
   },
-  // A passive power that changes the rules (`staticAbilities`, `{ rule }`, as a card's; see Game's #castsAtInstantSpeed).
+  // A passive power with static abilities, as a card's: one that changes the rules (`{ rule }`, see Game's
+  // #castsAtInstantSpeed) and an anthem.
   radagast: {
     id: 'radagast',
     name: 'The Ring of Rhosgobel',
     ring: true,
     passive: true,
     power: 'Friend of Beasts',
-    text: 'You may cast creature spells as though they had flash.',
+    text: 'You may cast creature spells as though they had flash. Birds and Beasts you control get +1/+1.',
     abilities: [],
-    staticAbilities: [{ rule: 'flashForCreatures' }],
+    staticAbilities: [
+      { rule: 'flashForCreatures' },
+      // An anthem from the command zone (see Game's #applyContinuousEffects).
+      { affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, subtypes: ['Bird', 'Beast'], power: 1, toughness: 1 },
+    ],
   },
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).

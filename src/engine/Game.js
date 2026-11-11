@@ -1335,7 +1335,7 @@ export class Game extends EventEmitter {
       activationsPerTurn: definition.activationsPerTurn ?? Infinity,
       activationsThisTurn: 0,
       // Rules it changes (Radagast's "creature spells as though they had flash"), for the AI to see.
-      ...(definition.staticAbilities ? { rules: definition.staticAbilities.map((s) => s.rule) } : {}),
+      ...(definition.staticAbilities ? { rules: definition.staticAbilities.filter((s) => s.rule).map((s) => s.rule) } : {}),
     };
   }
 
@@ -4403,6 +4403,14 @@ export class Game extends EventEmitter {
       if (source.abilitiesLost) continue;
       for (const effect of this.#cardDefinitions[source.cardId].staticAbilities ?? []) {
         if (!effect.rule) statics.push([source, effect]);
+      }
+    }
+    // Emblems' static abilities, from the command zone (Radagast's Ring of Power: "Birds and Beasts you control get +1/+1").
+    for (const zone of this.#zones.values()) {
+      for (const emblem of zone.emblems) {
+        for (const effect of this.#emblemDefinitions[emblem.emblemId].staticAbilities ?? []) {
+          if (!effect.rule) statics.push([emblem, effect]);
+        }
       }
     }
     const holds = ([source, effect]) => !effect.condition

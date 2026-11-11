@@ -419,3 +419,29 @@ test("Radagast's power: creature spells can be cast as though they had flash (an
   assert.deepEqual(s.players[0].emblems[0].rules, ['flashForCreatures']);
   assert.equal(activation(s, 'p1'), undefined, 'a passive power: nothing to activate');
 });
+
+test("Radagast's power: Birds and Beasts you control get +1/+1 (not other creatures, not the opponent's)", () => {
+  const game = new Game({
+    players, decks: { p1: ['gwaihirTheWindlord', 'bear'], p2: ['gwaihirTheWindlord'] }, cards: { ...CARDS, bear: BEAR }, shuffleLibraries: false,
+    openingHandSize: 2, deckingLoss: false, infiniteMana: true, emblems: { p1: ['radagast'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  const settle = () => {
+    for (let i = 0; i < 60; i++) {
+      const s = game.getState();
+      if (!s.pendingDecision && !s.stack.length && s.priorityPlayerId === 'p1' && s.phase === 'precombatMain') return;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const acts = s.validActions.filter((a) => a.playerId === actor);
+      game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]);
+    }
+  };
+  settle();
+  for (let n = 0; n < 2; n++) {
+    const s = game.getState();
+    assert.equal(game.dispatch(s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.CAST_SPELL)).ok, true);
+    settle();
+  }
+  const mine = (cardId) => game.getState().battlefield.find((p) => p.cardId === cardId);
+  assert.deepEqual([mine('gwaihirTheWindlord').power, mine('gwaihirTheWindlord').toughness], [5, 5]);
+  assert.deepEqual([mine('bear').power, mine('bear').toughness], [2, 2]);
+});
