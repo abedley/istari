@@ -1468,7 +1468,9 @@ export class Game extends EventEmitter {
       linkedExiles, abilitiesLost, grantedTriggers, dealtDamageThisTurn, blockedByOrBlockedLegendaryThisTurn, notedTypes, xPaid, wards,
       combatDamagedPlayers, wasCast, protections, grantedAbilities, damagedBySpiderOf, ...card
     } = permanent;
-    // 400.7: it becomes a new object with its printed characteristics.
+    // 400.7: it becomes a new object with its printed characteristics. Counting its zone changes tells the new
+    // object from the old one, which a spell or ability may have targeted (608.2b).
+    card.zoneChanges = (card.zoneChanges ?? 0) + 1;
     Object.assign(card, base.power === undefined ? { keywords: base.keywords } : { power: base.power, toughness: base.toughness, keywords: base.keywords });
     Object.assign(card, { types: [...this.#cardDefinitions[card.cardId].types], subtypes: [...(this.#cardDefinitions[card.cardId].subtypes ?? [])] });
     card.supertypes = [...(this.#cardDefinitions[card.cardId].supertypes ?? [])];
@@ -1493,6 +1495,27 @@ export class Game extends EventEmitter {
       const back = this.#putOntoBattlefield(returned, ownerId);
       this.#emitEvent('permanentEntered', { playerId: ownerId, card: this.#forEvent(back), returnedFromExile: true });
     }
+  }
+
+  /**
+   * Puts a spell or ability on the stack, noting which object each of its targets is (by its zone changes), so a
+   * target that left the battlefield and came back, a new object (400.7), is illegal as it resolves (608.2b).
+   */
+  #pushStack(stackObject) {
+    if (stackObject.targets?.length) stackObject.targetStamps = stackObject.targets.map((id) => this.#zoneChangesOf(id));
+    this.#stack.push(stackObject);
+  }
+
+  /** How many times the permanent or card `id` has left the battlefield, or null for anything else (a player, a spell). */
+  #zoneChangesOf(id) {
+    if (!id) return null;
+    const permanent = this.#permanent(id);
+    if (permanent) return permanent.zoneChanges ?? 0;
+    for (const zone of this.#zones.values()) {
+      const card = [zone.graveyard, zone.exile, zone.hand, zone.library].flat().find((c) => c.id === id);
+      if (card) return card.zoneChanges ?? 0;
+    }
+    return null;
   }
 
   /** Permanents leaving the battlefield together (704.3), so "another creature dies" sees them all (603.10a). */
@@ -1841,7 +1864,7 @@ export class Game extends EventEmitter {
     const alternative = costChoices?.alternative !== undefined ? additionalCost.anyOf[costChoices.alternative] : additionalCost;
     const cost = addCosts(this.#spellCost(playerId, card, { x, targets, free }), alternative?.mana);
     delete card.mayPlay;
-    this.#stack.push(stackObject);
+    this.#pushStack(stackObject);
     const manaPaid = this.#payManaFrom(playerId, cost, card);
     // Boromir: "if no mana was spent to cast it".
     stackObject.manaSpent = MANA_TYPES.reduce((sum, type) => sum + manaPaid[type], manaPaid.any ?? 0);
@@ -2046,7 +2069,7 @@ export class Game extends EventEmitter {
       ...(costPaid.exiledSelf ? { sourceSnapshot: costPaid.exiledSelf } : {}),
     };
     delete costPaid.exiledSelf;
-    this.#stack.push(stackObject);
+    this.#pushStack(stackObject);
     this.#emitEvent('abilityActivated', {
       ...activation, usesStack: true, stackObjectId: stackObject.id, targets: targets ?? [],
     });
@@ -2167,6 +2190,9 @@ export class Game extends EventEmitter {
     // 608.2b: each target is checked again; an illegal one is left out (kept in its place as null).
     const contextTargets = targets.map((id, i) => {
       if (!id) return null;
+      // 400.7: it left the battlefield (or its zone) since it was targeted, and is a new object now.
+      const stamp = stackObject.targetStamps?.[i];
+      if (stamp !== undefined && stamp !== null && this.#zoneChangesOf(id) !== stamp) return null;
       const kind = kinds[Math.min(i, kinds.length - 1)];
       return kind && this.#isLegalTarget(kind, id, controllerId, excludeId, {
         sourceId: stackObject.sourceId, x: stackObject.x, chosen: targets.slice(0, i), amassedArmyId: stackObject.amassedArmyId,
@@ -3902,7 +3928,7 @@ export class Game extends EventEmitter {
       // "You may …" without a target: the choice is made as it resolves.
       ...(trigger.optional && kinds.length === 0 ? { mayOnResolution: true } : {}),
     };
-    this.#stack.push(stackObject);
+    this.#pushStack(stackObject);
     this.#emitEvent('triggeredAbilityPutOnStack', {
       triggerId: trigger.id, stackObjectId: stackObject.id, sourceId: trigger.sourceId, targets: targets ?? [],
     });

@@ -837,3 +837,30 @@ test("Shower of Arrows can target an opponent's artifact (anyOf filters match an
   assert.equal(matchesFilter(grond, { anyOf: [{ types: ['Artifact'] }] }, { controllerId: 'p1' }), false);
   assert.equal(matchesFilter(grond, { anyOf: [{ types: ['Artifact'] }] }, { controllerId: 'p2' }), true);
 });
+
+test('a target that leaves the battlefield and returns is a new object: Bewitching Leechcraft fizzles after Slip On the Ring (400.7, 608.2b)', async () => {
+  const {
+    setup, state, inHand, ok, resolveAll, passRound, byCard, player, advanceTo,
+  } = await import('./helpers/ltrGame.js');
+  const { castSpell, passPriority } = await import('../src/index.js');
+  const { game } = setup({ p1: ['bear', 'slipOnTheRing'], p2: ['bewitchingLeechcraft'], cards: ['slipOnTheRing', 'bewitchingLeechcraft'] });
+  advanceTo(game, { turn: 1, phase: 'precombatMain' });
+  ok(game, castSpell('p1', inHand(game, 'p1', 'bear')));
+  resolveAll(game);
+  const bearId = byCard(game, 'bear')[0].id;
+  // p2 enchants it in its own main phase.
+  advanceTo(game, { turn: 2, phase: 'precombatMain' });
+  ok(game, castSpell('p2', inHand(game, 'p2', 'bewitchingLeechcraft'), [bearId]));
+  // p2 passes; p1 responds with Slip On the Ring on the same creature.
+  ok(game, passPriority('p2'));
+  ok(game, castSpell('p1', inHand(game, 'p1', 'slipOnTheRing'), [bearId]));
+  passRound(game);
+  // Slip On the Ring has resolved (the Ring's temptation may ask p1 to choose a Ring-bearer).
+  for (let i = 0; i < 5 && state(game).pendingDecision; i++) ok(game, state(game).validActions[0]);
+  assert.equal(state(game).stack.length, 1);
+  resolveAll(game);
+  // The Aura had no legal target left: it went to the graveyard, and the Bear is untouched.
+  assert.equal(state(game).battlefield.some((p) => p.cardId === 'bewitchingLeechcraft'), false);
+  assert.ok(player(game, 'p2').graveyard.some((c) => c.cardId === 'bewitchingLeechcraft'));
+  assert.equal(byCard(game, 'bear')[0].tapped, false);
+});
