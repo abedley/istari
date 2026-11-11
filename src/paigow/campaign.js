@@ -3,9 +3,11 @@
  * another, with three lives.
  *
  * Losing a match costs a life and you face the same opponent again (with a new booster); a tied match
- * costs nothing, and you face them again too. Beat an opponent and you may take their Ring of Power
- * (their planeswalker power, an emblem in src/cards/emblems.js) to use alongside your hero's, at the
- * cost of starting every round with one less life (see playerLife in paigow.js); four rings at most.
+ * costs nothing, and you face them again too. Beat an opponent and you choose a reward: take their Ring
+ * of Power (their planeswalker power, an emblem in src/cards/emblems.js) to use alongside your hero's, at
+ * the cost of starting every round with one less life (see playerLife in paigow.js), four rings at most;
+ * or add a common to every booster you open after (so you have more cards than your three decks of five
+ * need, and pick which to leave out).
  * Beat them all and the campaign is won; lose your last life and it's lost.
  *
  * Everything here is pure: a campaign is a plain object (it can be saved as JSON), and each function
@@ -41,7 +43,9 @@ export function createCampaign({ heroId = DEFAULT_HERO, seed = Math.floor(Math.r
     lives: CAMPAIGN_RULES.lives,
     /** Rings of Power taken (emblem ids). */
     rings: [],
-    /** A beaten opponent whose ring is on offer (their id), until it's taken or left. */
+    /** Extra commons in each of your boosters, one for each time you chose that reward. */
+    extraCommons: 0,
+    /** A beaten opponent whose reward is on offer (their id), until one is chosen. */
     offer: null,
     /** The match being played, or null between matches. */
     match: null,
@@ -66,11 +70,13 @@ export function currentOpponent(campaign) {
 export function startMatch(campaign) {
   const opponentId = currentOpponent(campaign);
   if (!opponentId) throw new Error('The campaign is over.');
-  if (campaign.offer) throw new Error('Take or leave the ring on offer first.');
+  if (campaign.offer) throw new Error('Choose the reward on offer first.');
   if (campaign.match) return campaign;
   // A different booster for every match.
   const seed = (campaign.seed + (campaign.history.length + 1) * 104729) >>> 0;
-  const match = createMatch({ seed, heroId: campaign.heroId, opponentId, rings: campaign.rings, campaign: true });
+  const match = createMatch({
+    seed, heroId: campaign.heroId, opponentId, rings: campaign.rings, extraCommons: campaign.extraCommons ?? 0, campaign: true,
+  });
   return { ...campaign, match };
 }
 
@@ -82,7 +88,7 @@ export function updateMatch(campaign, match) {
 
 /**
  * The campaign after its current match ended with `outcome` (`MATCH_OUTCOME`): a loss costs a life,
- * a win moves on to the next opponent and offers their ring. `match`, when given, must be the current
+ * a win moves on to the next opponent and offers a reward (their ring, or an extra common). `match`, when given, must be the current
  * match (so a match is never counted twice).
  */
 export function recordMatch(campaign, outcome, match = campaign.match) {
@@ -99,13 +105,16 @@ export function recordMatch(campaign, outcome, match = campaign.match) {
 /** Whether another ring can be taken. */
 export const canTakeRing = (campaign) => campaign.rings.length < CAMPAIGN_RULES.maxRings;
 
-/** The campaign with the ring on offer taken. */
+/** The campaign with the ring on offer taken, as the reward. */
 export function takeRing(campaign) {
-  if (!campaign.offer) throw new Error('No ring is on offer.');
+  if (!campaign.offer) throw new Error('No reward is on offer.');
   if (!canTakeRing(campaign)) throw new Error(`You can bear only ${CAMPAIGN_RULES.maxRings} rings.`);
   const emblem = PAIGOW_OPPONENTS[campaign.offer].emblem;
   return { ...campaign, rings: [...campaign.rings, emblem], offer: null };
 }
 
-/** The campaign with the ring on offer left behind. */
-export const leaveRing = (campaign) => ({ ...campaign, offer: null });
+/** The campaign with an extra common in every booster from now on taken as the reward (the ring left behind). */
+export function takeCommon(campaign) {
+  if (!campaign.offer) throw new Error('No reward is on offer.');
+  return { ...campaign, extraCommons: (campaign.extraCommons ?? 0) + 1, offer: null };
+}

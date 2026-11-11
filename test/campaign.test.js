@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, leaveRing, canTakeRing,
+  createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
   CAMPAIGN_RULES, CAMPAIGN_OPPONENTS, CAMPAIGN_STATUS,
 } from '../src/paigow/campaign.js';
 import {
-  roundSetup, setDecks, playerLife, MATCH_OUTCOME, PAIGOW_RULES, PLAYER_ID,
+  roundSetup, setDecks, validDecks, playerLife, MATCH_OUTCOME, PAIGOW_RULES, PLAYER_ID,
 } from '../src/paigow/paigow.js';
 import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { CARDS } from '../src/cards/cards.js';
 
 const { WON, LOST, TIE } = MATCH_OUTCOME;
 
@@ -51,18 +52,43 @@ test('a win moves on and offers the beaten opponent’s ring; beating them all w
   let campaign = play(createCampaign({ seed: 3 }), WON);
   assert.equal(currentOpponent(campaign), 'burglarBilbo');
   assert.equal(campaign.offer, 'birthdayBilbo');
-  assert.throws(() => startMatch(campaign), /ring/);
+  assert.throws(() => startMatch(campaign), /reward/);
   campaign = takeRing(campaign);
   assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS.birthdayBilbo.emblem]);
   assert.equal(campaign.offer, null);
-  campaign = leaveRing(play(campaign, WON));
+  campaign = takeCommon(play(campaign, WON));
   assert.deepEqual(campaign.rings, ['birthdayBilbo']);
-  while (currentOpponent(campaign) !== CAMPAIGN_OPPONENTS.at(-1)) campaign = leaveRing(play(campaign, WON));
+  while (currentOpponent(campaign) !== CAMPAIGN_OPPONENTS.at(-1)) campaign = takeCommon(play(campaign, WON));
   campaign = play(campaign, WON);
   // No ring is offered after the last opponent: there's no one left to use it on.
   assert.equal(campaign.offer, null);
   assert.equal(campaignStatus(campaign), CAMPAIGN_STATUS.WON);
   assert.deepEqual(campaign.history.map((m) => m.opponentId), CAMPAIGN_OPPONENTS);
+});
+
+test('the other reward: a common more in every booster after, and the spare cards left out of the decks', () => {
+  let campaign = createCampaign({ seed: 6 });
+  assert.equal(startMatch(campaign).match.cards.length, PAIGOW_RULES.cardsDealt);
+  campaign = takeCommon(play(campaign, WON));
+  assert.equal(campaign.extraCommons, 1);
+  assert.deepEqual(campaign.rings, []);
+  assert.equal(campaign.offer, null);
+  assert.throws(() => takeCommon(campaign), /reward/);
+  campaign = takeCommon(play(campaign, WON));
+  const { match } = startMatch(campaign);
+  assert.equal(match.cards.length, PAIGOW_RULES.cardsDealt + 2);
+  assert.equal(new Set(match.cards.slice(0, 12)).size, 12);
+  assert.ok(match.cards.slice(0, 12).every((id) => CARDS[id].rarity === 'common'));
+  // The CPU's booster is as ever.
+  assert.equal(match.cpuDecks.flat().length, PAIGOW_RULES.cardsDealt);
+  // Any 15 of the cards make three decks; the other two are left out.
+  const decks = [0, 1, 2].map((i) => match.cards.slice(2 + i * 5, 2 + i * 5 + 5));
+  assert.equal(validDecks(match, decks), true);
+  assert.equal(setDecks(match, decks).decks.flat().length, 15);
+  assert.equal(validDecks(match, [decks[0], decks[1], [...decks[2].slice(0, 4), decks[0][0]]]), false, 'a card used twice');
+  // A campaign saved before this reward existed has none.
+  const { extraCommons, ...old } = createCampaign({ seed: 7 });
+  assert.equal(startMatch(old).match.cards.length, PAIGOW_RULES.cardsDealt);
 });
 
 test('a match is counted once', () => {
@@ -79,7 +105,7 @@ test('each ring taken costs a life at the start of every round, four rings at mo
   campaign = play(campaign, WON);
   assert.equal(canTakeRing(campaign), false);
   assert.throws(() => takeRing(campaign));
-  campaign = leaveRing(campaign);
+  campaign = takeCommon(campaign);
 
   const { match } = startMatch(campaign);
   const ready = updateMatch(startMatch(campaign), setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5)))).match;

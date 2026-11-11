@@ -3,10 +3,10 @@ import { crest } from '../art.js';
 import { header, personInfo } from './common.js';
 import { ringBlock } from './heroes.js';
 import {
-  createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, leaveRing, canTakeRing,
+  createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
   CAMPAIGN_RULES, CAMPAIGN_STATUS,
 } from '../../src/paigow/campaign.js';
-import { playerLife } from '../../src/paigow/paigow.js';
+import { playerLife, BOOSTER } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
@@ -53,9 +53,12 @@ const lifeLine = (rings) => {
   return `You start each game on ${first} life going first, ${second} going second.`;
 };
 
+/** How many commons your boosters hold with `extra` more, in words. */
+const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.commons + extra} commons, ${BOOSTER.commons + BOOSTER.uncommons + BOOSTER.rares + BOOSTER.wildcards + extra} cards in all: make three decks of five and leave the rest out.`;
+
 /**
- * The campaign (src/paigow/campaign.js): a line of opponents, three lives, and the Rings of Power you
- * take from those you beat. With `heroId`, a new campaign begins for that hero.
+ * The campaign (src/paigow/campaign.js): a line of opponents, three lives, and the rewards you take
+ * from those you beat (Rings of Power, or extra commons). With `heroId`, a new campaign begins for that hero.
  */
 export function campaignScreen(app, { heroId = null } = {}) {
   let campaign = heroId ? saveCampaign(app, createCampaign({ heroId })) : loadCampaign(app);
@@ -102,7 +105,8 @@ export function campaignScreen(app, { heroId = null } = {}) {
       h('section.cp-section',
         h('h4', `Your Rings of Power · ${campaign.rings.length}/${CAMPAIGN_RULES.maxRings} taken`),
         h('div.cp-rings', rings.map((id) => ringBlock(id))),
-        h('p.pg-help', lifeLine(campaign.rings))),
+        h('p.pg-help', lifeLine(campaign.rings)),
+        campaign.extraCommons ? h('p.pg-help', commonsLine(campaign.extraCommons)) : null),
       h('p.pg-help', `Lose a match and you lose a life. ${campaign.lives === 1 ? 'This is your last.' : `You have ${campaign.lives}.`}`)),
     h('div.cta',
       h('button.btn.primary.big', { onclick: play }, campaign.match ? `Continue vs ${opponent.name}` : `Face ${opponent.name}`),
@@ -110,29 +114,34 @@ export function campaignScreen(app, { heroId = null } = {}) {
   return { el };
 }
 
-/** After a win: the beaten opponent's ring, to take (for a life each game) or leave. */
+/**
+ * After a win, the reward: the beaten opponent's ring (for a life each game), or an extra common in
+ * every booster from now on.
+ */
 function offerView(app, campaign) {
   const opponent = paigowOpponent(campaign.offer);
   const able = canTakeRing(campaign);
   const after = [...campaign.rings, opponent.emblem];
-  const decide = (take) => {
+  const decide = (ring) => {
     app.sound('select');
-    saveCampaign(app, take ? takeRing(campaign) : leaveRing(campaign));
+    saveCampaign(app, ring ? takeRing(campaign) : takeCommon(campaign));
     app.go('campaign');
   };
+  const extra = (campaign.extraCommons ?? 0) + 1;
   const el = h('div',
     header({ title: '', right: hearts(campaign.lives) }),
     h('div.cp-body.cp-offer',
       h('div.result-title.victory', 'Victory'),
       crest(personInfo(opponent), { size: 'lg' }),
-      h('p.cp-offer-lead', `${opponent.name} is beaten, and leaves behind a Ring of Power.`),
+      h('p.cp-offer-lead', `${opponent.name} is beaten. Choose your reward: their Ring of Power, or a common more in every booster.`),
       ringBlock(opponent.emblem),
       h('p.pg-help', able
-        ? `Take it, and you start every game with 1 less life. ${lifeLine(after)}`
-        : `You already bear ${CAMPAIGN_RULES.maxRings} rings. You can bear no more.`)),
+        ? `Take the ring, and you start every game with 1 less life. ${lifeLine(after)}`
+        : `You already bear ${CAMPAIGN_RULES.maxRings} rings. You can bear no more.`),
+      h('p.pg-help', `Or add a common: from now on ${commonsLine(extra, 'your')}`)),
     h('div.cta',
       able ? h('button.btn.primary.big', { onclick: () => decide(true) }, 'Take the ring') : null,
-      h(`button.btn${able ? '.ghost' : '.primary.big'}`, { onclick: () => decide(false) }, able ? 'Leave it' : 'Move on')));
+      h(`button.btn${able ? '' : '.primary.big'}`, { onclick: () => decide(false) }, 'Add a common to my boosters')));
   return { el };
 }
 

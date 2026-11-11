@@ -3,7 +3,7 @@ import { crest } from '../art.js';
 import { fullCard, cardBack } from '../cardView.js';
 import { header, personInfo } from './common.js';
 import {
-  createMatch, setDecks, score, outcome, nextRound, playerStartsRound, playerLife,
+  createMatch, setDecks, score, outcome, nextRound, playerStartsRound, playerLife, cardStrength,
   PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, DEFAULT_HERO } from '../../src/paigow/personas.js';
@@ -13,7 +13,8 @@ import { saveCampaignMatch, finishCampaignMatch } from './campaign.js';
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
- * Pai Gow (src/paigow/paigow.js): split 15 cards into three decks of five, then a best of three against
+ * Pai Gow (src/paigow/paigow.js): split 15 cards (or more, with a campaign's extra commons, leaving the
+ * spare ones out) into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Without a `match`, a
  * new one is dealt, for the hero `heroId` (see the heroes screen). A campaign's match (`match.campaign`,
  * see the campaign screen) is saved after each round, and its outcome recorded in the campaign.
@@ -103,7 +104,9 @@ function buildView(app, match) {
     render();
   };
   const fill = () => {
-    for (const n of indexes) {
+    // With more cards than the decks hold, the strongest go in first.
+    const order = [...indexes].sort((a, b) => cardStrength(match.cards[b]) - cardStrength(match.cards[a]) || a - b);
+    for (const n of order) {
       if (placed.has(n)) continue;
       const target = [...Array(count).keys()].find(free);
       if (target === undefined) break;
@@ -132,10 +135,13 @@ function buildView(app, match) {
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
     const left = indexes.filter((n) => !placed.has(n));
-    trayTitle.textContent = left.length ? `Your booster · ${left.length} left` : 'All cards placed';
+    const full = [...Array(count).keys()].every((i) => !free(i));
+    trayTitle.textContent = full
+      ? (left.length ? `All decks full · ${left.length} left out` : 'All cards placed')
+      : `Your booster · ${left.length} left${left.length > count * deckSize - placed.size ? ` · ${count * deckSize - placed.size} to place` : ''}`;
     tray.replaceChildren(...left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true })));
-    start.disabled = left.length > 0;
-    autoFill.disabled = left.length === 0;
+    start.disabled = !full;
+    autoFill.disabled = full;
     clear.disabled = placed.size === 0;
   };
   render();

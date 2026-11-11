@@ -33,7 +33,8 @@ campaign's match, see *The campaign*):
    land, any LTR card at all, each equally likely (it can repeat a card already in the pack).
    The pool (`PAIGOW_POOL`) is every LTR card in the game but the basic lands, the set's few
    nonbasic lands included; the 8 left out of the game can't be opened. No foils or special editions.
-2. You split yours into three decks of five (tap a card to put it in the highlighted round,
+2. You split yours into three decks of five (in a campaign you may have more cards than that, and
+   leave the spare ones out; tap a card to put it in the highlighted round,
    hold it to read it, or Auto-fill). The CPU shares its cards out by a rough strength
    (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
    its decks.
@@ -107,9 +108,12 @@ the title screen): you choose a hero, then play a Pai Gow match against each opp
 `CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, then the Rider in Black; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
-may take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of
+choose a reward: take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of
 starting every round with 1 less life (`playerLife` in `src/paigow/paigow.js`: 5 and 8, less one per
-ring, at least 1), up to 4 rings. Beat them all to win; run out of lives and it's lost. The campaign
+ring, at least 1), up to 4 rings; or add a common to every booster you open after (`takeCommon`; the
+campaign's `extraCommons`, passed to `createMatch` and `openBooster`), so you have more than 15 cards
+and leave the spare ones out of your three decks of five (Auto-fill places the strongest first, by
+`cardStrength`). Beat them all to win; run out of lives and it's lost. The campaign
 is saved in `localStorage` (`istari.campaign`) after every step, its current match with it after each
 round, so a reload picks it up where it was (a round in progress starts over).
 

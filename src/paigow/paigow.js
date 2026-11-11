@@ -2,7 +2,8 @@
  * Pai Gow: a best-of-three match against the CPU with tiny decks.
  *
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
- * splits its 15 cards into three decks of five. Round N pits deck N against deck N: both players start with all
+ * splits its 15 cards into three decks of five (a campaign's player may have a few more cards, and leave
+ * the spare ones out). Round N pits deck N against deck N: both players start with all
  * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), their
  * character's Ring of Power (a planeswalker power: an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
  * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
@@ -67,13 +68,14 @@ export function cardStrength(cardId) {
  * A booster's 15 cards, in the order they'd be in the pack: the commons, the uncommons, the rare or
  * mythic (each rare twice as likely as each mythic, as on a print sheet, so a mythic is about one
  * pack in seven), and last the wildcard, every LTR card equally likely (it may repeat one already in
- * the pack).
+ * the pack). `extraCommons`: more different commons on top of the 10 (a campaign's reward, see
+ * src/paigow/campaign.js), so the booster holds more than 15 cards.
  */
-export function openBooster(random) {
+export function openBooster(random, { extraCommons = 0 } = {}) {
   const { common, uncommon, rare, mythic } = POOL_BY_RARITY;
   const rareSlot = [...rare, ...rare, ...mythic];
   return [
-    ...shuffle([...common], random).slice(0, BOOSTER.commons),
+    ...shuffle([...common], random).slice(0, BOOSTER.commons + extraCommons),
     ...shuffle([...uncommon], random).slice(0, BOOSTER.uncommons),
     rareSlot[Math.floor(random() * rareSlot.length)],
     PAIGOW_POOL[Math.floor(random() * PAIGOW_POOL.length)],
@@ -100,16 +102,18 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
  * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
  * `heroId`: the player's character, from PAIGOW_HEROES. `opponentId`: the opponent, when not left to chance.
  * `rings`: Rings of Power (emblem ids) the player has besides their hero's, as a campaign's (see
- * src/paigow/campaign.js); each costs them a life at the start of every round. `campaign`: whether the
- * match is a campaign's.
+ * src/paigow/campaign.js); each costs them a life at the start of every round. `extraCommons`: more
+ * commons in the player's booster (a campaign's reward), so they have more cards than their decks need.
+ * `campaign`: whether the match is a campaign's.
  */
 export function createMatch({
-  seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO, opponentId: chosen = null, rings = [], campaign = false,
+  seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO, opponentId: chosen = null, rings = [], extraCommons = 0,
+  campaign = false,
 } = {}) {
   if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
   if (chosen && !PAIGOW_OPPONENTS[chosen]) throw new Error(`Unknown opponent: ${chosen}`);
   const random = seededRandom(seed);
-  const cards = openBooster(random);
+  const cards = openBooster(random, { extraCommons });
   const cpuCards = openBooster(random);
   const candidates = Object.keys(PAIGOW_OPPONENTS);
   const drawn = candidates[Math.floor(random() * candidates.length)];
@@ -127,11 +131,20 @@ export function createMatch({
   };
 }
 
-/** Whether `decks` is a legal split of the match's cards: three decks of five, using each card (each copy) once. */
+/**
+ * Whether `decks` is a legal split of the match's cards: three decks of five, using each card (each copy)
+ * at most once. With 15 cards that's every card; with more (a campaign's extra commons), some are left out.
+ */
 export function validDecks(match, decks) {
   if (!Array.isArray(decks) || decks.length !== PAIGOW_RULES.decks) return false;
   if (decks.some((deck) => !Array.isArray(deck) || deck.length !== PAIGOW_RULES.deckSize)) return false;
-  return [...decks.flat()].sort().join() === [...match.cards].sort().join();
+  const left = new Map();
+  for (const id of match.cards) left.set(id, (left.get(id) ?? 0) + 1);
+  for (const id of decks.flat()) {
+    if (!left.get(id)) return false;
+    left.set(id, left.get(id) - 1);
+  }
+  return true;
 }
 
 /** The match with the player's decks set. */
