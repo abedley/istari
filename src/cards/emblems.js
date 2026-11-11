@@ -77,6 +77,17 @@ export const EMBLEMS = deepFreeze({
     startsWith: ['fieldTestedFryingPan'],
     abilities: [],
   },
+  // A passive power that changes the rules (`staticAbilities`, `{ rule }`, as a card's; see Game's #castsAtInstantSpeed).
+  radagast: {
+    id: 'radagast',
+    name: 'The Ring of Rhosgobel',
+    ring: true,
+    passive: true,
+    power: 'Friend of Beasts',
+    text: 'You may cast creature spells as though they had flash.',
+    abilities: [],
+    staticAbilities: [{ rule: 'flashForCreatures' }],
+  },
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {

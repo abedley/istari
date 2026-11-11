@@ -18,7 +18,7 @@ import { DECISION } from '../engine/Game.js';
 import { PHASE } from '../engine/turnStructure.js';
 import { canPayMana } from '../engine/mana.js';
 import {
-  isCreature, isLand, isAura, isCurse, hasKeyword, castsAtInstantSpeed, KEYWORD, EFFECT, targetList, withX, manaValue,
+  isCreature, isLand, isAura, isCurse, hasKeyword, KEYWORD, EFFECT, targetList, withX, manaValue,
 } from '../cards/cards.js';
 import {
   planAttack, planBlocks, chooseBlocks, creatureValue, curseValue, BLOCKING,
@@ -29,7 +29,7 @@ import {
 import { planLookaheadAttack } from './attacking.js';
 import { windowOf, windowAllows, permanentWindowAllows } from './timing.js';
 import {
-  bestBy, manaSources, neededColors, canReach, chooseManaAction, castCost, manaAvailable, capX, guardActivations,
+  bestBy, manaSources, neededColors, canReach, chooseManaAction, castsAtInstantSpeedFor, castCost, manaAvailable, capX, guardActivations,
 } from './manaPlanning.js';
 
 /** How many targets per spell or ability are worth considering (the best-scoring ones). */
@@ -162,7 +162,7 @@ function priorityMacros(state, me, mine) {
   // Instants and flash wait for the moment they're needed (timing.js), never our main phase.
   const window = windowOf(state, me);
   for (const card of player.hand) {
-    const instant = castsAtInstantSpeed(card);
+    const instant = castsAtInstantSpeedFor(state, me, card);
     const timely = (effects, targetId) => !instant
       || (card.spell ? windowAllows(window, effects, true, targetId, state, me, { sourceId: card.id }) : permanentWindowAllows(window, card, targetId, state, me));
     // Cycling and other abilities that work from the hand.
@@ -171,7 +171,7 @@ function priorityMacros(state, me, mine) {
         macros.push(keyed({ kind: 'activate', cardId: card.id, abilityId: ability.id, targetId: null }));
       }
     }
-    if (isLand(card) || !(castsAtInstantSpeed(card) || sorceryTiming) || !affordable(castCost(state, me, card))) continue;
+    if (isLand(card) || !(instant || sorceryTiming) || !affordable(castCost(state, me, card))) continue;
     if (!canSacrifice(card.additionalCost, card.id)) continue;
     if (card.spell?.targets || card.spell?.modes || card.manaCost?.X) {
       // Several targets (a fight, "up to two"), modes, or {X} (as big as we can pay): the best few combinations.

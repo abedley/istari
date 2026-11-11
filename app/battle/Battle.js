@@ -13,6 +13,7 @@ import {
 import { ACTION } from '../../src/engine/actions.js';
 import { actingPlayerId } from '../../src/ai/simulate.js';
 import { createCpuController } from '../../src/ai/cpu.js';
+import { castsAtInstantSpeedFor } from '../../src/ai/manaPlanning.js';
 import {
   BANTER, SwingWatch, outlook, pickLine,
 } from '../../src/ai/banter.js';
@@ -33,7 +34,7 @@ import { boardCard, fullCard, typeLine } from '../cardView.js';
 import { relRect } from './fx.js';
 import { inlineSymbols } from '../symbols.js';
 import {
-  isLand, castsAtInstantSpeed, GRAVEYARD_TARGETS, targetKindOf,
+  isLand, GRAVEYARD_TARGETS, targetKindOf,
 } from '../../src/cards/cards.js';
 import { formatMana } from '../../src/engine/mana.js';
 import { canFastForward, planFastForward } from '../../src/paigow/fastForward.js';
@@ -1362,7 +1363,7 @@ export class Battle {
   #whyNot(card) {
     const state = this.#state;
     if (card.types.includes('Land')) return state.activePlayerId !== this.#me ? 'Play lands on your turn' : 'One land per turn';
-    const sorcerySpeed = !castsAtInstantSpeed(card);
+    const sorcerySpeed = !castsAtInstantSpeedFor(state, this.#me, card);
     if (sorcerySpeed && (state.activePlayerId !== this.#me || state.stack.length)) return 'Cast on your main phase';
     return 'Not enough mana';
   }

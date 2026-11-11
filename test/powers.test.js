@@ -70,7 +70,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
     if (emblem.passive) {
       assert.equal(emblem.abilities.length, 0);
       assert.ok(emblem.text && [...(emblem.startsWith ?? []), ...(emblem.shufflesIn ?? [])].every((id) => CARDS[id]));
-      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length, `${person.name}'s passive power does something`);
+      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length || emblem.staticAbilities?.length, `${person.name}'s passive power does something`);
       continue;
     }
     assert.equal(emblem.activationsPerTurn, 1);
@@ -84,7 +84,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -393,4 +393,29 @@ test("Strider's power can target any creature: an opponent's grows or shrinks to
   });
   assert.equal(outOfActions(ffState(2), 'p1'), true);
   assert.equal(outOfActions(ffState(9), 'p1'), false);
+});
+
+test("Radagast's power: creature spells can be cast as though they had flash (and only creatures)", () => {
+  const make = (emblems) => {
+    const game = new Game({
+      players, decks: { p1: ['bear', 'hobbitsSting'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, shuffleLibraries: false, openingHandSize: 2,
+      deckingLoss: false, infiniteMana: true, emblems: { p1: emblems, p2: [] }, startingPlayerId: 'p2',
+    });
+    game.start();
+    // p2's upkeep: p1 gets priority on the opponent's turn.
+    let s = game.getState();
+    for (let i = 0; i < 20 && s.priorityPlayerId !== 'p1'; i++) {
+      game.dispatch(passPriority(s.priorityPlayerId));
+      s = game.getState();
+    }
+    assert.equal(s.activePlayerId, 'p2');
+    return s;
+  };
+  const casts = (s) => s.validActions.filter((a) => a.playerId === 'p1' && a.type === ACTION.CAST_SPELL)
+    .map((a) => s.players[0].hand.find((c) => c.id === a.cardId).cardId);
+  assert.deepEqual(casts(make([])), []);
+  const s = make(['radagast']);
+  assert.deepEqual(casts(s), ['bear']);
+  assert.deepEqual(s.players[0].emblems[0].rules, ['flashForCreatures']);
+  assert.equal(activation(s, 'p1'), undefined, 'a passive power: nothing to activate');
 });

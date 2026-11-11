@@ -60,6 +60,7 @@ const PATHS = {
   flame: 'M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z',
   wind: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8',
   sparkle: 'M12 2l2 7 7-2-5 5 5 5-7-2-2 7-2-7-7 2 5-5-5-5 7 2z',
+  bird: 'M1 17l6-3c0-5 3-8 8-8 2 0 3 1 4 2l4 1-4 2c0 6-4 9-10 9-2 0-4-1-5-3z',
   pan: 'M3 13a6 6 0 1 0 12 0 6 6 0 1 0-12 0M14.2 9.6 21 5',
   // A willow: a trunk, its drooping boughs, and roots.
   willow: 'M12 21V10M12 10c-3-4-7-4-9 0v8M12 10c3-4 7-4 9 0v8M12 13c-2-2-4-1-5 1v5M12 13c2-2 4-1 5 1v5M9 21h6',
@@ -84,6 +85,7 @@ export const POWER_ICONS = Object.freeze({
   frodo: 'ring',
   strider: 'sword',
   samwise: 'pan',
+  radagast: 'bird',
   birthdayBilbo: 'cake',
   burglarBilbo: 'key',
   gandalf: 'staff',

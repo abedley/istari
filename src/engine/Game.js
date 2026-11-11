@@ -786,12 +786,22 @@ export class Game extends EventEmitter {
     return playable;
   }
 
-  /** 702.8a, and Gandalf, Friend of the Shire's "You may cast sorcery spells as though they had flash." */
+  /**
+   * 702.8a, Gandalf, Friend of the Shire's "You may cast sorcery spells as though they had flash.", and
+   * Radagast's Ring of Power: "You may cast creature spells as though they had flash."
+   */
   #castsAtInstantSpeed(playerId, card) {
     if (castsAtInstantSpeed(card)) return true;
     // Borne Upon a Wind: "You may cast spells this turn as though they had flash."
     if (this.#zones.get(playerId).turnTally.flashSpells) return true;
+    if (isCreature(card) && this.#emblemRule(playerId, 'flashForCreatures')) return true;
     return isSorcery(card) && this.#staticRules('flashForSorceries').some((p) => p.controllerId === playerId);
+  }
+
+  /** Whether one of `playerId`'s emblems has a static ability that changes the rules (`{ rule }`), as Radagast's. */
+  #emblemRule(playerId, rule) {
+    return this.#zones.get(playerId).emblems
+      .some((e) => (this.#emblemDefinitions[e.emblemId].staticAbilities ?? []).some((s) => s.rule === rule));
   }
 
   /** The values {X} can take: up to what the pool could pay on top of the rest of the cost (107.3). */
@@ -1324,6 +1334,8 @@ export class Game extends EventEmitter {
       })),
       activationsPerTurn: definition.activationsPerTurn ?? Infinity,
       activationsThisTurn: 0,
+      // Rules it changes (Radagast's "creature spells as though they had flash"), for the AI to see.
+      ...(definition.staticAbilities ? { rules: definition.staticAbilities.map((s) => s.rule) } : {}),
     };
   }
 

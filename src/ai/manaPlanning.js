@@ -4,8 +4,17 @@
  */
 import { ACTION } from '../engine/actions.js';
 import { INFINITE_MANA_MAX_X } from '../engine/Game.js';
-import { isCreature, manaValue, countOf, spellCost } from '../cards/cards.js';
+import { isCreature, manaValue, countOf, spellCost, castsAtInstantSpeed } from '../cards/cards.js';
 import { manaPoolTotal, MANA_TYPES } from '../engine/mana.js';
+
+/**
+ * Whether `me` may cast `card` at instant speed: an instant or flash, or a creature with a Ring of Power
+ * that lets creature spells be cast as though they had flash (Radagast's; the emblem's `rules`).
+ */
+export function castsAtInstantSpeedFor(state, me, card) {
+  if (castsAtInstantSpeed(card)) return true;
+  return isCreature(card) && (state.players.find((p) => p.id === me)?.emblems ?? []).some((e) => e.rules?.includes('flashForCreatures'));
+}
 
 /** The item with the highest score (the first one on ties). */
 export function bestBy(items, score) {

@@ -4,11 +4,11 @@ import { DECISION, CHOICE } from '../engine/Game.js';
 import { PHASE } from '../engine/turnStructure.js';
 import {
   isCreature, isLand, isAura, isCurse, hasKeyword, cantAttack, manaValue, KEYWORD, EFFECT, AFFECTED, isHarmfulEffect,
-  castsAtInstantSpeed, targetList, withX, colorsOf, COLORS_OF_MANA, flattenEffects,
+  targetList, withX, colorsOf, COLORS_OF_MANA, flattenEffects,
 } from '../cards/cards.js';
 import { manaPoolTotal, canPayMana } from '../engine/mana.js';
 import {
-  bestBy, manaSources, neededColors, canReach, chooseManaAction, manaAvailable, castCost, capX, guardActivations,
+  bestBy, manaSources, neededColors, canReach, chooseManaAction, castsAtInstantSpeedFor, manaAvailable, castCost, capX, guardActivations,
 } from './manaPlanning.js';
 import {
   creatureValue, curseValue, anthemValue, planAttack, chooseBlocks, combatValue, damageWeight, BLOCKING, legalBlocks,
@@ -327,7 +327,7 @@ export class BasicAIController extends EventEmitter {
         add({ score: 1, manaCost: ability.cost.mana ?? {}, cost: {}, sourceId: card.id, now: true, matches });
       }
       if (isLand(card)) continue;
-      const instant = castsAtInstantSpeed(card);
+      const instant = castsAtInstantSpeedFor(state, me, card);
       if (!instant && window !== WINDOW.MAIN) continue;
       const cost = card.additionalCost ?? {};
       const manaCost = castCost(state, me, card);

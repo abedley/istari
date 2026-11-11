@@ -25,7 +25,7 @@ A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain m
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
 scoreboard) and `app/screens/battle.js` (a round), from *Quick match* on the title screen (or as a
 campaign's match, see *The campaign*):
-0. You choose your hero, Frodo, Strider or Samwise (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
+0. You choose your hero, Frodo, Strider, Samwise or Radagast (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
    with a Ring of Power of their own (see *Rings of Power*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
@@ -73,13 +73,15 @@ and costs nothing or a little life (mana means nothing here). Samwise's is passi
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
 from the command zone. So is Gildor's: the emblem's `shufflesIn` cards are shuffled into the library as the first
-turn begins, after the opening hands. They're placeholders to tune:
+turn begins, after the opening hands. And Radagast's: the emblem's `staticAbilities` change the rules (`{ rule:
+'flashForCreatures' }`), as a card's do. They're placeholders to tune:
 
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
 | Strider | The Ring of Barahir | Ranger of the North | 0: Target creature's power becomes 4 until your next turn (yours or theirs). Sorcery speed. |
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
+| Radagast | The Ring of Rhosgobel | Friend of Beasts | (passive) You may cast creature spells as though they had flash. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |

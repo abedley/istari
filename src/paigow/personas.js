@@ -187,6 +187,11 @@ export const PAIGOW_HEROES = deepFreeze({
     blurb: 'A gardener of the Shire, and a pan that has seen some use.',
     portrait: portrait('a/1/a1b6f13e-63d0-46bf-aa57-23c2dbdf62dd.jpg?1783916249', 36, 8, 300, 'Samwise Gamgee', 'Ekaterina Burmak'),
   },
+  radagast: {
+    name: 'Radagast', color: 'gold', emblem: 'radagast',
+    blurb: 'The Brown Wizard of Rhosgobel, who calls the beasts and birds to his side in an instant.',
+    portrait: portrait('b/3/b3988120-ebbe-4d24-9bb4-8c5331a14034.jpg?1783916261', 46, 4, 320, 'Radagast the Brown', 'Alexander Mokhov'),
+  },
 });
 
 /** The hero a match starts with when none is chosen. */
