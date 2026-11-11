@@ -339,6 +339,8 @@ export class BasicAIController extends EventEmitter {
         const held = instant && window === WINDOW.MAIN;
         if (!held && !permanentWindowAllows(window, card)) continue;
         for (const { targetId, score } of permanentSpellOptions(state, me, card, held ? false : preCombat, this.#heuristics)) {
+          // A flash Aura that pumps: only on a creature it makes pay in this combat.
+          if (!held && targetId && !permanentWindowAllows(window, card, targetId, state, me)) continue;
           add({ score: held ? 0.6 * score : score, manaCost, cost, sourceId: card.id, now: !held, matches: held ? () => false : castMatches(targetId) });
         }
         continue;
@@ -406,7 +408,7 @@ export class BasicAIController extends EventEmitter {
           const xs = manaCost.X ? Array.from({ length: capX(state, Math.max(0, available - manaValue(manaCost))) + 1 }, (_, i) => i) : [undefined];
           for (const x of xs) {
             const best = bestTargets(state, me, ability.effects, targetList(ability), source.id, preCombat, x);
-            if (!best || best.score <= 0 || !windowAllows(window, ability.effects, ability.timing !== 'sorcery', best.targets.filter(Boolean).at(-1), state, me)) continue;
+            if (!best || best.score <= 0 || !windowAllows(window, ability.effects, ability.timing !== 'sorcery', best.targets.filter(Boolean).at(-1), state, me, { ability: true })) continue;
             const matches = (a) => a.type === ACTION.ACTIVATE_ABILITY && a.cardId === source.id && a.abilityId === ability.id
               && (x === undefined || a.x === x) && (a.targets ?? []).join() === best.targets.join();
             const score = best.score + costScore(state, me, ability.cost, {}, source.id) + cheapestSacrifice(state, me, ability.cost, source.id, fodder);
@@ -415,7 +417,7 @@ export class BasicAIController extends EventEmitter {
           continue;
         }
         const best = bestTarget(state, me, ability.effects, ability.target, source.id, window, preCombat, doomed);
-        if (!best || !(windowAllows(window, ability.effects, ability.timing !== 'sorcery', best.targetId, state, me)
+        if (!best || !(windowAllows(window, ability.effects, ability.timing !== 'sorcery', best.targetId, state, me, { ability: true })
           || cashesInDoomed(state, me, ability.cost, source.id, window, fodder))) continue;
         const score = best.score + costScore(state, me, ability.cost, {}, source.id)
           + cheapestSacrifice(state, me, ability.cost, source.id, fodder);

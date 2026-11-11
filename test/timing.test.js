@@ -6,6 +6,8 @@ import {
   Game, PHASE, STEP, ACTION, BasicAIController, passPriority,
 } from '../src/index.js';
 import { listMacros } from '../src/ai/macroActions.js';
+import { trickPays, permanentWindowAllows, windowAllows, WINDOW } from '../src/ai/timing.js';
+import { CARDS as ALL_CARDS } from '../src/cards/cards.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
 const CARDS = {
@@ -13,6 +15,8 @@ const CARDS = {
   ox: { id: 'ox', name: 'Ox', manaCost: { generic: 1 }, types: ['Creature'], power: 1, toughness: 4 },
   zap: { id: 'zap', name: 'Zap', manaCost: { generic: 1 }, types: ['Instant'], target: 'any', effects: [{ type: 'dealDamage', amount: 2 }] },
   salve: { id: 'salve', name: 'Salve', manaCost: { generic: 1 }, types: ['Instant'], effects: [{ type: 'gainLife', amount: 3 }] },
+  dreadfulAsTheStorm: ALL_CARDS.dreadfulAsTheStorm,
+  giftOfStrands: ALL_CARDS.giftOfStrands,
   ambusher: { id: 'ambusher', name: 'Ambusher', manaCost: { generic: 1 }, types: ['Creature'], keywords: ['flash'], power: 3, toughness: 3 },
 };
 
@@ -123,4 +127,44 @@ test('burn that wins the game is cast at once', () => {
   assert.equal(state.phase, PHASE.PRECOMBAT_MAIN);
   assert.deepEqual(action.targets, ['p2']);
   assert.deepEqual(castsIn(state, 'zap').map((m) => m.targetId), ['p2']);
+});
+
+test("combat tricks aren't cast for nothing: not at the end of the opponent's turn, nor on an unblocked attack", () => {
+  // p1 has a Bear and both tricks; nobody blocks, and nothing they'd do kills anything or wins.
+  const game = setup({ p1Hand: ['bear', 'dreadfulAsTheStorm', 'giftOfStrands'] });
+  const { action } = firstCast(game);
+  assert.equal(game.getState().players[0].hand.find((c) => c.id === action.cardId).cardId, 'bear');
+  game.dispatch(action);
+  passTo(game, (s) => s.stack.length === 0 && s.priorityPlayerId === 'p1');
+  assert.equal(firstCast(game, { maxTurn: 6 }), null);
+});
+
+/** A combat: p1's 2/2 Bear attacks, blocked by p2's `blocker` (or unblocked); p2 at `life`. */
+const combat = ({ blocker = null, life = 20 } = {}) => ({
+  activePlayerId: 'p1',
+  players: [{ id: 'p1', life: 20 }, { id: 'p2', life }],
+  battlefield: [
+    { id: 'b', controllerId: 'p1', types: ['Creature'], power: 2, toughness: 2, damage: 0, keywords: [] },
+    ...(blocker ? [{ id: 'x', controllerId: 'p2', types: ['Creature'], damage: 0, keywords: [], ...blocker }] : []),
+  ],
+  combat: { attackers: [{ cardId: 'b', blockerIds: blocker ? ['x'] : [], blocked: Boolean(blocker) }] },
+});
+
+test('a combat trick is worth it when it kills their creature or wins the game, not to save ours', () => {
+  const dreadful = ALL_CARDS.dreadfulAsTheStorm.effects;
+  const pump = [{ type: 'pump', power: 3, toughness: 3 }];
+  // A 1/4 blocker survives a 2/2 Bear, but not a 5/5.
+  assert.equal(trickPays(combat({ blocker: { power: 1, toughness: 4 } }), 'p1', dreadful, 'b'), true);
+  assert.equal(windowAllows(WINDOW.COMBAT, dreadful, true, 'b', combat({ blocker: { power: 1, toughness: 4 } }), 'p1'), true);
+  assert.equal(permanentWindowAllows(WINDOW.COMBAT, ALL_CARDS.giftOfStrands, 'b', combat({ blocker: { power: 1, toughness: 4 } }), 'p1'), true);
+  // A 3/1 blocker dies anyway: the trick would only save the Bear.
+  assert.equal(trickPays(combat({ blocker: { power: 3, toughness: 1 } }), 'p1', pump, 'b'), false);
+  // Unblocked: only if the extra damage is lethal.
+  assert.equal(trickPays(combat({ life: 20 }), 'p1', pump, 'b'), false);
+  assert.equal(trickPays(combat({ life: 5 }), 'p1', pump, 'b'), true);
+  assert.equal(trickPays(combat({ life: 2 }), 'p1', pump, 'b'), false, 'already lethal without it');
+  // Never at the end of the opponent's turn, nor on their creature.
+  assert.equal(windowAllows(WINDOW.END, dreadful, true, 'b', combat(), 'p1'), false);
+  assert.equal(permanentWindowAllows(WINDOW.END, ALL_CARDS.giftOfStrands, 'b', combat(), 'p1'), false);
+  assert.equal(trickPays(combat({ blocker: { power: 1, toughness: 4 } }), 'p1', pump, 'x'), false);
 });

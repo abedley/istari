@@ -3,7 +3,8 @@
  * they're needed, never the AI's own main phase:
  * - removal on the opponent's creatures, and "can't block" effects: at the start of the AI's combat
  *   (clearing the way), or on attackers once the opponent attacks, or on combatants after blocks;
- * - combat tricks: after blockers are declared;
+ * - combat tricks (pumps, "base 5/5", flash Auras that pump): after blockers are declared, and only if they
+ *   kill an opponent's creature that would otherwise survive, or make the combat damage lethal (trickPays);
  * - creatures with flash: as surprise blockers when the opponent attacks, otherwise at the end of the
  *   opponent's turn, like the other instants (card draw, life gain, ...);
  * - counterspells: in response to the opponent's spell.
@@ -13,8 +14,9 @@
  */
 import { STEP, PHASE } from '../engine/turnStructure.js';
 import {
-  isCreature, isHarmfulEffect, flattenEffects, EFFECT, KEYWORD, castsAtInstantSpeed,
+  isCreature, isHarmfulEffect, flattenEffects, EFFECT, KEYWORD, AFFECTED, castsAtInstantSpeed, isAura, isCurse,
 } from '../cards/cards.js';
+import { resolveCombat } from './combat.js';
 
 /** Moments when the AI considers acting (anything else it passes). */
 export const WINDOW = Object.freeze({
@@ -58,18 +60,71 @@ export function winsNow(given, targetId, state, me) {
   return damage >= player.life;
 }
 
+/** A pump that makes a creature bigger (+X/+X, or "has base power and toughness 5/5"): a combat trick. */
+const isTrickPump = (e) => e.type === EFFECT.PUMP && (Boolean(e.setBase) || (e.power ?? 0) + (e.toughness ?? 0) > 0);
+
+/** What a bonus Aura (not a curse) gives the creature it enchants, as pumps: Gift of Strands' +3/+3. */
+export function auraPumps(card) {
+  if (!isAura(card) || isCurse(card)) return [];
+  return (card.staticAbilities ?? []).filter((e) => e.affected === AFFECTED.ATTACHED_PERMANENT && (e.power || e.toughness))
+    .map((e) => ({ type: EFFECT.PUMP, power: e.power ?? 0, toughness: e.toughness ?? 0, keywords: e.keywords ?? [] }));
+}
+
+const pumped = (creature, pumps) => pumps.reduce((c, e) => ({
+  ...c,
+  power: e.setBase?.power ?? c.power + (e.power ?? 0),
+  toughness: e.setBase?.toughness ?? c.toughness + (e.toughness ?? 0),
+  keywords: [...new Set([...(c.keywords ?? []), ...(e.keywords ?? [])])],
+}), creature);
+
+/**
+ * Whether a combat trick (these pumps on `targetId`, or on each creature `me` controls) is worth casting in this
+ * combat: it kills a creature of the opponent's that would survive without it, or it makes the combat damage to the
+ * opponent lethal. Saving our own creature, or more damage that doesn't kill, isn't enough.
+ */
+export function trickPays(state, me, given, targetId) {
+  if (!state.combat?.attackers.length) return false;
+  const pumps = flattenEffects(given).filter(isTrickPump);
+  if (!pumps.length) return false;
+  const byId = (id) => state.battlefield.find((p) => p.id === id);
+  const mine = (p) => p && p.controllerId === me && isCreature(p);
+  const affected = new Set(pumps.some((e) => e.affected === AFFECTED.EACH_CREATURE_YOU_CONTROL)
+    ? state.battlefield.filter(mine).map((p) => p.id) : mine(byId(targetId)) ? [targetId] : []);
+  if (!affected.size) return false;
+  const outcome = (modify) => {
+    const killed = new Set();
+    let damage = 0;
+    for (const { cardId, blockerIds, blocked } of state.combat.attackers) {
+      const attacker = byId(cardId);
+      if (!attacker) continue;
+      const blockers = blockerIds.map(byId).filter(Boolean);
+      const result = resolveCombat(modify(attacker), blockers.map(modify), { blocked: blocked ?? blockers.length > 0 });
+      if (result.attackerDies && attacker.controllerId !== me) killed.add(attacker.id);
+      for (const id of result.deadBlockers) if (byId(id)?.controllerId !== me) killed.add(id);
+      if (attacker.controllerId === me) damage += result.playerDamage;
+    }
+    return { killed, damage };
+  };
+  const before = outcome((c) => c);
+  const after = outcome((c) => (affected.has(c.id) ? pumped(c, pumps) : c));
+  const opponent = state.players.find((p) => p.id !== me && !p.hasLost);
+  if (opponent && after.damage >= opponent.life && before.damage < opponent.life) return true;
+  return [...after.killed].some((id) => !before.killed.has(id));
+}
+
 /**
  * Whether these effects (of a spell, or an ability with `instantSpeed`) are worth using in this
- * window, rather than waiting for a better one.
+ * window, rather than waiting for a better one. `ability`: an activated ability, which costs no card,
+ * so a pump of it (firebreathing) is fine whenever it helps in combat; a trick spell has to pay.
  */
-export function windowAllows(window, given, instantSpeed, targetId, state, me) {
+export function windowAllows(window, given, instantSpeed, targetId, state, me, { ability = false } = {}) {
   const effects = flattenEffects(given);
   const counters = effects.some((e) => e.type === EFFECT.COUNTER_SPELL);
   if (window === WINDOW.RESPONSE) return counters;
   if (counters) return false;
   if (winsNow(effects, targetId, state, me)) return true;
   const harmful = effects.some(isHarmfulEffect);
-  const trick = effects.some((e) => e.type === EFFECT.PUMP && (e.power ?? 0) + (e.toughness ?? 0) > 0);
+  const trick = effects.some(isTrickPump);
   const onCreature = targetId && state.battlefield.some((p) => p.id === targetId && isCreature(p));
   const onTheirCreature = onCreature && isTheirs(state, me, targetId);
   // Blocking restrictions only matter if they're in place before blockers are declared.
@@ -83,7 +138,8 @@ export function windowAllows(window, given, instantSpeed, targetId, state, me) {
       // Clearing the way for the attack: removal on their creatures, blocking restrictions.
       return restricts || (harmful && onTheirCreature);
     case WINDOW.COMBAT:
-      return trick || (harmful && onCreature);
+      // A trick only when it kills one of theirs or wins the game (trickPays).
+      return trick ? ability || trickPays(state, me, effects, targetId) : harmful && onCreature;
     case WINDOW.ATTACKED:
       return harmful && onCreature && state.combat.attackers.some((a) => a.cardId === targetId);
     case WINDOW.END:
@@ -98,9 +154,13 @@ export function windowAllows(window, given, instantSpeed, targetId, state, me) {
 /**
  * When a permanent spell with flash is worth casting: as a blocker once the opponent attacks (a
  * creature), or at the end of the opponent's turn. Sorcery-speed permanents only in the main phase.
+ * A bonus Aura with flash is a combat trick: after blocks, on the creature it makes pay (trickPays);
+ * without a `targetId` (and `state`), whether its window has come at all.
  */
-export function permanentWindowAllows(window, card) {
+export function permanentWindowAllows(window, card, targetId = null, state = null, me = null) {
   if (!castsAtInstantSpeed(card)) return window === WINDOW.MAIN;
+  const pumps = auraPumps(card);
+  if (pumps.length) return window === WINDOW.COMBAT && (!state || trickPays(state, me, pumps, targetId));
   if (window === WINDOW.ATTACKED) return isCreature(card);
   return window === WINDOW.END;
 }
