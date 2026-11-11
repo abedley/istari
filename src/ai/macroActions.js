@@ -252,9 +252,12 @@ function dedupe(macros) {
  * The next raw action that carries out `macro` for `me`: `{ action, done }`, where
  * `done` means the macro is complete once this action is taken. Returns null when
  * the macro can't be carried out (e.g. its target is gone or the mana isn't there).
+ * `guard`: leave out activations past the AI's limit (AI_ACTIVATIONS_PER_TURN); the human
+ * player's plays (app/battle/play.js) aren't limited.
  */
-export function nextAction(state, me, macro) {
-  const mine = guardActivations(state, state.validActions.filter((a) => a.playerId === me));
+export function nextAction(state, me, macro, { guard = true } = {}) {
+  const valid = state.validActions.filter((a) => a.playerId === me);
+  const mine = guard ? guardActivations(state, valid) : valid;
   const find = (predicate) => mine.find(predicate);
   switch (macro.kind) {
     case 'pass': {

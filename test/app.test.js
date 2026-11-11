@@ -361,3 +361,33 @@ test('cards that may be cast from exile are play options', () => {
   assert.ok(option, 'the Bear in exile');
   assert.deepEqual(perform(game, 'p1', option, option.variants[0]), { ok: true });
 });
+
+test('the AI’s limit on activations each turn doesn’t apply to the player', async () => {
+  const { AI_ACTIVATIONS_PER_TURN } = await import('../src/ai/manaPlanning.js');
+  const bear = { id: 'bear', name: 'Bear', manaCost: { generic: 1 }, types: ['Creature'], power: 2, toughness: 2 };
+  const game = new Game({
+    players, cards: { bear }, shuffleLibraries: false, emblems: { p1: [], p2: [] }, startingPlayerId: 'p1',
+    decks: { p1: ['arwenUndomiel', 'bear'], p2: ['bear', 'bear'] }, openingHandSize: 2, mulligans: false, deckingLoss: false, infiniteMana: true,
+  });
+  game.start();
+  /** Passes until the stack is empty and p1 has priority in its main phase. */
+  const settle = () => {
+    for (let i = 0; i < 40; i++) {
+      const s = state(game);
+      if (!s.pendingDecision && !s.stack.length && s.priorityPlayerId === 'p1' && s.phase === PHASE.PRECOMBAT_MAIN) return;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const mine = s.validActions.filter((a) => a.playerId === actor);
+      game.dispatch(mine.find((a) => a.type === ACTION.PASS_PRIORITY) ?? mine[0]);
+    }
+  };
+  settle();
+  const arwen = playOptions(game, 'p1').find((o) => o.kind === 'cast' && state(game).players[0].hand.find((c) => c.id === o.sourceId)?.cardId === 'arwenUndomiel');
+  assert.deepEqual(perform(game, 'p1', arwen, arwen.variants[0]), { ok: true });
+  settle();
+  for (let n = 0; n < AI_ACTIVATIONS_PER_TURN + 3; n++) {
+    const scry = playOptions(game, 'p1').find((o) => o.kind === 'activate' && o.sourceId === arwen.sourceId);
+    assert.ok(scry, `activation ${n + 1}`);
+    assert.deepEqual(perform(game, 'p1', scry, scry.variants[0]), { ok: true });
+    settle();
+  }
+});

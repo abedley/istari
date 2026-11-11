@@ -91,13 +91,14 @@ function option(macro, variants) {
  * could be paid is offered.
  */
 function prepare(game, state, me, macro, hasX = false) {
-  let step = nextAction(state, me, macro);
+  // The AI's limit on activations each turn isn't a rule: the player can activate as often as they like.
+  let step = nextAction(state, me, macro, { guard: false });
   if (!step) return null;
   if (step.done && !hasX) return option(macro, matching(state, me, macro));
   const sim = game.clone();
   for (let i = 0; i < 30 && step && !step.done; i++) {
     sim.applyTrusted(step.action);
-    step = nextAction(sim.peekState(), me, macro);
+    step = nextAction(sim.peekState(), me, macro, { guard: false });
   }
   if (!step?.done) return null;
   for (let i = 0; hasX && i < 30; i++) {
