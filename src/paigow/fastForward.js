@@ -12,7 +12,8 @@ const usable = (abilities) => (abilities ?? []).some((ability) => !ability.isMan
 
 /**
  * Whether an emblem's power could still do something for `player`, who has no hand and no creatures:
- * not one that targets their own creature, nor one that targets an opponent's creature or makes
+ * not one that targets their own creature, nor one that sets a creature's power when none of the opponent's is
+ * bigger, nor one that targets an opponent's creature or makes
  * opponents discard when there are none, nor the Ring tempting them once it's at its last level.
  */
 function powerLeft(state, player, ability) {
@@ -21,6 +22,11 @@ function powerLeft(state, player, ability) {
   const opponents = state.players.filter((p) => p.id !== player.id);
   if (target === TARGET.CREATURE_OPPONENT_CONTROLS) return state.battlefield.some((p) => p.controllerId !== player.id && isCreature(p));
   const effects = ability.effects ?? [];
+  // Strider's "target creature's power becomes 4": with none of our own, only shrinking one of theirs.
+  const setPower = effects.find((e) => e.type === EFFECT.PUMP && e.setBase?.power !== undefined)?.setBase.power;
+  if (target === TARGET.CREATURE && setPower !== undefined) {
+    return state.battlefield.some((p) => p.controllerId !== player.id && isCreature(p) && p.power > setPower);
+  }
   if (effects.length && effects.every((e) => e.type === EFFECT.DISCARD)) return opponents.some((p) => (p.hand?.length ?? p.handSize ?? 0) > 0);
   if (effects.length && effects.every((e) => e.type === EFFECT.RING_TEMPTS)) return (player.ring?.level ?? 0) < 4;
   // Gaining life on an otherwise empty side changes nothing worth waiting for.

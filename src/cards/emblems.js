@@ -59,8 +59,9 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   strider: power('strider', 'The Ring of Barahir', 'Ranger of the North', {
-    text: "0: Target creature you control's power becomes 4 until your next turn. Activate only as a sorcery.",
-    target: TARGET.CREATURE_YOU_CONTROL,
+    text: "0: Target creature's power becomes 4 until your next turn. Activate only as a sorcery.",
+    // Any creature: one of yours grows, one of theirs (bigger than 4) shrinks.
+    target: TARGET.CREATURE,
     // Until your next turn: it blocks as a 4-power creature on the opponent's turn too.
     effects: [{ type: EFFECT.PUMP, setBase: { power: 4 }, untilYourNextTurn: true }],
     timing: SORCERY,

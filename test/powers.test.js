@@ -40,9 +40,12 @@ function powerGame(mine, theirs, { p1 = ['bear', 'bear'], p2 = ['bear', 'bear'] 
 
 const activation = (state, playerId) => state.validActions.find((a) => a.playerId === playerId && a.type === ACTION.ACTIVATE_ABILITY && a.cardId === `${playerId}-emblem-1`);
 
-/** Activates p1's power (on its first legal target), lets it resolve, and returns the state. */
-function usePower(game) {
-  const action = activation(game.getState(), 'p1');
+/** Activates p1's power (on its first legal target, or on `targetOf(state)`), lets it resolve, and returns the state. */
+function usePower(game, targetOf = null) {
+  const state = game.getState();
+  const action = targetOf
+    ? state.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.ACTIVATE_ABILITY && a.cardId === 'p1-emblem-1' && a.targets?.[0] === targetOf(state))
+    : activation(state, 'p1');
   assert.ok(action, 'the power can be activated');
   assert.equal(game.dispatch(action).ok, true);
   for (let i = 0; i < 50; i++) {
@@ -107,7 +110,7 @@ test('each power does what it says', () => {
   let s = usePower(powerGame('frodo'));
   assert.equal(s.players[0].life, 20);
   assert.equal(s.players[0].ring.level, 1);
-  s = usePower(powerGame('strider'));
+  s = usePower(powerGame('strider'), (st) => p1Bear(st).id);
   assert.equal(p1Bear(s).power, 4);
   assert.equal(p1Bear(s).toughness, 2);
   s = usePower(powerGame('gandalf'));
@@ -177,7 +180,7 @@ test('two basic AIs play rounds with every pair of powers', () => {
 
 test("Strider's power: sorcery speed, and the creature's power becomes 4 until p1's next turn", () => {
   const game = powerGame('strider');
-  const s = usePower(game);
+  const s = usePower(game, (st) => st.battlefield.find((p) => p.controllerId === 'p1').id);
   const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;
   const bear = () => game.getState().battlefield.find((p) => p.id === bearId);
   assert.equal(bear().power, 4);
@@ -373,4 +376,21 @@ test("the Rider in Black's power: at his end step, each opponent with a Ring-bea
   // No Ring-bearer, no life lost.
   assert.equal(endStepLoss(powerGame(null, 'riderInBlack')), 0);
   assert.equal(EMBLEMS.riderInBlack.text, 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.');
+});
+
+test("Strider's power can target any creature: an opponent's grows or shrinks to 4 power too", () => {
+  const theirs = (st) => st.battlefield.find((p) => p.controllerId === 'p2');
+  const game = powerGame('strider');
+  const targets = game.getState().validActions.filter((a) => a.playerId === 'p1' && a.cardId === 'p1-emblem-1').map((a) => a.targets[0]);
+  assert.ok(targets.includes(theirs(game.getState()).id), 'an opponent\'s creature is a legal target');
+  const s = usePower(game, (st) => theirs(st).id);
+  assert.equal(theirs(s).power, 4);
+  // Fast forward: with nothing of our own, it can only shrink a creature of theirs bigger than 4.
+  const ffState = (power) => ({
+    players: [{ id: 'p1', hand: [], emblems: [{ emblemId: 'strider', activationsThisTurn: 0, activationsPerTurn: 1, abilities: EMBLEMS.strider.abilities }], exile: [], graveyard: [], ring: { level: 0 } },
+      { id: 'p2', hand: [], emblems: [], exile: [], graveyard: [] }],
+    battlefield: [{ id: 'x', controllerId: 'p2', types: ['Creature'], power, toughness: power, abilities: [] }],
+  });
+  assert.equal(outOfActions(ffState(2), 'p1'), true);
+  assert.equal(outOfActions(ffState(9), 'p1'), false);
 });

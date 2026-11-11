@@ -77,7 +77,7 @@ turn begins, after the opening hands. They're placeholders to tune:
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
-| Strider | The Ring of Barahir | Ranger of the North | 0: Target creature you control's power becomes 4 until your next turn. Sorcery speed. |
+| Strider | The Ring of Barahir | Ranger of the North | 0: Target creature's power becomes 4 until your next turn (yours or theirs). Sorcery speed. |
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
@@ -98,8 +98,9 @@ Each is written with `power(id, ring, powerName, { text, cost, effects, target, 
 and the `text` to match. Your power is a button beside your portrait in a round; the opponent's shows
 its cost by theirs (hold it to read it). The *vs* screen before a round shows both, and so does tapping
 the opponent on the deck builder or either side on the scoreboard. For fast forward, a power that
-targets your own creature, or one that can do nothing more (no creature of theirs to target, no cards
-for them to discard, the Ring at its last level), doesn't count as an action.
+targets your own creature, or one that can do nothing more (no creature of theirs to target, none of
+theirs bigger than Strider's 4 to shrink, no cards for them to discard, the Ring at its last level), doesn't
+count as an action.
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
