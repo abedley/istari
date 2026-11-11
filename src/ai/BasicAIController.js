@@ -355,7 +355,7 @@ export class BasicAIController extends EventEmitter {
         for (const [mode, holder] of modes) {
           const best = bestTargets(state, me, holder.effects, targetList(holder), card.id, preCombat, x);
           const targetId = best?.targets.filter(Boolean).at(-1) ?? null;
-          if (best && best.score > 0 && windowAllows(window, holder.effects, instant, targetId, state, me)) {
+          if (best && best.score > 0 && windowAllows(window, holder.effects, instant, targetId, state, me, { sourceId: card.id })) {
             const matches = (a) => a.type === ACTION.CAST_SPELL && a.cardId === card.id && a.mode === mode && sameX(a)
               && (a.targets ?? []).join() === best.targets.join();
             add({ score: best.score, manaCost: xCost, cost, sourceId: card.id, now: true, matches });
@@ -369,7 +369,7 @@ export class BasicAIController extends EventEmitter {
       // Burn spells are kept for kills (wastedDamage).
       const best = bestTarget(state, me, effects, target, card.id, window, preCombat, doomed, true);
       if (best && this.#savesRemoval(state, effects, best.targetId, window)) continue;
-      const allowed = best && (windowAllows(window, effects, instant, best.targetId, state, me)
+      const allowed = best && (windowAllows(window, effects, instant, best.targetId, state, me, { sourceId: card.id })
         || (instant && cashesInDoomed(state, me, cost, card.id, window, fodder)));
       if (allowed) {
         const score = best.score + costScore(state, me, cost, {}, card.id) + cheapestSacrifice(state, me, cost, card.id, fodder);

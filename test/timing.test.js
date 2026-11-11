@@ -168,3 +168,35 @@ test('a combat trick is worth it when it kills their creature or wins the game, 
   assert.equal(permanentWindowAllows(WINDOW.END, ALL_CARDS.giftOfStrands, 'b', combat(), 'p1'), false);
   assert.equal(trickPays(combat({ blocker: { power: 1, toughness: 4 } }), 'p1', pump, 'x'), false);
 });
+
+test('a combat trick that only works with another trick in hand is cast first, if there is the mana for both', () => {
+  // As cards in a hand: Gift of Strands (+3/+3, flash Aura, {1}{G}), Rally (+2/+2 instant, {1}), Might (+5/+5, {1}).
+  const gift = { id: 'h1', cardId: 'giftOfStrands', types: ['Enchantment'], subtypes: ['Aura'], keywords: ['flash'],
+    manaCost: { generic: 1, G: 1 }, staticAbilities: ALL_CARDS.giftOfStrands.staticAbilities };
+  const instant = (id, n) => ({ id, types: ['Instant'], keywords: [], manaCost: { generic: 1 }, spell: { target: 'creature', effects: [{ type: 'pump', power: n, toughness: n }] } });
+  const rally = instant('h2', 2);
+  const might = instant('h3', 5);
+  /** p1's 2/2 Bear blocked by a 1/6: Gift alone makes it 5/5, Gift and Rally 7/7. */
+  const state = (hand, { infiniteMana = true, lands = 0, toughness = 6 } = {}) => {
+    const s = combat({ blocker: { power: 1, toughness } });
+    s.infiniteMana = infiniteMana;
+    s.players[0] = { ...s.players[0], hand, manaPool: {} };
+    for (let i = 0; i < lands; i++) s.battlefield.push({ id: `l${i}`, controllerId: 'p1', types: ['Land'], tapped: false });
+    return s;
+  };
+  const giftPays = (s) => permanentWindowAllows(WINDOW.COMBAT, gift, 'b', s, 'p1');
+  assert.equal(giftPays(state([gift])), false, 'alone it kills nothing');
+  assert.equal(giftPays(state([gift, rally])), true, 'with Rally it kills the blocker');
+  assert.equal(windowAllows(WINDOW.COMBAT, rally.spell.effects, true, 'b', state([gift, rally]), 'p1', { sourceId: 'h2' }), true, 'either can go first');
+  // The mana for both: 3 lands for Gift's 2 and Rally's 1, not 2.
+  assert.equal(giftPays(state([gift, rally], { infiniteMana: false, lands: 3 })), true);
+  assert.equal(giftPays(state([gift, rally], { infiniteMana: false, lands: 2 })), false);
+  // Might does it alone: it's cast instead of the two.
+  assert.equal(giftPays(state([gift, rally, might])), false);
+  assert.equal(windowAllows(WINDOW.COMBAT, might.spell.effects, true, 'b', state([gift, rally, might]), 'p1', { sourceId: 'h3' }), true);
+  // Up to three cards in all: against a 1/7, Gift needs two +1/+1s (7/7); one isn't enough, and three more is too many.
+  const tiny = (id) => instant(id, 1);
+  assert.equal(giftPays(state([gift, tiny('t1'), tiny('t2')], { toughness: 7 })), true);
+  assert.equal(giftPays(state([gift, tiny('t1')], { toughness: 7 })), false);
+  assert.equal(giftPays(state([gift, tiny('t1'), tiny('t2'), tiny('t3')], { toughness: 8 })), false);
+});

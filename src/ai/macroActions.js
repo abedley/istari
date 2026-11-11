@@ -164,7 +164,7 @@ function priorityMacros(state, me, mine) {
   for (const card of player.hand) {
     const instant = castsAtInstantSpeed(card);
     const timely = (effects, targetId) => !instant
-      || (card.spell ? windowAllows(window, effects, true, targetId, state, me) : permanentWindowAllows(window, card, targetId, state, me));
+      || (card.spell ? windowAllows(window, effects, true, targetId, state, me, { sourceId: card.id }) : permanentWindowAllows(window, card, targetId, state, me));
     // Cycling and other abilities that work from the hand.
     for (const ability of card.handAbilities ?? []) {
       if (affordable(ability.cost.mana) && (sorceryTiming || state.activePlayerId !== me)) {

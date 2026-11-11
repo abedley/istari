@@ -4,7 +4,8 @@
  * - removal on the opponent's creatures, and "can't block" effects: at the start of the AI's combat
  *   (clearing the way), or on attackers once the opponent attacks, or on combatants after blocks;
  * - combat tricks (pumps, "base 5/5", flash Auras that pump): after blockers are declared, and only if they
- *   kill an opponent's creature that would otherwise survive, or make the combat damage lethal (trickPays);
+ *   kill an opponent's creature that would otherwise survive, or make the combat damage lethal, alone or with
+ *   other tricks in hand (trickPays);
  * - creatures with flash: as surprise blockers when the opponent attacks, otherwise at the end of the
  *   opponent's turn, like the other instants (card draw, life gain, ...);
  * - counterspells: in response to the opponent's spell.
@@ -14,7 +15,7 @@
  */
 import { STEP, PHASE } from '../engine/turnStructure.js';
 import {
-  isCreature, isHarmfulEffect, flattenEffects, EFFECT, KEYWORD, AFFECTED, castsAtInstantSpeed, isAura, isCurse,
+  isCreature, isLand, isHarmfulEffect, flattenEffects, manaValue, EFFECT, KEYWORD, AFFECTED, castsAtInstantSpeed, isAura, isCurse,
 } from '../cards/cards.js';
 import { resolveCombat } from './combat.js';
 
@@ -70,28 +71,49 @@ export function auraPumps(card) {
     .map((e) => ({ type: EFFECT.PUMP, power: e.power ?? 0, toughness: e.toughness ?? 0, keywords: e.keywords ?? [] }));
 }
 
-const pumped = (creature, pumps) => pumps.reduce((c, e) => ({
+/** A creature with pumps applied: "base 5/5" first, then the +X/+X ones. */
+const pumped = (creature, pumps) => [...pumps].sort((a, b) => Boolean(b.setBase) - Boolean(a.setBase)).reduce((c, e) => ({
   ...c,
   power: e.setBase?.power ?? c.power + (e.power ?? 0),
   toughness: e.setBase?.toughness ?? c.toughness + (e.toughness ?? 0),
   keywords: [...new Set([...(c.keywords ?? []), ...(e.keywords ?? [])])],
 }), creature);
 
+/** A card's combat-trick pumps: an instant-speed spell's, or a flash Aura's bonus; [] if it isn't a trick. */
+const trickPumpsOf = (card) => (!castsAtInstantSpeed(card) ? []
+  : card.spell ? flattenEffects(card.spell.effects ?? []).filter(isTrickPump) : auraPumps(card));
+
+/** How many other tricks (besides the one being cast) a combination may use: up to three cards in all. */
+const MAX_PARTNERS = 2;
+
 /**
  * Whether a combat trick (these pumps on `targetId`, or on each creature `me` controls) is worth casting in this
  * combat: it kills a creature of the opponent's that would survive without it, or it makes the combat damage to the
  * opponent lethal. Saving our own creature, or more damage that doesn't kill, isn't enough.
+ *
+ * When it can't on its own, it still pays as the first of a few tricks from the hand that together do (the fewest,
+ * up to MAX_PARTNERS more, with the mana for all of them); once it has resolved, the next one pays on its own against
+ * the pumped creature. `sourceId` is the card being cast (so it isn't counted twice). Not when another trick in hand
+ * does the job alone: that one is cast instead.
  */
-export function trickPays(state, me, given, targetId) {
+export function trickPays(state, me, given, targetId, { sourceId = null, combine = true } = {}) {
   if (!state.combat?.attackers.length) return false;
   const pumps = flattenEffects(given).filter(isTrickPump);
   if (!pumps.length) return false;
   const byId = (id) => state.battlefield.find((p) => p.id === id);
   const mine = (p) => p && p.controllerId === me && isCreature(p);
-  const affected = new Set(pumps.some((e) => e.affected === AFFECTED.EACH_CREATURE_YOU_CONTROL)
-    ? state.battlefield.filter(mine).map((p) => p.id) : mine(byId(targetId)) ? [targetId] : []);
-  if (!affected.size) return false;
-  const outcome = (modify) => {
+  const myCreatures = state.battlefield.filter(mine).map((p) => p.id);
+  // Whom pumps go on: everything we control ("creatures you control get +1/+1"), or the target if it's ours.
+  const onto = (effects, id) => new Set(effects.some((e) => e.affected === AFFECTED.EACH_CREATURE_YOU_CONTROL)
+    ? myCreatures : mine(byId(id)) ? [id] : []);
+  const first = { pumps, ids: onto(pumps, targetId) };
+  if (!first.ids.size) return false;
+  /** What combat does with these tricks: the opponent's creatures that die, and the damage dealt to them. */
+  const outcome = (tricks) => {
+    const modify = (c) => {
+      const on = tricks.filter((t) => t.ids.has(c.id)).flatMap((t) => t.pumps);
+      return on.length ? pumped(c, on) : c;
+    };
     const killed = new Set();
     let damage = 0;
     for (const { cardId, blockerIds, blocked } of state.combat.attackers) {
@@ -105,11 +127,46 @@ export function trickPays(state, me, given, targetId) {
     }
     return { killed, damage };
   };
-  const before = outcome((c) => c);
-  const after = outcome((c) => (affected.has(c.id) ? pumped(c, pumps) : c));
+  const before = outcome([]);
   const opponent = state.players.find((p) => p.id !== me && !p.hasLost);
-  if (opponent && after.damage >= opponent.life && before.damage < opponent.life) return true;
-  return [...after.killed].some((id) => !before.killed.has(id));
+  const pays = (tricks) => {
+    const after = outcome(tricks);
+    if (opponent && after.damage >= opponent.life && before.damage < opponent.life) return true;
+    return [...after.killed].some((id) => !before.killed.has(id));
+  };
+  if (pays([first])) return true;
+  if (!combine) return false;
+
+  // The other tricks in hand, each on any of our creatures in this combat.
+  const player = state.players.find((p) => p.id === me);
+  const fighting = new Set(state.combat.attackers.flatMap((a) => [a.cardId, ...a.blockerIds]).filter((id) => mine(byId(id))));
+  const others = (player?.hand ?? []).filter((c) => c.id !== sourceId).flatMap((card) => {
+    const cardPumps = trickPumpsOf(card);
+    if (!cardPumps.length) return [];
+    if (cardPumps.some((e) => e.affected === AFFECTED.EACH_CREATURE_YOU_CONTROL)) return [{ card, pumps: cardPumps, ids: new Set(myCreatures) }];
+    return [...fighting].map((id) => ({ card, pumps: cardPumps, ids: new Set([id]) }));
+  });
+  // Another trick that does it alone goes first, rather than spending several cards.
+  if (others.some((o) => pays([o]))) return false;
+  // The mana for this card and its partners (any amount with infinite mana).
+  const pool = Object.values(player?.manaPool ?? {}).reduce((sum, n) => sum + n, 0);
+  const lands = state.battlefield.filter((p) => p.controllerId === me && isLand(p) && !p.tapped).length;
+  const available = state.infiniteMana ? Infinity : pool + lands;
+  const cost = (card) => manaValue(card?.manaCost ?? {});
+  const own = cost(player?.hand?.find((c) => c.id === sourceId));
+  // The fewest partners first: one, then two (each card once).
+  const search = (chosen, from, size) => {
+    if (chosen.length === size) {
+      return own + chosen.reduce((sum, o) => sum + cost(o.card), 0) <= available && pays([first, ...chosen]);
+    }
+    for (let i = from; i < others.length; i++) {
+      if (chosen.some((o) => o.card.id === others[i].card.id)) continue;
+      if (search([...chosen, others[i]], i + 1, size)) return true;
+    }
+    return false;
+  };
+  for (let size = 1; size <= MAX_PARTNERS; size++) if (search([], 0, size)) return true;
+  return false;
 }
 
 /**
@@ -117,7 +174,7 @@ export function trickPays(state, me, given, targetId) {
  * window, rather than waiting for a better one. `ability`: an activated ability, which costs no card,
  * so a pump of it (firebreathing) is fine whenever it helps in combat; a trick spell has to pay.
  */
-export function windowAllows(window, given, instantSpeed, targetId, state, me, { ability = false } = {}) {
+export function windowAllows(window, given, instantSpeed, targetId, state, me, { ability = false, sourceId = null } = {}) {
   const effects = flattenEffects(given);
   const counters = effects.some((e) => e.type === EFFECT.COUNTER_SPELL);
   if (window === WINDOW.RESPONSE) return counters;
@@ -139,7 +196,7 @@ export function windowAllows(window, given, instantSpeed, targetId, state, me, {
       return restricts || (harmful && onTheirCreature);
     case WINDOW.COMBAT:
       // A trick only when it kills one of theirs or wins the game (trickPays).
-      return trick ? ability || trickPays(state, me, effects, targetId) : harmful && onCreature;
+      return trick ? ability || trickPays(state, me, effects, targetId, { sourceId }) : harmful && onCreature;
     case WINDOW.ATTACKED:
       return harmful && onCreature && state.combat.attackers.some((a) => a.cardId === targetId);
     case WINDOW.END:
@@ -160,7 +217,7 @@ export function windowAllows(window, given, instantSpeed, targetId, state, me, {
 export function permanentWindowAllows(window, card, targetId = null, state = null, me = null) {
   if (!castsAtInstantSpeed(card)) return window === WINDOW.MAIN;
   const pumps = auraPumps(card);
-  if (pumps.length) return window === WINDOW.COMBAT && (!state || trickPays(state, me, pumps, targetId));
+  if (pumps.length) return window === WINDOW.COMBAT && (!state || trickPays(state, me, pumps, targetId, { sourceId: card.id }));
   if (window === WINDOW.ATTACKED) return isCreature(card);
   return window === WINDOW.END;
 }
