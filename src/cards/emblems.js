@@ -59,9 +59,10 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   strider: power('strider', 'The Ring of Barahir', 'Ranger of the North', {
-    text: "0: Target creature you control's power becomes 4 until end of turn. Activate only as a sorcery.",
+    text: "0: Target creature you control's power becomes 4 until your next turn. Activate only as a sorcery.",
     target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, setBase: { power: 4 } }],
+    // Until your next turn: it blocks as a 4-power creature on the opponent's turn too.
+    effects: [{ type: EFFECT.PUMP, setBase: { power: 4 }, untilYourNextTurn: true }],
     timing: SORCERY,
   }),
   // A passive power: no ability to activate, just something the game starts with (`startsWith`, card ids put onto

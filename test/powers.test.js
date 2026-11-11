@@ -175,7 +175,7 @@ test('two basic AIs play rounds with every pair of powers', () => {
   }
 });
 
-test("Strider's power: sorcery speed, and the creature's power becomes 4 until end of turn", () => {
+test("Strider's power: sorcery speed, and the creature's power becomes 4 until p1's next turn", () => {
   const game = powerGame('strider');
   const s = usePower(game);
   const bearId = s.battlefield.find((p) => p.controllerId === 'p1').id;
@@ -195,14 +195,23 @@ test("Strider's power: sorcery speed, and the creature's power becomes 4 until e
   assert.notEqual(st.phase, 'precombatMain');
   assert.equal(st.priorityPlayerId, 'p1');
   assert.equal(activation(st, 'p1'), undefined);
-  // Gone by the opponent's turn.
-  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) {
-    const now = game.getState();
-    const actor = now.pendingDecision?.playerId ?? now.priorityPlayerId;
-    const acts = now.validActions.filter((a) => a.playerId === actor);
-    game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]);
-  }
-  assert.equal(game.getState().activePlayerId, 'p2');
+  /** Passes (no attacks, no blocks) until `done`. */
+  const passUntil = (done) => {
+    for (let i = 0; i < 500 && !done(game.getState()); i++) {
+      const now = game.getState();
+      const actor = now.pendingDecision?.playerId ?? now.priorityPlayerId;
+      const acts = now.validActions.filter((a) => a.playerId === actor);
+      game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]);
+    }
+  };
+  // Still 4 through the opponent's turn, as a blocker.
+  const turn = game.getState().turn;
+  passUntil((st) => st.activePlayerId === 'p2' && st.phase === 'combat');
+  assert.equal(bear().power, 4);
+  passUntil((st) => st.activePlayerId === 'p2' && st.step === 'end');
+  assert.equal(bear().power, 4);
+  // Gone as p1's next turn begins.
+  passUntil((st) => st.activePlayerId === 'p1' && st.turn > turn);
   assert.equal(bear().power, 2);
 });
 

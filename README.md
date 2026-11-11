@@ -77,7 +77,7 @@ turn begins, after the opening hands. They're placeholders to tune:
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
 | Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
-| Strider | The Ring of Barahir | Ranger of the North | 0: Target creature you control's power becomes 4 until end of turn. Sorcery speed. |
+| Strider | The Ring of Barahir | Ranger of the North | 0: Target creature you control's power becomes 4 until your next turn. Sorcery speed. |
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
