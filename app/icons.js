@@ -66,6 +66,8 @@ const PATHS = {
   willow: 'M12 21V10M12 10c-3-4-7-4-9 0v8M12 10c3-4 7-4 9 0v8M12 13c-2-2-4-1-5 1v5M12 13c2-2 4-1 5 1v5M9 21h6',
   // A mug: Pippin's second breakfast.
   mug: 'M5 8h11v8a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4zM16 10h2a2 2 0 0 1 0 4h-2M8 3v2M12 3v2',
+  // A teapot: Merry pours for his friends.
+  teapot: 'M6 11h10v5a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4zM6 13 2 10M16 12h2a2 2 0 0 1 0 4h-2M9 11V9h4v2M11 9V7',
   // A hooded figure: the portrait of someone without art.
   hooded: 'M12 2C8 2 5.5 5 5.5 9.5c0 2.6.8 4.6 1.8 6L4 22h16l-3.3-6.5c1-1.4 1.8-3.4 1.8-6C18.5 5 16 2 12 2zm0 5.5c1.9 0 3.2 1.7 3.2 4 0 1.6-.7 3-1.6 3.8L12 17l-1.6-1.7c-.9-.8-1.6-2.2-1.6-3.8 0-2.3 1.3-4 3.2-4z',
 };
@@ -73,7 +75,7 @@ const PATHS = {
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
   'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
-  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'pan', 'willow', 'mug']);
+  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'pan', 'willow', 'mug', 'teapot']);
 
 /** Icons whose inner shapes are holes. */
 const EVEN_ODD = new Set(['eye']);
@@ -88,6 +90,7 @@ export const POWER_ICONS = Object.freeze({
   strider: 'sword',
   samwise: 'pan',
   radagast: 'bird',
+  merry: 'teapot',
   pippin: 'mug',
   birthdayBilbo: 'cake',
   burglarBilbo: 'key',

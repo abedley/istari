@@ -14,9 +14,13 @@ const usable = (abilities) => (abilities ?? []).some((ability) => !ability.isMan
  * Whether an emblem's power could still do something for `player`, who has no hand and no creatures:
  * not one that targets their own creature, nor one that sets a creature's power when none of the opponent's is
  * bigger, nor one that targets an opponent's creature or makes
- * opponents discard when there are none, nor the Ring tempting them once it's at its last level.
+ * opponents discard when there are none, nor one that sacrifices a Food they don't have, nor the Ring tempting them once it's at its last level.
  */
 function powerLeft(state, player, ability) {
+  // Merry's "Sacrifice a Food": nothing to sacrifice, no power.
+  const sacrifice = ability.cost?.sacrifice;
+  const subtypes = typeof sacrifice === 'object' ? sacrifice?.filter?.subtypes : null;
+  if (subtypes && !state.battlefield.some((p) => p.controllerId === player.id && subtypes.some((t) => (p.subtypes ?? []).includes(t)))) return false;
   const target = typeof ability.target === 'object' && ability.target ? ability.target.kind : ability.target;
   if (target === TARGET.CREATURE_YOU_CONTROL) return false;
   const opponents = state.players.filter((p) => p.id !== player.id);

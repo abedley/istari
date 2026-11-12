@@ -94,6 +94,12 @@ export const EMBLEMS = deepFreeze({
     ],
   },
 
+  merry: power('merry', 'The Ring of Buckland', 'Halflings of the Shire', {
+    text: 'Sacrifice a Food: Create two 1/1 white Halfling creature tokens. Activate only as a sorcery.',
+    cost: { sacrifice: { kind: TARGET.PERMANENT, filter: { subtypes: ['Food'] } } },
+    effects: [{ type: EFFECT.CREATE_TOKEN, count: 2, token: { colors: ['white'], subtypes: ['Halfling'], power: 1, toughness: 1 } }],
+    timing: SORCERY,
+  }),
   pippin: power('pippin', 'The Ring of the Tooks', 'Second Breakfast', {
     text: '0: Create a Morsel token. (It\u2019s a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life.") Activate only as a sorcery.',
     effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: TOKEN.MORSEL }],

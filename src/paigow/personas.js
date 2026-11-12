@@ -192,6 +192,11 @@ export const PAIGOW_HEROES = deepFreeze({
     blurb: 'The Brown Wizard of Rhosgobel, who calls the beasts and birds to his side in an instant.',
     portrait: portrait('b/3/b3988120-ebbe-4d24-9bb4-8c5331a14034.jpg?1783916261', 46, 4, 320, 'Radagast the Brown', 'Alexander Mokhov'),
   },
+  merry: {
+    name: 'Merry', color: 'gold', emblem: 'merry',
+    blurb: 'A Brandybuck of Buckland, who brings his friends along and the provisions too.',
+    portrait: portrait('8/8/885a3277-ef10-4dcf-ac63-eb8971cd627c.jpg?1783916264', 44, 18, 300, 'Meriadoc Brandybuck', 'Marie Magny'),
+  },
   pippin: {
     name: 'Pippin', color: 'gold', emblem: 'pippin',
     blurb: 'A Took of the Shire, who has never once skipped second breakfast.',

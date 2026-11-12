@@ -84,7 +84,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Pippin']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Pippin']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -154,6 +154,8 @@ test('fast forward ignores powers that could do nothing more', () => {
   assert.equal(outOfActions(powerGame('denethor', null, empty).getState(), 'p1'), true);
   assert.equal(outOfActions(powerGame('frodo', null, empty).getState(), 'p1'), false);
   assert.equal(outOfActions(powerGame('birthdayBilbo', null, empty).getState(), 'p1'), true);
+  // Merry's power needs a Food to sacrifice.
+  assert.equal(outOfActions(powerGame('merry', null, empty).getState(), 'p1'), true);
 });
 
 test('two basic AIs play rounds with every pair of powers', () => {
@@ -378,6 +380,35 @@ test("Pippin's power: create a Morsel, a Food artifact with '{T}, Sacrifice this
   s = game.getState();
   assert.equal(s.players[0].life, 21);
   assert.ok(!s.battlefield.some((p) => p.id === morsel.id));
+});
+
+test("Merry's power: sacrifice a Food to create two 1/1 white Halflings, as a sorcery", () => {
+  const FOOD_MAKER = { id: 'snack', name: 'Snack', manaCost: { generic: 1 }, types: ['Sorcery'], effects: [{ type: 'createToken', token: 'food' }] };
+  const game = new Game({
+    players, decks: { p1: ['snack'], p2: ['bear'] }, cards: { bear: BEAR, snack: FOOD_MAKER }, shuffleLibraries: false,
+    openingHandSize: 1, deckingLoss: false, infiniteMana: true, emblems: { p1: ['merry'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  const pass = (done) => {
+    for (let i = 0; i < 100; i++) {
+      const s = game.getState();
+      if (done(s)) return s;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const acts = s.validActions.filter((a) => a.playerId === actor);
+      assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]).ok, true);
+    }
+    throw new Error('Too many steps');
+  };
+  let s = pass((st) => st.phase === 'precombatMain' && st.priorityPlayerId === 'p1' && !st.stack.length);
+  // No Food, no power.
+  assert.ok(!activation(s, 'p1'));
+  assert.equal(game.dispatch(s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.CAST_SPELL)).ok, true);
+  pass((st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  s = usePower(game);
+  const halflings = s.battlefield.filter((p) => p.controllerId === 'p1' && p.subtypes?.includes('Halfling'));
+  assert.equal(halflings.length, 2);
+  assert.ok(halflings.every((p) => p.power === 1 && p.toughness === 1 && p.colors.includes('white')));
+  assert.ok(!s.battlefield.some((p) => p.subtypes?.includes('Food')), 'the Food was sacrificed');
 });
 
 test("Gildor's power: as the game starts, after the opening hand, two Forests and a Chance-Met Elves are shuffled into the library", () => {
