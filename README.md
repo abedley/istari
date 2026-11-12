@@ -408,12 +408,14 @@ npm run import-cards -- --dry-run "Birds of Paradise"      # report only, write 
 
 ### Importing token art
 
-`tools/import-tokens.js` (`npm run import-tokens`) finds every token the cards can create, plus
-Treasure, Food, Clue and Morsel (made up, so it borrows the art of the printing its `artScryfallId` names), and writes the art of a matching Scryfall
+`tools/import-tokens.js` (`npm run import-tokens`) finds every token the cards and emblems can create, plus
+Treasure, Food, Clue and Morsel, and writes the art of a matching Scryfall
 token to `src/cards/tokenArt.js` (`TOKEN_PRESENTATION`, keyed by the card id the game gives the
 token: `tokenCardId`).
 - **Matching:** the Scryfall token must have the same name, type line, power/toughness, colors
   and keywords, and no other rules text.
+- **Borrowed art:** a token with no exact printing names one with `artScryfallId`: Morsel (made up) uses
+  LTR's breakfast-pan Food, Old Man Willow's 2/2 Treefolk the */* Treefolk of TLTC 13.
 - **Which printing:** the token printed alongside a card that creates it (Scryfall's related
   cards), else the newest regular printing from a token set.
 - **Re-running** keeps the tokens' current art and adds the new ones; `--refresh` picks every

@@ -134,7 +134,12 @@ export const EMBLEMS = deepFreeze({
       eachTurn: true,
       text: 'At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token.',
       condition: { creatureDiedThisTurn: true },
-      effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: { colors: ['green'], subtypes: ['Treefolk'], power: 2, toughness: 2 } }],
+      effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: {
+        colors: ['green'], subtypes: ['Treefolk'], power: 2, toughness: 2,
+        // The Treefolk of the LTR Commander decks (TLTC 13): a */* token, so it borrows that printing's art.
+        artScryfallId: 'bf661b43-53eb-4e51-8152-420f6d8c925f',
+      },
+    }],
     }],
   },
   // A passive power that adds cards to the library as the game starts (`shufflesIn`; see Game's #startFirstTurn).

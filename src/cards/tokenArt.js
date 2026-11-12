@@ -134,5 +134,17 @@ export const TOKEN_PRESENTATION = {
     "collectorNumber": "10",
     "typeLine": "Token Artifact — Treasure",
     "scryfallId": "42e54aad-ec80-4914-9ba8-91bd53924778"
+  },
+  "token:Treefolk Token:2/2:green:": {
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/b/f/bf661b43-53eb-4e51-8152-420f6d8c925f.jpg?1783916059",
+      "card": "https://cards.scryfall.io/normal/front/b/f/bf661b43-53eb-4e51-8152-420f6d8c925f.jpg?1783916059"
+    },
+    "artist": "Audrey Benjaminsen",
+    "rarity": "common",
+    "set": "tltc",
+    "collectorNumber": "13",
+    "typeLine": "Token Creature — Treefolk",
+    "scryfallId": "bf661b43-53eb-4e51-8152-420f6d8c925f"
   }
 };

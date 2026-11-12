@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   Game, CARD_TYPE, EFFECT, TOKEN, CARDS, TOKEN_PRESENTATION, passPriority, castSpell, tokenCardId,
 } from '../src/index.js';
+import { EMBLEMS } from '../src/cards/emblems.js';
 import { collectTokens, pickTokenPrinting, tokenMatches, tokenQuery } from '../tools/scryfall/tokens.js';
 import { readTokenArt, renderTokenArtModule } from '../tools/import-tokens.js';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -44,7 +45,7 @@ test('tokens created in a game get the card id tokenCardId gives them', () => {
 });
 
 test('collects every token the cards create, with the cards that create them', () => {
-  const tokens = collectTokens([CARDS]);
+  const tokens = collectTokens([CARDS, EMBLEMS]);
   assert.ok(tokens.has('token:treasure') && tokens.has('token:food') && tokens.has('token:clue'));
   assert.ok(tokens.get('token:Spirit Token:1/1:white:flying').creators.has('oathOfTheGreyHost'));
   assert.ok(tokens.get('token:treasure').creators.has('bilboRetiredBurglar'));

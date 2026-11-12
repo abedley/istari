@@ -195,7 +195,7 @@ export const PAIGOW_HEROES = deepFreeze({
   pippin: {
     name: 'Pippin', color: 'gold', emblem: 'pippin',
     blurb: 'A Took of the Shire, who has never once skipped second breakfast.',
-    portrait: portrait('0/8/08b7a4d8-1183-430e-8ea4-016844f33200.jpg?1783916249', 55, 22, 340, 'Pippin, Guard of the Citadel', 'Bartłomiej Gaweł'),
+    portrait: portrait('f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263', 48, 18, 300, 'Peregrin Took', 'Campbell White'),
   },
 });
 

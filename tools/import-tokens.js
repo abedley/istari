@@ -2,7 +2,7 @@
 /**
  * Imports art for the game's tokens from Scryfall into src/cards/tokenArt.js.
  *
- * Finds every token the cards can create (plus Treasure,
+ * Finds every token the cards and emblems can create (plus Treasure,
  * Food and Clue), and looks for a printed Scryfall token with the same name, type,
  * power/toughness, colors and keywords: first the token printed alongside a card
  * that creates it (its "related" token), else the best printing from a search.
@@ -18,6 +18,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { CARDS, TOKENS } from '../src/cards/cards.js';
+import { EMBLEMS } from '../src/cards/emblems.js';
 import { fetchCollection, searchCards } from './scryfall/client.js';
 import { collectTokens, describeToken, pickTokenPrinting, tokenPresentation, tokenQuery } from './scryfall/tokens.js';
 
@@ -58,8 +59,8 @@ async function relatedTokenIds(creators) {
 }
 
 async function findPrinting(token, creators) {
-  // A made-up token (Morsel) borrows the art of the printing it names.
-  const artId = typeof token === 'string' ? TOKENS[token].artScryfallId : null;
+  // A token with no exact printing (Morsel, Old Man Willow's Treefolk) borrows the art of the printing it names.
+  const artId = typeof token === 'string' ? TOKENS[token].artScryfallId : token.artScryfallId;
   if (artId) return (await fetchCollection([{ id: artId }])).cards[0] ?? null;
   const related = await relatedTokenIds(creators);
   if (related.length) {
@@ -88,7 +89,7 @@ async function main() {
     return;
   }
 
-  const tokens = collectTokens([CARDS]);
+  const tokens = collectTokens([CARDS, EMBLEMS]);
   const existing = await readTokenArt(OUTPUT);
   const presentation = {};
   const imported = [];
