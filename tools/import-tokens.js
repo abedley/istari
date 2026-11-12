@@ -17,7 +17,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { CARDS } from '../src/cards/cards.js';
+import { CARDS, TOKENS } from '../src/cards/cards.js';
 import { fetchCollection, searchCards } from './scryfall/client.js';
 import { collectTokens, describeToken, pickTokenPrinting, tokenPresentation, tokenQuery } from './scryfall/tokens.js';
 
@@ -58,6 +58,9 @@ async function relatedTokenIds(creators) {
 }
 
 async function findPrinting(token, creators) {
+  // A made-up token (Morsel) borrows the art of the printing it names.
+  const artId = typeof token === 'string' ? TOKENS[token].artScryfallId : null;
+  if (artId) return (await fetchCollection([{ id: artId }])).cards[0] ?? null;
   const related = await relatedTokenIds(creators);
   if (related.length) {
     const { cards } = await fetchCollection(related.map((id) => ({ id })));

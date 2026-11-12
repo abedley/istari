@@ -1,5 +1,5 @@
 import {
-  EFFECT, ACTIVATION_TIMING, TARGET, KEYWORD, COUNTER, AFFECTED, TRIGGER,
+  EFFECT, ACTIVATION_TIMING, TARGET, KEYWORD, COUNTER, AFFECTED, TRIGGER, TOKEN,
 } from './cards.js';
 
 /**
@@ -93,6 +93,12 @@ export const EMBLEMS = deepFreeze({
       { affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, subtypes: ['Bird', 'Beast'], power: 1, toughness: 1 },
     ],
   },
+
+  pippin: power('pippin', 'The Ring of the Tooks', 'Second Breakfast', {
+    text: '0: Create a Morsel token. (It\u2019s a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life.") Activate only as a sorcery.',
+    effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: TOKEN.MORSEL }],
+    timing: SORCERY,
+  }),
 
   // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {

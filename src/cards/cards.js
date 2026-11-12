@@ -608,6 +608,7 @@ export const TOKEN = Object.freeze({
   TREASURE: 'treasure', // 111.10a
   FOOD: 'food', // 111.10b
   CLUE: 'clue', // 111.10f
+  MORSEL: 'morsel', // Made up: a small Food (Pippin's Second Breakfast).
 });
 
 /** Definitions of the predefined tokens, keyed by TOKEN name. They're colorless artifacts. */
@@ -647,6 +648,21 @@ export const TOKENS = deepFreeze({
       effects: [{ type: EFFECT.DRAW_CARDS, count: 1 }],
     }],
     text: '{2}, Sacrifice this artifact: Draw a card.',
+  },
+  // Not a real predefined token: a Food without the {2}, for a smaller bite. No Scryfall token is a Morsel, so its
+  // art is a Food token's (`artScryfallId`: LTR's breakfast pan; see tools/import-tokens.js).
+  [TOKEN.MORSEL]: {
+    name: 'Morsel',
+    artScryfallId: 'bfcff41e-b6ff-4ddd-bcb6-8943f7d88aef',
+    types: [CARD_TYPE.ARTIFACT],
+    subtypes: ['Food'],
+    abilities: [{
+      id: 'nibble',
+      text: '{T}, Sacrifice this artifact: You gain 1 life.',
+      cost: { tap: true, sacrificeSelf: true },
+      effects: [{ type: EFFECT.GAIN_LIFE, amount: 1 }],
+    }],
+    text: '{T}, Sacrifice this artifact: You gain 1 life.',
   },
 });
 

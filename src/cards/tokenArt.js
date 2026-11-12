@@ -63,6 +63,18 @@ export const TOKEN_PRESENTATION = {
     "typeLine": "Token Creature — Human Soldier",
     "scryfallId": "a6181330-7521-4ec6-be6c-b35487c2d2d4"
   },
+  "token:morsel": {
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/b/f/bfcff41e-b6ff-4ddd-bcb6-8943f7d88aef.jpg?1783916047",
+      "card": "https://cards.scryfall.io/normal/front/b/f/bfcff41e-b6ff-4ddd-bcb6-8943f7d88aef.jpg?1783916047"
+    },
+    "artist": "Claudiu-Antoniu Magherusan",
+    "rarity": "common",
+    "set": "tltr",
+    "collectorNumber": "10",
+    "typeLine": "Token Artifact — Food",
+    "scryfallId": "bfcff41e-b6ff-4ddd-bcb6-8943f7d88aef"
+  },
   "token:Orc Army:0/0:black:": {
     "image": {
       "art": "https://cards.scryfall.io/art_crop/front/6/9/6943f966-fd21-427c-a13f-44727edcaa4b.jpg?1783916045",

@@ -84,7 +84,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Pippin']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -360,6 +360,24 @@ test("Old Man Willow's power triggers at each end step, the opponent's too", () 
   // p2's end step: the ring makes a Treefolk.
   passUntil((st) => st.turn === 3);
   assert.equal(treefolk().length, 1);
+});
+
+test("Pippin's power: create a Morsel, a Food artifact with '{T}, Sacrifice this artifact: You gain 1 life'", () => {
+  const game = powerGame('pippin');
+  let s = usePower(game);
+  const morsel = s.battlefield.find((p) => p.controllerId === 'p1' && p.name === 'Morsel');
+  assert.ok(morsel, 'a Morsel');
+  assert.ok(morsel.token);
+  assert.deepEqual(morsel.types, ['Artifact']);
+  assert.deepEqual(morsel.subtypes, ['Food']);
+  // Eat it: no mana needed.
+  const eat = s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.ACTIVATE_ABILITY && a.cardId === morsel.id);
+  assert.ok(eat, 'the Morsel can be eaten');
+  assert.equal(game.dispatch(eat).ok, true);
+  for (let i = 0; i < 20 && game.getState().stack.length; i++) game.dispatch(passPriority(game.getState().priorityPlayerId));
+  s = game.getState();
+  assert.equal(s.players[0].life, 21);
+  assert.ok(!s.battlefield.some((p) => p.id === morsel.id));
 });
 
 test("Gildor's power: as the game starts, after the opening hand, two Forests and a Chance-Met Elves are shuffled into the library", () => {

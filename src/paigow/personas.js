@@ -192,6 +192,11 @@ export const PAIGOW_HEROES = deepFreeze({
     blurb: 'The Brown Wizard of Rhosgobel, who calls the beasts and birds to his side in an instant.',
     portrait: portrait('b/3/b3988120-ebbe-4d24-9bb4-8c5331a14034.jpg?1783916261', 46, 4, 320, 'Radagast the Brown', 'Alexander Mokhov'),
   },
+  pippin: {
+    name: 'Pippin', color: 'gold', emblem: 'pippin',
+    blurb: 'A Took of the Shire, who has never once skipped second breakfast.',
+    portrait: portrait('0/8/08b7a4d8-1183-430e-8ea4-016844f33200.jpg?1783916249', 55, 22, 340, 'Pippin, Guard of the Citadel', 'Bartłomiej Gaweł'),
+  },
 });
 
 /** The hero a match starts with when none is chosen. */
