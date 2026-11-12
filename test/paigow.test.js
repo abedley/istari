@@ -10,11 +10,11 @@ import { AI_ACTIVATIONS_PER_TURN } from '../src/ai/manaPlanning.js';
 import { playout } from '../src/ai/simulate.js';
 import {
   PAIGOW_POOL, POOL_BY_RARITY, PAIGOW_RULES, openBooster, createMatch, setDecks, validDecks, recordRound, roundSetup, nextRound, outcome, score,
-  arrangeCpuDecks, playerStartsRound, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
+  arrangeCpuDecks, playerStartsRound, withCards, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
 } from '../src/paigow/paigow.js';
 import { seededRandom } from '../src/engine/random.js';
 import { outOfActions, canFastForward, planFastForward } from '../src/paigow/fastForward.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
 import { banterProblems } from '../src/ai/banter.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
@@ -409,4 +409,48 @@ test('a warning when this turn could end in a draw: after a turn with no change,
   const limited = newGame({ p1: ['bear'], p2: ['bear'] }, { turnLimit: 2 });
   assert.equal(limited.getState().drawWarning, null);
   assert.equal(passUntil(limited, (s) => s.turn === 2).drawWarning, 'turnLimit');
+});
+
+test('a booster with cards it must hold: each takes the place of a card of its rarity, the size kept', () => {
+  const booster = openBooster(seededRandom(9));
+  const uncommon = POOL_BY_RARITY.uncommon.find((id) => !booster.includes(id));
+  const withIt = withCards(booster, [uncommon]);
+  assert.equal(withIt.length, booster.length);
+  assert.equal(withIt[12], uncommon, 'the last uncommon');
+  assert.deepEqual(withIt.filter((_, i) => i !== 12), booster.filter((_, i) => i !== 12));
+  assert.deepEqual(withCards(booster, [booster[3]]), booster, 'a card already there');
+  const rare = POOL_BY_RARITY.mythic.find((id) => !booster.includes(id));
+  assert.equal(withCards(booster, [rare])[13], rare, 'a mythic takes the rare slot');
+});
+
+test('Old Man Willow’s own setup: his card in every pack, and ten Forests in his library each round', () => {
+  assert.deepEqual(opponentSetup('gandalf'), { pack: [], library: [], battlefield: [] });
+  assert.deepEqual(opponentSetup('oldManWillow').library, Array(10).fill('forest'));
+  for (let seed = 1; seed <= 20; seed += 1) {
+    const match = createMatch({ seed, opponentId: 'oldManWillow' });
+    assert.ok(match.cpuDecks.flat().includes('oldManWillow'), `seed ${seed}`);
+    assert.equal(match.cpuDecks.flat().length, PAIGOW_RULES.cardsDealt);
+  }
+  // Other opponents' packs are as ever.
+  const other = createMatch({ seed: 5, opponentId: 'gandalf' });
+  assert.deepEqual(other.cpuDecks.flat().sort(), openBooster((() => { const r = seededRandom(5); openBooster(r); return r; })()).sort());
+
+  const match = createMatch({ seed: 11, opponentId: 'oldManWillow' });
+  const setup = roundSetup(setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5))));
+  assert.deepEqual(setup.game.shufflesIn[CPU_ID], Array(10).fill('forest'));
+  const game = new Game(setup.game);
+  game.start();
+  const cpu = game.serialize().zones[CPU_ID];
+  // His hand is still his deck of five (and a Forest, if he has drawn one); the Forests are his library.
+  assert.deepEqual(cpu.hand.map((c) => c.cardId).filter((id) => id !== 'forest').sort(), [...match.cpuDecks[0]].sort());
+  assert.ok(cpu.library.every((c) => c.cardId === 'forest'));
+  assert.equal(cpu.library.length + cpu.hand.filter((c) => c.cardId === 'forest').length, 10);
+  assert.equal(game.serialize().zones[PLAYER_ID].library.length, 0);
+});
+
+test('a game can start a player with permanents on the battlefield', () => {
+  const game = newGame({ p1: ['bear'], p2: ['bear'] }, { startsWith: { p2: ['forest', 'forest'] } });
+  const forests = game.getState().battlefield.filter((p) => p.cardId === 'forest');
+  assert.equal(forests.length, 2);
+  assert.ok(forests.every((p) => p.controllerId === 'p2'));
 });

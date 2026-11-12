@@ -62,6 +62,14 @@ Burglar Bilbo are Raiders, Saruman, Denethor, Elrond and Old Man Willow are Ward
 new one. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
+**An opponent's own setup:** an opponent may have a `setup` in `src/paigow/personas.js` (read with
+`opponentSetup`): `pack`, cards its booster always holds (each takes the place of the last card of its
+rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `library`, cards shuffled into
+its library at the start of every round, after its hand of five (the Game's `shufflesIn` option); and
+`battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring).
+For now only Old Man Willow has one: his pack always holds *Old Man Willow*, and he starts every round
+with a library of 10 Forests, so he draws one each turn (and his card grows with the lands he plays).
+
 **Rings of Power:** every hero and every opponent has one planeswalker power, shown in the app as
 a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in
 `src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its

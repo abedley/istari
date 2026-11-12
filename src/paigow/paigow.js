@@ -6,7 +6,8 @@
  * the spare ones out). Round N pits deck N against deck N: both players start with all
  * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), their
  * character's Ring of Power (a planeswalker power: an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
- * library. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
+ * library. Some opponents have a setup of their own (opponentSetup in src/paigow/personas.js): cards their
+ * booster always holds, a library to draw from, a board to start with. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
  * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
  *
@@ -16,7 +17,7 @@ import { CARDS, isCreature, manaValue } from '../cards/cards.js';
 import { GAME_LIMITS } from '../engine/Game.js';
 import { seededRandom, shuffle } from '../engine/random.js';
 import {
-  PAIGOW_OPPONENTS, PAIGOW_HEROES, DEFAULT_HERO, paigowOpponent, paigowHero,
+  PAIGOW_OPPONENTS, PAIGOW_HEROES, DEFAULT_HERO, paigowOpponent, paigowHero, opponentSetup,
 } from './personas.js';
 import { weightsFor } from '../ai/evaluate.js';
 import { AI_KIND } from '../ai/cpu.js';
@@ -85,6 +86,30 @@ export function openBooster(random, { extraCommons = 0 } = {}) {
 }
 
 /**
+ * A booster with `cards` in it (an opponent's `pack`, see opponentSetup): each one not already there takes the
+ * place of the last card of its rarity (a rare or mythic the rare's, a common or uncommon the last of those), or of
+ * the wildcard when there's none, so the booster keeps its size. Takes no random draws.
+ */
+export function withCards(booster, cards) {
+  const result = [...booster];
+  const fixed = new Set();
+  const rank = (id) => (['rare', 'mythic'].includes(CARDS[id].rarity) ? 'rare' : CARDS[id].rarity);
+  for (const cardId of cards) {
+    if (!CARDS[cardId]) throw new Error(`Unknown card: ${cardId}`);
+    const present = result.findIndex((id, i) => id === cardId && !fixed.has(i));
+    if (present >= 0) { fixed.add(present); continue; }
+    // The wildcard (the last card) only when no card of the same rarity is left to replace.
+    let slot = -1;
+    for (let i = result.length - 2; i >= 0; i -= 1) if (!fixed.has(i) && rank(result[i]) === rank(cardId)) { slot = i; break; }
+    if (slot < 0) slot = [...result.keys()].reverse().find((i) => !fixed.has(i)) ?? -1;
+    if (slot < 0) throw new Error('The booster has no room for its cards.');
+    result[slot] = cardId;
+    fixed.add(slot);
+  }
+  return result;
+}
+
+/**
  * How the CPU's decks used to be made (now buildDecks in deckBuilder.js; kept for the arena to compare with):
  * its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
  * each deck gets a fair share, and then the decks in a random order (so its best isn't always first).
@@ -124,7 +149,7 @@ export function createMatch({
   const candidates = Object.keys(PAIGOW_OPPONENTS);
   const drawn = candidates[Math.floor(random() * candidates.length)];
   const opponentId = chosen ?? drawn;
-  const built = buildDecks(cpuCards, null, { persona: opponentId });
+  const built = buildDecks(withCards(cpuCards, opponentSetup(opponentId).pack), null, { persona: opponentId });
   return {
     seed,
     heroId,
@@ -227,6 +252,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
   const playerFirst = playerStartsRound(match, round);
   const { startingLife: first, secondPlayerLife: second } = PAIGOW_RULES;
   const mine = playerLife(match);
+  const setup = opponentSetup(match.opponentId);
   return {
     game: {
       players,
@@ -234,6 +260,9 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       seed: (match.seed + round * 7919) >>> 0,
       decks: { [PLAYER_ID]: [...match.decks[round]], [CPU_ID]: [...match.cpuDecks[round]] },
       emblems: { [PLAYER_ID]: [hero.emblem, ...(match.rings ?? [])], [CPU_ID]: [opponent.emblem] },
+      // The opponent's own setup (opponentSetup in personas.js): a library to draw from, a board to start with.
+      shufflesIn: { [CPU_ID]: [...setup.library] },
+      startsWith: { [CPU_ID]: [...setup.battlefield] },
       startingLife: { [PLAYER_ID]: playerFirst ? mine.first : mine.second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,
@@ -250,7 +279,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       ai: opponent.ai.kind === AI_KIND.STRATEGIST ? { ...opponent.ai, persona: match.opponentId, plan: deckPlan(match.cpuDecks[round]) } : {
         ...opponent.ai,
         budgetMs: Math.max(opponent.ai.budgetMs ?? 0, 1000),
-        // Libraries are always empty here, and that's no danger.
+        // Libraries are empty here, or hold an opponent's own cards; running out is no danger.
         weights: { ...weightsFor(opponent.ai.weights), library: 0 },
       },
       banter: opponent.banter ?? null,

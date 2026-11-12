@@ -288,6 +288,8 @@ export class Game extends EventEmitter {
   #processing = false;
   #silent = false;
   #limits = {};
+  /** What players begin the game with besides their decks: `startsWith`, `shufflesIn` (see the constructor). */
+  #setup = { startsWith: {}, shufflesIn: {} };
 
   /**
    * @param {object} options
@@ -317,11 +319,15 @@ export class Game extends EventEmitter {
    * @param {boolean} [options.stallDraw] The game is a draw when a full turn cycle (each player's turn)
    *   ends with nothing lasting changed: see #stallFingerprint.
    * @param {number} [options.turnLimit] The game is a draw when this turn ends without a winner.
+   * @param {Record<string, string[]>} [options.startsWith] Card ids per player id: permanents the player begins the
+   *   game with on the battlefield (as an emblem's `startsWith`).
+   * @param {Record<string, string[]>} [options.shufflesIn] Card ids per player id: cards shuffled into the player's
+   *   library after the opening hands are drawn (as an emblem's `shufflesIn`), so the hand is still the deck's own.
    */
   constructor({
     players, startingPlayerId, decks = {}, seed, cards = {}, shuffleLibraries = true,
     emblems = {}, emblemDefinitions = {}, startingLife = {}, limits = {}, silent = false, mulligans = false,
-    openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit,
+    openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit, startsWith = {}, shufflesIn = {},
   } = {}) {
     super();
     if (!Array.isArray(players) || players.length < 2) {
@@ -342,6 +348,7 @@ export class Game extends EventEmitter {
     this.#silent = silent;
     this.#limits = { ...limits };
     this.#setVariant({ openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit });
+    this.#setup = { startsWith: { ...startsWith }, shufflesIn: { ...shufflesIn } };
 
     for (const { id } of this.#players) {
       const deck = decks[id] ?? DEFAULT_DECK;
@@ -1678,33 +1685,48 @@ export class Game extends EventEmitter {
   // Mulligans (103.5, the London mulligan)
 
   #startFirstTurn() {
-    // Emblems that start the game with a card on the battlefield (Samwise's Field-Tested Frying Pan). Like a Leyline's
-    // "begin the game with it on the battlefield" (103.6), it's just there: its "when this enters" abilities don't trigger.
     for (const { id } of this.#players) {
+      // What the player's setup starts them with (a Pai Gow opponent's own, see src/paigow/personas.js).
+      this.#startWith(id, this.#setup.startsWith[id] ?? [], null, 'setup');
+      this.#shuffleIn(id, this.#setup.shufflesIn[id] ?? [], null, 'setup');
       for (const emblem of this.#zones.get(id).emblems) {
-        for (const cardId of this.#emblemDefinitions[emblem.emblemId].startsWith ?? []) {
-          if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for emblem ${emblem.emblemId}: ${cardId}`);
-          const card = this.#createCard(cardId, id, `${id}-start-${this.#nextTokenNumber++}`);
-          const permanent = this.#putOntoBattlefield(card, id, { triggers: false });
-          this.#emitEvent('startedWith', { playerId: id, card: this.#forEvent(permanent), sourceId: emblem.id });
-        }
-        // Emblems that add cards to the library as the game starts (Gildor's Chance-Met Elves), after the opening
-        // hands, so the hand is still the deck's own; then the library is shuffled.
-        const added = this.#emblemDefinitions[emblem.emblemId].shufflesIn ?? [];
-        if (added.length) {
-          const zone = this.#zones.get(id);
-          const cards = added.map((cardId) => {
-            if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for emblem ${emblem.emblemId}: ${cardId}`);
-            return this.#createCard(cardId, id, `${id}-added-${this.#nextTokenNumber++}`);
-          });
-          zone.library.push(...cards);
-          if (this.#shuffleLibraries) shuffle(zone.library, this.#random);
-          this.#emitEvent('cardsShuffledIntoLibrary', { playerId: id, cardIds: cards.map((c) => c.id), sourceId: emblem.id });
-        }
+        const definition = this.#emblemDefinitions[emblem.emblemId];
+        this.#startWith(id, definition.startsWith ?? [], emblem.id, `emblem ${emblem.emblemId}`);
+        this.#shuffleIn(id, definition.shufflesIn ?? [], emblem.id, `emblem ${emblem.emblemId}`);
       }
     }
     this.#beginTurn(this.#startingPlayerId);
     this.#advance();
+  }
+
+  /**
+   * Cards a player begins the game with on the battlefield (Samwise's Field-Tested Frying Pan, or the `startsWith`
+   * option). Like a Leyline's "begin the game with it on the battlefield" (103.6), it's just there: its "when this
+   * enters" abilities don't trigger.
+   */
+  #startWith(playerId, cardIds, sourceId, what) {
+    for (const cardId of cardIds) {
+      if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for ${what}: ${cardId}`);
+      const card = this.#createCard(cardId, playerId, `${playerId}-start-${this.#nextTokenNumber++}`);
+      const permanent = this.#putOntoBattlefield(card, playerId, { triggers: false });
+      this.#emitEvent('startedWith', { playerId, card: this.#forEvent(permanent), sourceId });
+    }
+  }
+
+  /**
+   * Cards added to a player's library as the game starts (Gildor's Chance-Met Elves, or the `shufflesIn` option),
+   * after the opening hands, so the hand is still the deck's own; then the library is shuffled.
+   */
+  #shuffleIn(playerId, cardIds, sourceId, what) {
+    if (!cardIds.length) return;
+    const zone = this.#zones.get(playerId);
+    const cards = cardIds.map((cardId) => {
+      if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for ${what}: ${cardId}`);
+      return this.#createCard(cardId, playerId, `${playerId}-added-${this.#nextTokenNumber++}`);
+    });
+    zone.library.push(...cards);
+    if (this.#shuffleLibraries) shuffle(zone.library, this.#random);
+    this.#emitEvent('cardsShuffledIntoLibrary', { playerId, cardIds: cards.map((c) => c.id), sourceId });
   }
 
   /** Asks the first of `order` whether to keep; the rest decide after them. */

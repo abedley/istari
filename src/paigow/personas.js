@@ -4,6 +4,10 @@
  * own thinking time and temperament (PERSONA_TEMPERAMENT in src/ai/strategist/profiles.js), and their Ring of Power
  * (`emblem`, an id in EMBLEMS, src/cards/emblems.js: a planeswalker power). PAIGOW_HEROES are the player's
  * characters to choose from, each with a portrait and a ring of their own.
+ *
+ * An opponent may also have a `setup` of its own (see opponentSetup): `pack`, cards its booster always holds;
+ * `library`, cards shuffled into its library at the start of every round (after its hand, which is still its
+ * deck of five); and `battlefield`, permanents it starts every round with.
  */
 import { AI_KIND } from '../ai/cpu.js';
 
@@ -60,6 +64,8 @@ export const PAIGOW_OPPONENTS = deepFreeze({
   },
   oldManWillow: {
     name: 'Old Man Willow', color: 'green', emblem: 'oldManWillow', ai: strategist(),
+    // The Old Forest is all around him: a library of Forests to draw, and his own card in every pack.
+    setup: { pack: ['oldManWillow'], library: Array(10).fill('forest') },
     portrait: portrait('0/3/0362b7c4-fff5-4bc2-b32d-913f85c23cc4.jpg?1783916248', 86, 38, 300, 'Old Man Willow', 'Miklós Ligeti'),
     banter: {
       start: ['Sit down, little one. Rest by the river. There is no hurry.', 'Sleepy, are you? Lie down among my roots, and we shall play.', 'The Old Forest remembers every footstep. Yours too.'],
@@ -219,3 +225,13 @@ export const paigowHero = (id) => PAIGOW_HEROES[currentHeroId(id)];
 
 /** A Pai Gow opponent by id. */
 export const paigowOpponent = (id) => PAIGOW_OPPONENTS[id];
+
+/**
+ * What an opponent starts with besides a booster's cards (its `setup`, every part empty when it has none):
+ * `pack` (card ids its booster always holds), `library` (card ids shuffled into its library each round)
+ * and `battlefield` (card ids it begins each round with on the battlefield).
+ */
+export function opponentSetup(id) {
+  const setup = PAIGOW_OPPONENTS[id]?.setup ?? {};
+  return { pack: setup.pack ?? [], library: setup.library ?? [], battlefield: setup.battlefield ?? [] };
+}
