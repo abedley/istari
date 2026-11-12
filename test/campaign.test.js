@@ -15,8 +15,12 @@ const { WON, LOST, TIE } = MATCH_OUTCOME;
 /** The campaign after its next match ends with `outcome`. */
 const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
-test('a campaign faces Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor and the Rider in Black in turn, with three lives', () => {
-  assert.deepEqual(CAMPAIGN_OPPONENTS, ['birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow', 'gildor', 'riderInBlack']);
+test('a campaign faces every opponent in turn, Sauron last, with three lives', () => {
+  assert.deepEqual(CAMPAIGN_OPPONENTS, [
+    'birthdayBilbo', 'burglarBilbo', 'gandalf', 'oldManWillow', 'tomBombadil', 'gildor', 'riderInBlack',
+    'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
+  ]);
+  assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(PAIGOW_OPPONENTS).sort(), 'no opponent is left out');
   const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);
   assert.equal(currentOpponent(campaign), 'birthdayBilbo');
