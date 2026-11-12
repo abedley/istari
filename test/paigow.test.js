@@ -347,7 +347,7 @@ test('fast forward with nothing on either side is a draw', () => {
   assert.equal(plan.endReason, 'stall');
 });
 
-test('Pai Gow has its own opponents, each with a portrait, banter and the search AI', () => {
+test('Pai Gow has its own opponents, each with a portrait, banter and the Strategist', () => {
   const names = Object.values(PAIGOW_OPPONENTS).map((o) => o.name);
   assert.deepEqual(names, ['Birthday Bilbo', 'Burglar Bilbo', 'Gandalf', 'Old Man Willow', 'Gildor', 'Rider in Black', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
   for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
@@ -356,7 +356,7 @@ test('Pai Gow has its own opponents, each with a portrait, banter and the search
     if (!opponent.portrait.set) assert.ok(Object.values(CARDS).some((c) => c.name === opponent.portrait.card), `${id}'s portrait card`);
     assert.deepEqual(banterProblems(id, opponent.banter), []);
     assert.deepEqual(Object.keys(opponent.banter).sort(), ['collapse', 'comeback', 'lose', 'start', 'win']);
-    assert.equal(opponent.ai.kind, 'search');
+    assert.equal(opponent.ai.kind, 'strategist');
   }
   // Every one of them turns up.
   const met = new Set(Array.from({ length: 200 }, (_, seed) => createMatch({ seed }).opponentId));

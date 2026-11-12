@@ -1,7 +1,7 @@
 /**
  * Pai Gow's CPU opponents: figures of Middle-earth, each with a portrait from their LTR card's art,
- * what they say (see src/ai/banter.js), and how they play: the search AI with their own
- * thinking time and evaluation (an archetype from src/ai/evaluate.js), and their Ring of Power
+ * what they say (see src/ai/banter.js), and how they play: the Strategist (src/ai/strategist/) with their
+ * own thinking time and temperament (PERSONA_TEMPERAMENT in src/ai/strategist/profiles.js), and their Ring of Power
  * (`emblem`, an id in EMBLEMS, src/cards/emblems.js: a planeswalker power). PAIGOW_HEROES are the player's
  * characters to choose from, each with a portrait and a ring of their own.
  */
@@ -21,11 +21,12 @@ const portrait = (path, x, y, zoom, card, artist, set = null) => ({
   art: `https://cards.scryfall.io/art_crop/front/${path}`, x, y, zoom, card, artist, ...(set ? { set } : {}),
 });
 
-const search = (budgetMs, weights) => ({ kind: AI_KIND.SEARCH, budgetMs, ...(weights ? { weights } : {}) });
+/** The Strategist (src/ai/strategist/), thinking for up to `budgetMs` at a decision. */
+const strategist = (budgetMs) => ({ kind: AI_KIND.STRATEGIST, budgetMs });
 
 export const PAIGOW_OPPONENTS = deepFreeze({
   birthdayBilbo: {
-    name: 'Birthday Bilbo', color: 'gold', emblem: 'birthdayBilbo', ai: search(1000, 'aggro'),
+    name: 'Birthday Bilbo', color: 'gold', emblem: 'birthdayBilbo', ai: strategist(200),
     portrait: portrait('3/8/38d39cac-e6df-4b3a-826b-b040d80a5fde.jpg?1783915984', 50, 6, 300, 'Bilbo, Birthday Celebrant', 'Billy Christian', 'ltc'),
     banter: {
       start: ['A game! At my party! Splendid. Have some cake first.', 'I am eleventy-one today, and I mean to win at least one thing.', 'Sit, sit! There are presents for everyone. Even you.'],
@@ -36,7 +37,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   burglarBilbo: {
-    name: 'Burglar Bilbo', color: 'gold', emblem: 'burglarBilbo', ai: search(1500, 'aggro'),
+    name: 'Burglar Bilbo', color: 'gold', emblem: 'burglarBilbo', ai: strategist(250),
     portrait: portrait('6/a/6a109b3e-9f5b-4625-abb7-6b992c10530b.jpg?1785323194', 48, 0, 300, 'Bilbo Baggins, Burglar', 'Kieran Yanner', 'hob'),
     banter: {
       start: ['What have I got in my pocket? You will find out.', 'A burglar is hired for his quiet hands. Watch them.', 'Riddles first? No? Cards, then.'],
@@ -47,7 +48,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   gandalf: {
-    name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: search(2000),
+    name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: strategist(300),
     portrait: portrait('c/c/cc9cfcc7-be64-4871-8d52-851e43fe3305.jpg?1783916321', 68, 0, 300, 'Gandalf, Friend of the Shire', 'Dmitry Burmak'),
     banter: {
       start: ['Five cards each? A small game. Small things have a way of mattering.', 'Shall we? I have fireworks to see to afterwards.', 'Mind your hand. A wizard notices things.'],
@@ -58,7 +59,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   oldManWillow: {
-    name: 'Old Man Willow', color: 'green', emblem: 'oldManWillow', ai: search(2000, 'control'),
+    name: 'Old Man Willow', color: 'green', emblem: 'oldManWillow', ai: strategist(300),
     portrait: portrait('0/3/0362b7c4-fff5-4bc2-b32d-913f85c23cc4.jpg?1783916248', 86, 38, 300, 'Old Man Willow', 'Miklós Ligeti'),
     banter: {
       start: ['Sit down, little one. Rest by the river. There is no hurry.', 'Sleepy, are you? Lie down among my roots, and we shall play.', 'The Old Forest remembers every footstep. Yours too.'],
@@ -69,7 +70,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   gildor: {
-    name: 'Gildor', color: 'green', emblem: 'gildor', ai: search(1500),
+    name: 'Gildor', color: 'green', emblem: 'gildor', ai: strategist(250),
     // No card shows Gildor himself: his company of wandering Elves.
     portrait: portrait('0/a/0aa57431-39e2-4152-8a30-1c1e8faef153.jpg?1783916273', 75, 4, 300, 'Chance-Met Elves', 'Irvin Rodriguez'),
     banter: {
@@ -81,7 +82,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   riderInBlack: {
-    name: 'Rider in Black', color: 'black', emblem: 'riderInBlack', ai: search(1500, 'aggro'),
+    name: 'Rider in Black', color: 'black', emblem: 'riderInBlack', ai: strategist(250),
     portrait: portrait('4/0/4023a6de-3ac7-488a-b1a9-b1e26681d9bc.jpg?1783916195', 45, 0, 300, 'Nazgûl', 'Lorenzo Mastroianni'),
     banter: {
       start: ['Shire... Baggins...', 'Where is the one you hide? I smell it on you.', 'Give it to me. Then you may go.'],
@@ -92,7 +93,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   tomBombadil: {
-    name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: search(1000),
+    name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: strategist(200),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),
     banter: {
       start: ['Hop along, come along! Tom will play a merry game!', 'Cards, is it? Tom has time. Tom always has time.', 'Hey dol! Sit you down, and deal them merry!'],
@@ -103,7 +104,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   sauron: {
-    name: 'Sauron', color: 'black', emblem: 'sauron', ai: search(2500, 'aggro'),
+    name: 'Sauron', color: 'black', emblem: 'sauron', ai: strategist(300),
     portrait: portrait('0/3/034e0929-b2c7-4b5f-94f2-8eaf4fb1a2a1.jpg?1783916249', 50, 0, 320, 'Sauron, the Dark Lord', 'Kieran Yanner'),
     banter: {
       start: ['You play against me? Then you have already lost.', 'Every card you hold, I see.', 'Kneel, or be broken. The choice is the only one you have.'],
@@ -114,7 +115,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   saruman: {
-    name: 'Saruman', color: 'white', emblem: 'saruman', ai: search(2000, 'control'),
+    name: 'Saruman', color: 'white', emblem: 'saruman', ai: strategist(300),
     portrait: portrait('1/b/1bfccbab-29fa-4e92-8919-6cd4815fb655.jpg?1783916311', 52, 16, 300, 'Saruman the White', 'Matt Stewart'),
     banter: {
       start: ['Come, let us be reasonable. You cannot win, but you may learn something.', 'I have studied every card in this game. Have you?', 'Sit. My patience is greater than your deck.'],
@@ -125,7 +126,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   theoden: {
-    name: 'Théoden', color: 'red', emblem: 'theoden', ai: search(1500, 'aggro'),
+    name: 'Théoden', color: 'red', emblem: 'theoden', ai: strategist(250),
     portrait: portrait('f/6/f6dcd1ca-4943-46e4-bb5d-c14949e21e23.jpg?1783916242', 27, 0, 300, 'Théoden, King of Rohan', 'Kieran Yanner'),
     banter: {
       start: ['Ride with me, or ride against me! Either way, we ride!', 'A king does not hide behind his cards.', 'Sound the horns. Let this be a game worth singing of.'],
@@ -136,7 +137,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   denethor: {
-    name: 'Denethor', color: 'black', emblem: 'denethor', ai: search(1000, 'control'),
+    name: 'Denethor', color: 'black', emblem: 'denethor', ai: strategist(200),
     portrait: portrait('f/a/fa8654cf-431c-427b-b78f-0e48f6007e9e.jpg?1783916256', 34, 4, 320, 'Denethor, Ruling Steward', 'Campbell White'),
     banter: {
       start: ['You come before the Steward of Gondor. Play carefully.', 'I have seen how this ends. Shall we pretend otherwise?', 'Sit. I rule here, and I do not lose lightly.'],
@@ -147,7 +148,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   elrond: {
-    name: 'Elrond', color: 'blue', emblem: 'elrond', ai: search(1500, 'control'),
+    name: 'Elrond', color: 'blue', emblem: 'elrond', ai: strategist(250),
     portrait: portrait('a/6/a62a5e55-fa1b-4c70-9293-740dd513d52e.jpg?1783916319', 52, 0, 320, 'Elrond, Lord of Rivendell', 'Ryan Yee'),
     banter: {
       start: ['Welcome to Rivendell. Let us play, and let the game be fair.', 'I have watched long ages. One more game is no burden.', 'Take your time. Here, time is something we have.'],
@@ -158,7 +159,7 @@ export const PAIGOW_OPPONENTS = deepFreeze({
     },
   },
   galadriel: {
-    name: 'Galadriel', color: 'green', emblem: 'galadriel', ai: search(2500),
+    name: 'Galadriel', color: 'green', emblem: 'galadriel', ai: strategist(300),
     portrait: portrait('a/6/a6e5c3b3-9a70-4a1c-bfb3-db27e51c4b8d.jpg?1783916254', 34, 0, 320, 'Galadriel of Lothlórien', 'Magali Villeneuve'),
     banter: {
       start: ['I know what is in your hand. And what is in your heart.', 'Look into the mirror, and play what you see.', 'Welcome to the Golden Wood. Tread softly.'],

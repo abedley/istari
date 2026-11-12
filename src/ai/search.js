@@ -116,6 +116,7 @@ export class MacroSearch {
   #rootBeam;
   #rolloutNoise;
   #inference;
+  #determinize;
   #round = -1;
   #guess = null;
   #queue = [];
@@ -124,8 +125,9 @@ export class MacroSearch {
 
   constructor(view, me, macros, {
     random = Math.random, weights, defaults = [], margin = DEFAULT_MARGIN, horizon = DEFAULT_HORIZON, evaluation = 'weighted',
-    lookahead = null, rootBeam = 0, rolloutNoise = 0, inference = false,
+    lookahead = null, rootBeam = 0, rolloutNoise = 0, inference = false, determinizer = determinize,
   } = {}) {
+    this.#determinize = determinizer;
     this.#view = view;
     this.#me = me;
     const preferred = new Set(defaults);
@@ -172,7 +174,7 @@ export class MacroSearch {
         return false;
       }
       this.#round += 1;
-      this.#guess = determinize(this.#view, this.#random, { inference: this.#inference });
+      this.#guess = this.#determinize(this.#view, this.#random, { inference: this.#inference });
       if (this.#round === 0 && this.#rootBeam > 0) this.#pruneRoot();
       this.#queue = this.#entries.filter((e) => !e.dropped);
     }

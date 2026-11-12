@@ -19,6 +19,8 @@ import {
   PAIGOW_OPPONENTS, PAIGOW_HEROES, DEFAULT_HERO, paigowOpponent, paigowHero,
 } from './personas.js';
 import { weightsFor } from '../ai/evaluate.js';
+import { AI_KIND } from '../ai/cpu.js';
+import { buildDecks } from './deckBuilder.js';
 
 export const PAIGOW_RULES = Object.freeze({
   cardsDealt: 15,
@@ -83,7 +85,8 @@ export function openBooster(random, { extraCommons = 0 } = {}) {
 }
 
 /**
- * The CPU's three decks: its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
+ * How the CPU's decks used to be made (now buildDecks in deckBuilder.js; kept for the arena to compare with):
+ * its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
  * each deck gets a fair share, and then the decks in a random order (so its best isn't always first).
  */
 export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = {}) {
@@ -98,7 +101,8 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
 }
 
 /**
- * A new match: a booster opened for each side, the CPU's decks arranged, its opponent picked from
+ * A new match: a booster opened for each side, the CPU's decks built (buildDecks in deckBuilder.js, to its opponent's tastes,
+ * without a look at the player's cards) and put in a random order, its opponent picked from
  * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
  * `heroId`: the player's character, from PAIGOW_HEROES. `opponentId`: the opponent, when not left to chance.
  * `rings`: Rings of Power (emblem ids) the player has besides their hero's, as a campaign's (see
@@ -115,17 +119,21 @@ export function createMatch({
   const random = seededRandom(seed);
   const cards = openBooster(random, { extraCommons });
   const cpuCards = openBooster(random);
+  // The order of the CPU's decks, then its opponent (the random draws come in the order they always did).
+  const order = shuffle([...Array(PAIGOW_RULES.decks).keys()], random);
   const candidates = Object.keys(PAIGOW_OPPONENTS);
   const drawn = candidates[Math.floor(random() * candidates.length)];
+  const opponentId = chosen ?? drawn;
+  const built = buildDecks(cpuCards, null, { persona: opponentId });
   return {
     seed,
     heroId,
-    opponentId: chosen ?? drawn,
+    opponentId,
     rings: [...rings],
     ...(campaign ? { campaign: true } : {}),
     cards,
     decks: null,
-    cpuDecks: arrangeCpuDecks(cpuCards, random),
+    cpuDecks: order.map((i) => built[i]),
     playerStarts: random() < 0.5,
     rounds: [],
   };
@@ -239,7 +247,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       playerId: CPU_ID,
       opponentId: match.opponentId,
       name: opponent.name,
-      ai: {
+      ai: opponent.ai.kind === AI_KIND.STRATEGIST ? { ...opponent.ai, persona: match.opponentId } : {
         ...opponent.ai,
         budgetMs: Math.max(opponent.ai.budgetMs ?? 0, 1000),
         // Libraries are always empty here, and that's no danger.
