@@ -71,7 +71,7 @@ function position({ p1 = {}, p2 = {} }) {
   return game;
 }
 
-const OPTIONS = { profile: profileFor('trickster'), budgetMs: 150 };
+const OPTIONS = { profile: profileFor('trickster') };
 const choose = (game, me = 'p1', seed = 3) => decide(blindView(game, me), me, { ...OPTIONS, random: seededRandom(seed) }).macro;
 /** The Strategist plays `me` until `until(state)`; returns the actions it took that weren't passes. */
 function play(game, me, until, seed = 3) {
@@ -145,7 +145,8 @@ test('its choices don\'t change when the other player\'s hidden cards do', () =>
         if (hand.length) {
           snapshot.zones[PLAYER_ID].hand = hand.map((card, i) => ({ ...spare[i % spare.length], id: card.id }));
           const swapped = Game.deserialize(snapshot, { silent: true });
-          const pick = (g) => decide(blindView(g, CPU_ID), CPU_ID, { ...OPTIONS, budgetMs: 1e9, maxDepth: 1, random: seededRandom(5) }).macro?.key ?? null;
+          // With guesses of the hidden hand, and without: neither may depend on the real one.
+          const pick = (g) => [0, 3].map((worlds) => decide(blindView(g, CPU_ID), CPU_ID, { ...OPTIONS, worlds, budgetMs: 1e9, maxDepth: 1, random: seededRandom(5) }).macro?.key ?? null).join(' / ');
           assert.equal(pick(swapped), pick(game), `seed ${seed}, step ${step}`);
           checked += 1;
         }
@@ -299,6 +300,12 @@ test('every opponent has a temperament, and plays with the Strategist', () => {
   assert.equal(profileFor('nobody').temperament, 'trickster');
   assert.ok(profileFor('sauron').aggression > profileFor('saruman').aggression);
   assert.ok(profileFor('saruman').patience > profileFor('sauron').patience);
+  // Only the Wardens imagine the other player's hand; the rest play the board.
+  assert.equal(profileFor('sauron').foresight, 0);
+  assert.ok(profileFor('saruman').foresight > 0);
+  // A deck's plan shifts how it's played.
+  assert.ok(profileFor('saruman', 'race').aggression > profileFor('saruman').aggression);
+  assert.deepEqual(profileFor('saruman', 'tempo'), profileFor('saruman'));
 });
 
 test('the controller plays a whole round through the game\'s events, and is seen thinking', async () => {
@@ -306,6 +313,7 @@ test('the controller plays a whole round through the game\'s events, and is seen
   const setup = roundSetup(match);
   assert.equal(setup.cpu.ai.kind, AI_KIND.STRATEGIST);
   assert.equal(setup.cpu.ai.persona, match.opponentId);
+  assert.ok(['race', 'grind', 'tempo'].includes(setup.cpu.ai.plan));
   // Timers that fire at once, in order; decisions made on this thread.
   const queue = [];
   const timers = { setTimeout: (fn) => queue.push(fn), clearTimeout: (id) => { queue[id - 1] = null; }, now: () => 0 };

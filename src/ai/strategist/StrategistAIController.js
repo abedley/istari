@@ -22,7 +22,8 @@ import { profileFor } from './profiles.js';
  *   `responseMs` plus jitter, whatever it holds. At its own main phase and its declarations it's seen
  *   thinking, for at least `minThinkMs`.
  *
- * Options: `persona` (an opponent's id or a temperament, see profiles.js) or `profile`; `budgetMs`
+ * Options: `persona` (an opponent's id or a temperament, see profiles.js) or `profile`; `plan` (what its deck is
+ * built to do, see profileFor); `budgetMs`
  * (thinking time for one decision), `search` (other search options, see SEARCH_DEFAULTS), `seed`,
  * `runner` (`{ decide(request) => Promise<result>, dispose() }`), `timers` (for tests).
  */
@@ -46,7 +47,7 @@ export class StrategistAIController extends EventEmitter {
   #turnOf = 0;
 
   constructor({
-    game, playerId, persona, profile, budgetMs, search = {}, minThinkMs = 500, responseMs = 400, jitterMs = 200, passMs = 60,
+    game, playerId, persona, profile, plan = null, budgetMs, search = {}, minThinkMs = 500, responseMs = 400, jitterMs = 200, passMs = 60,
     seed = Math.floor(Math.random() * 2 ** 32), runner = createStrategistRunner(), timers = {
       setTimeout: (...args) => setTimeout(...args),
       clearTimeout: (id) => clearTimeout(id),
@@ -56,7 +57,7 @@ export class StrategistAIController extends EventEmitter {
     super();
     this.#game = game;
     this.#playerId = playerId;
-    this.#profile = profileFor(profile ?? persona);
+    this.#profile = profileFor(profile ?? persona, plan);
     this.#options = { ...search, ...(budgetMs ? { budgetMs } : {}) };
     this.#minThinkMs = minThinkMs;
     this.#responseMs = responseMs;

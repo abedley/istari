@@ -13,7 +13,7 @@ tuning tools stay there.
 - `index.html` + `app/`: **the game**, a single-page app for phones held upright (see *The app*)
 - `src/engine/`: the rules engine; `src/cards/`: card definitions; `src/ai/`: the CPU players
 - `src/paigow/`: Pai Gow's rules, opponents and fast forward
-- `tools/`: the Scryfall card and token importers (Node only; the site never loads them); `tools/title/make-layers.py`
+- `tools/`: the Scryfall card and token importers, and the CPU's arena and fitting tools (see *The Strategist*); all Node only, the site never loads them. `tools/title/make-layers.py`
   cuts the title screen's picture (`tools/title/source.jpg`) into the depth layers in `app/title/` for its
   parallax zoom (Python, with Pillow, numpy and OpenCV)
 - `test/`: `npm test`; `test/fixtures/` has the made-up sample cards and the few non-LTR cards
@@ -35,9 +35,8 @@ campaign's match, see *The campaign*):
    nonbasic lands included; the 8 left out of the game can't be opened. No foils or special editions.
 2. You split yours into three decks of five (in a campaign you may have more cards than that, and
    leave the spare ones out; tap a card to put it in the highlighted round,
-   hold it to read it, or Auto-fill). The CPU shares its cards out by a rough strength
-   (`arrangeCpuDecks`: rarity, mana value and size, dealt snake-wise), then shuffles the order of
-   its decks.
+   hold it to read it, or Auto-fill). The CPU builds its three decks without a look at your cards
+   (`buildDecks` in `src/paigow/deckBuilder.js`, see *The Strategist*), then shuffles their order.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
    hand, infinite mana and their character's Ring of Power, and can't lose by drawing from an empty library. The player
    who goes first starts at 5 life, the other at 8.
@@ -57,11 +56,11 @@ campaign's match, see *The campaign*):
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
 picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, the Rider in Black, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
-Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the search AI with
-their own thinking time (1 to 2.5 seconds) and style (Sauron and Théoden race, Saruman, Denethor
-and Elrond grind). The match lives in memory: reloading the page starts a
-new one. As everywhere, the search AI assumes it knows its opponent's deck list, and with
-five-card decks that means it knows your hand.
+Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
+(`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
+Burglar Bilbo are Raiders, Saruman, Denethor, Elrond and Old Man Willow are Wardens, the rest Tricksters. The match lives in memory: reloading the page starts a
+new one. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
+or reveal them, how many you hold, and what you did, as a person across the table would.
 
 **Rings of Power:** every hero and every opponent has one planeswalker power, shown in the app as
 a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in
@@ -1079,9 +1078,106 @@ phase records whether players get priority and can provide a `skip` rule.
 
 ## AI
 
-There are two computer players, both in `src/ai/` (`createCpuController` in `src/ai/cpu.js` makes
+There are three computer players, all in `src/ai/` (`createCpuController` in `src/ai/cpu.js` makes
 one from an opponent's `ai`). Each listens to the game's `state` events and
-emits `action` events. None of them looks at the opponent's hand or any library.
+emits `action` events. Pai Gow's opponents all use the Strategist; the search AI is kept to compare
+it with, and the basic AI plays out both of their simulations, and Pai Gow's fast forward.
+
+### The Strategist (`src/ai/strategist/`)
+
+Pai Gow's CPU. It was written for Pai Gow's tiny games (five cards each, free mana, 5 or 8 life),
+where the search AI below was written for 40-card Magic.
+
+**What it knows** (`beliefs.js`): only what a person across the table would. `blindView(game, me)`
+is `getPlayerView` with the opponent's deck list taken out, and it's all the Strategist, or its
+worker, is ever given. A test swaps the player's hidden cards for others and checks its choices
+stay the same.
+- By default it **plays the board**: it searches the game as it stands, with the opponent's hidden
+  cards left out, and its evaluation counts each of them as an average card. A hidden hand is five
+  near-random cards from one booster, and in arena play guessing it six times over was no stronger
+  than not guessing (51.0% ± 6.0 for no guesses), at twice the thinking.
+- A profile's `foresight` makes it guess instead: each guess deals the hidden cards from what a
+  booster holds (by rarity slot), and a card held through its owner's own turn is taken to be an
+  instant or a trick more often than a plain creature (mana is free, so those come down at once).
+  The Wardens do this, with two guesses.
+
+**Moves with a reason** (`moves.js`): at each decision it considers only plays that have a point
+right now, so there's little to search.
+- Its main phase: creatures and other permanents come down at once, and a free power with no
+  target is used at once (neither is a choice). Sorceries, Auras and powers with a target are
+  choices, each on its best two targets. Instants wait, unless they win on the spot or must come
+  before blockers (tapping a blocker, haste, menace).
+- After blockers, and when the opponent's spell or ability is on the stack: anything at instant
+  speed, but only if it **flips an outcome**. `probe` plays the action on a copy, lets combat and
+  the stack run their course, and compares with doing nothing: a card must change who lives, who
+  dies or who wins; a power that costs nothing may also just save life. So a pump is only ever
+  used to kill a creature, save one, or finish the game, and Elrond's ring answers removal.
+- Attacks and blocks: the heuristic plans (`combat.js`, `attacking.js`, `blocking.js`) and small
+  changes to them. Lethal on the board is simply taken. A creature pumped this turn attacks.
+- Guards: an attack that can lose a creature for nothing, and a chump block when the life isn't
+  needed, must look clearly better than the alternatives to be chosen (`handicap`).
+
+**Search** (`search.js`): each move is tried on a copy of the game, against an opponent who answers
+well: the next few real choices of either side are searched in full (alpha-beta over the same
+move generator), then the basic AI plays both sides to the start of its next turn. Steps with one
+sensible move are just played. It deepens while there's time (100 ms a decision by default; six
+times that bought nothing in arena play), dropping moves that fall clearly behind.
+
+**Evaluation** (`evaluate.js`, weights in `evalWeights.js`): its chance of winning from a position
+at the start of its turn, as a logistic model fitted by `tools/tune-eval.js` to who went on to win
+in 24,000 self-played rounds: each side's life, creatures, cards in hand and other permanents, how
+many turns each needs to kill the other, and the board played forward a few turns
+(`planLookaheadAttack`). On positions held back from the fit it calls the winner right 80.4% of
+the time; the search AI's evaluation, given its best scale, 76.6%.
+
+**Personalities** (`profiles.js`): a profile is a few numbers. `aggression`, `caution` and
+`patience` scale what its own clock, the opponent's clock and its cards in hand count for in the
+evaluation; `foresight` is how many guesses it makes of the hidden hand; `tastes` are for building
+decks. Raiders (Sauron, Théoden, the Rider in Black, Burglar Bilbo) race, Wardens (Saruman,
+Denethor, Elrond, Old Man Willow) hold on and imagine what you might have, Tricksters (the rest)
+sit between. Each deck also has a plan (`deckPlan`: race, grind or tempo, from what's in it) that
+shifts the profile for that round, so a Warden handed a racing deck races a little more.
+
+**Decks** (`src/paigow/deckBuilder.js`): `tools/rate-cards.js` rates every card for Pai Gow from
+60,000 self-played rounds (a logistic regression on what was in each deck, with a bonus for the
+number of creatures; mana costs don't come into it, since mana is free). `buildDecks` scores each
+of the 3,003 possible decks, turns the score into a chance of beating a deck dealt at random, and
+tries all 126,126 ways to split the fifteen cards, keeping the one most likely to win two rounds of
+three. Among splits as good as the best, the opponent's tastes choose. It takes about 30 ms.
+With the same pilot on both sides, the builder's decks won 57.3% ± 3.2 of 800 matches against
+decks dealt out by strength (`arrangeCpuDecks`, how it used to be done).
+
+**The controller** (`StrategistAIController`) has the search AI's interface and manners: a Web
+Worker when there is one, quick passes outside the moments it could ever act in, the same delay
+inside them whatever it holds, and visible thinking only at its main phase and its declarations.
+
+**The arena** (`tools/arena.js`) plays AIs against each other in mirrors: the same decks and seats
+played twice with the AIs swapped, so the luck of the cards cancels. About four mirrors in five are
+decided by the decks or the seat whoever plays, so the telling number is the mirrors one AI won
+from both seats. `tools/blunders.js` counts plays that look dumb whatever the position.
+
+Measured on the final code (4 cores; ± is a 95% interval; the search AI at the thinking time it
+shipped with for each opponent, 1 to 2.5 s a decision; the Strategist at its own, 100 to 150 ms):
+
+| Comparison | Strategist's score | Mirrors won from both seats | Thinking |
+| --- | --- | --- | --- |
+| Whole matches: its play and its decks, against the search AI made blind with the old decks (220 matches) | 63.6% ± 6.1 | 32 to 6 | 1.4 s against 22.7 s a match |
+| Rounds, same decks: against the search AI made blind (640 rounds) | 53.6% ± 3.7 | 45 to 24 | 0.58 s against 9.85 s a round |
+| Rounds, same decks: against the search AI as it shipped, seeing the Strategist's hand (320 rounds) | 50.3% ± 5.2 | 11 to 9 | 0.70 s against 5.08 s a round |
+| Rounds, same decks: against the basic AI (600 rounds) | 65.6% ± 3.6 | 78 to 1 | 0.85 s a round |
+
+So with the same decks it's a little ahead of the search AI on a seventeenth of the thinking, level
+with it when the search AI can see its hand, and well ahead once it also builds its own decks. A
+decision takes 5 ms at the median, 112 ms at the 95th percentile and 0.3 s at most.
+
+Blunders in the 640 rounds against the blind search AI (Strategist, then search AI): tricks that
+changed nothing 0 and 193; a pump with no attack after it 1 and 92; lethal on the board not taken 0
+and 16; an attacker lost for nothing 33 and 48 (some of these are a blocker or a trick it couldn't
+have seen); needless chump blocks 4 and 7. Against the basic AI it missed lethal twice in 600 rounds.
+
+To run them again: `node tools/arena.js --a strategist --b search-blind --seeds 160 --personas`,
+`--b search` (seeing hands), `--adecks new --match` (whole matches), `--a basic --b basic --adecks new --match`
+(the decks alone). `--aopts '{"worlds":6}'` and the like set a Strategist's options.
 
 ### Basic AI (`BasicAIController`)
 

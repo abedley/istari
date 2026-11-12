@@ -22,10 +22,17 @@ import { evaluate } from './evaluate.js';
 import { sampleWorld, unseenCards } from './beliefs.js';
 
 export const SEARCH_DEFAULTS = Object.freeze({
-  /** Guesses of the hidden cards; 0 plays the board as it stands, with no guess at all. (A profile's `foresight` sets it.) */
-  worlds: 6,
-  /** Thinking time for one decision, in ms: no new pass starts after it, and a pass under way stops at twice it. */
-  budgetMs: 250,
+  /**
+   * Guesses of the opponent's hidden cards. 0 (the default) plays the board as it stands, with no guess at
+   * all: a hidden hand is five near-random cards from one booster, and in arena play six guesses of it
+   * were no stronger than none, at twice the thinking. A profile's `foresight` sets it.
+   */
+  worlds: 0,
+  /**
+   * Thinking time for one decision, in ms: no new pass starts after it, and a pass under way stops at twice
+   * it. More than this bought nothing in arena play (600 ms and two more choices deep: 50.9% against this).
+   */
+  budgetMs: 100,
   /** Real choices searched in full after the move itself, at most. */
   maxDepth: 3,
   /** Moves kept after each pass, and how far behind the best (in chance of winning) a kept move may be. */
@@ -62,7 +69,10 @@ export class Search {
   constructor(me, profile, options = {}) {
     this.#me = me;
     this.#profile = profile;
-    this.#options = { ...SEARCH_DEFAULTS, ...(profile?.foresight !== undefined ? { worlds: profile.foresight } : {}), ...options };
+    this.#options = {
+      ...SEARCH_DEFAULTS, ...(profile?.foresight !== undefined ? { worlds: profile.foresight } : {}),
+      ...(profile?.budgetMs ? { budgetMs: profile.budgetMs } : {}), ...options,
+    };
     this.#now = options.now ?? (() => performance.now());
   }
 

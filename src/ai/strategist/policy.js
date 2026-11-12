@@ -32,11 +32,11 @@ export function decide(view, me, { profile, random, ...options } = {}) {
 
 /**
  * @param {string} me
- * @param {object} options `{ persona, profile, seed, budgetMs, worlds, maxDepth, onDecision }`: `persona` an opponent's id or
+ * @param {object} options `{ persona, profile, plan, seed, budgetMs, worlds, maxDepth, onDecision }`: `persona` an opponent's id or
  *   a temperament's name (profiles.js), or `profile` the numbers themselves.
  */
-export function strategistPolicy(me, { persona, profile, seed = 1, onDecision, ...options } = {}) {
-  const chosen = profileFor(profile ?? persona);
+export function strategistPolicy(me, { persona, profile, plan = null, seed = 1, onDecision, ...options } = {}) {
+  const chosen = profileFor(profile ?? persona, plan);
   const random = seededRandom(seed);
   const fallback = new BasicAIController({ game: null, playerId: me });
   let current = null;

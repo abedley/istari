@@ -20,7 +20,7 @@ import {
 } from './personas.js';
 import { weightsFor } from '../ai/evaluate.js';
 import { AI_KIND } from '../ai/cpu.js';
-import { buildDecks } from './deckBuilder.js';
+import { buildDecks, deckPlan } from './deckBuilder.js';
 
 export const PAIGOW_RULES = Object.freeze({
   cardsDealt: 15,
@@ -247,7 +247,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       playerId: CPU_ID,
       opponentId: match.opponentId,
       name: opponent.name,
-      ai: opponent.ai.kind === AI_KIND.STRATEGIST ? { ...opponent.ai, persona: match.opponentId } : {
+      ai: opponent.ai.kind === AI_KIND.STRATEGIST ? { ...opponent.ai, persona: match.opponentId, plan: deckPlan(match.cpuDecks[round]) } : {
         ...opponent.ai,
         budgetMs: Math.max(opponent.ai.budgetMs ?? 0, 1000),
         // Libraries are always empty here, and that's no danger.

@@ -33,6 +33,7 @@ import { searchPolicy } from '../src/ai/search.js';
 import { weightsFor } from '../src/ai/evaluate.js';
 import { actingPlayerId } from '../src/ai/simulate.js';
 import { blindView, blindDeterminizer } from '../src/ai/strategist/beliefs.js';
+import { deckPlan } from '../src/paigow/deckBuilder.js';
 
 const args = Object.fromEntries(process.argv.slice(2).join(' ').split('--').filter(Boolean).map((part) => {
   const [key, ...value] = part.trim().split(/\s+/);
@@ -112,7 +113,10 @@ async function playRound({ seed, match, round, first, ais, budget }) {
   });
   game.start();
   const policies = {};
-  for (const seat of SEATS) policies[seat] = await makePolicy(ais[seat].name, seat, { persona: match.opponentId, seed: seed * 7 + round * 2 + (seat === CPU_ID ? 1 : 0), budget, opts: sideOpts[ais[seat].side] });
+  for (const seat of SEATS) policies[seat] = await makePolicy(ais[seat].name, seat, {
+    persona: match.opponentId, seed: seed * 7 + round * 2 + (seat === CPU_ID ? 1 : 0), budget,
+    opts: { plan: deckPlan((seat === CPU_ID ? match.cpuDecks : match.decks)[round]), ...sideOpts[ais[seat].side] },
+  });
   const think = { [PLAYER_ID]: [], [CPU_ID]: [] };
   const { watchBlunders } = await import('./blunders.js');
   const blunders = watchBlunders(game, SEATS);
@@ -245,11 +249,12 @@ function report(options, mirrors, errors, seconds) {
     else if (total === 0) pair.b += 1;
     else pair.split += 1;
   }
+  const per = options.match ? 'match' : 'round';
   const stats = (lists) => {
     const all = lists.flat().sort((x, y) => x - y);
     const perRound = lists.map((l) => l.reduce((s, x) => s + x, 0));
     const at = (q) => all[Math.min(all.length - 1, Math.floor(q * all.length))] ?? 0;
-    return `decisions over 1 ms: ${(all.length / lists.length).toFixed(1)} a round; median ${at(0.5).toFixed(0)} ms, p95 ${at(0.95).toFixed(0)} ms, max ${(all.at(-1) ?? 0).toFixed(0)} ms; ${(perRound.reduce((s, x) => s + x, 0) / lists.length / 1000).toFixed(2)} s a round`;
+    return `decisions over 1 ms: ${(all.length / lists.length).toFixed(1)} a ${per}; median ${at(0.5).toFixed(0)} ms, p95 ${at(0.95).toFixed(0)} ms, max ${(all.at(-1) ?? 0).toFixed(0)} ms; ${(perRound.reduce((s, x) => s + x, 0) / lists.length / 1000).toFixed(2)} s a ${per}`;
   };
   const sum = (key) => {
     const total = {};
