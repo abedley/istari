@@ -279,7 +279,7 @@ test('Field-Tested Frying Pan: equipped creature gets +X/+X whenever you gain li
   assert.equal(bear().toughness, 3);
 });
 
-test("Old Man Willow's power: at your end step, if a creature you controlled died this turn, create a 2/2 green Treefolk", () => {
+test("Old Man Willow's power: at its end step, if a creature you controlled died this turn, create a 2/2 green Treefolk", () => {
   const game = new Game({
     players, decks: { p1: ['bear', 'shock'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR, shock: SHOCK }, shuffleLibraries: false,
     openingHandSize: 2, deckingLoss: false, infiniteMana: true, emblems: { p1: ['oldManWillow'], p2: [] }, startingPlayerId: 'p1',
@@ -324,6 +324,41 @@ test("Old Man Willow's power: at your end step, if a creature you controlled die
   assert.deepEqual(token.colors, ['green']);
   // The next end step of p1's, with nothing dying, makes none.
   passUntil((st) => st.turn === 6);
+  assert.equal(treefolk().length, 1);
+});
+
+test("Old Man Willow's power triggers at each end step, the opponent's too", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'shock'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR, shock: SHOCK }, shuffleLibraries: false,
+    openingHandSize: 2, deckingLoss: false, infiniteMana: true, emblems: { p1: ['oldManWillow'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  const treefolk = () => game.getState().battlefield.filter((p) => p.controllerId === 'p1' && p.subtypes?.includes('Treefolk'));
+  const passUntil = (done) => {
+    for (let i = 0; i < 200; i++) {
+      const s = game.getState();
+      if (done(s)) return s;
+      const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+      const acts = s.validActions.filter((a) => a.playerId === actor);
+      assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]).ok, true);
+    }
+    throw new Error('Too many steps');
+  };
+  const castCard = (s, cardId, targets) => s.validActions.find((a) => a.playerId === 'p1' && a.type === ACTION.CAST_SPELL
+    && a.cardId === s.players[0].hand.find((c) => c.cardId === cardId).id && (!targets || a.targets?.[0] === targets[0]));
+  // Turn 1: p1 casts a Bear.
+  let s = passUntil((st) => st.phase === 'precombatMain' && st.priorityPlayerId === 'p1' && !st.stack.length);
+  assert.equal(game.dispatch(castCard(s, 'bear')).ok, true);
+  s = passUntil((st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  const bear = s.battlefield.find((p) => p.controllerId === 'p1' && p.cardId === 'bear');
+  assert.ok(bear);
+  // Turn 2, p2's: p1 Shocks its own Bear when it gets priority.
+  s = passUntil((st) => st.turn === 2 && st.phase === 'precombatMain' && st.priorityPlayerId === 'p1' && !st.stack.length);
+  assert.equal(treefolk().length, 0);
+  assert.equal(game.dispatch(castCard(s, 'shock', [bear.id])).ok, true);
+  passUntil((st) => !st.stack.length && !st.battlefield.some((p) => p.id === bear.id));
+  // p2's end step: the ring makes a Treefolk.
+  passUntil((st) => st.turn === 3);
   assert.equal(treefolk().length, 1);
 });
 
