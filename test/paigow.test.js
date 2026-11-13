@@ -423,9 +423,10 @@ test('a booster with cards it must hold: each takes the place of a card of its r
   assert.equal(withCards(booster, [rare])[13], rare, 'a mythic takes the rare slot');
 });
 
-test('Old Man Willow’s own setup: his card in every pack, and ten Forests in his library each round', () => {
+test('Old Man Willow’s own setup: his card in every pack, and five Forests in play and five in his library each round', () => {
   assert.deepEqual(opponentSetup('gandalf'), { pack: [], library: [], battlefield: [] });
-  assert.deepEqual(opponentSetup('oldManWillow').library, Array(10).fill('forest'));
+  assert.deepEqual(opponentSetup('oldManWillow').library, Array(5).fill('forest'));
+  assert.deepEqual(opponentSetup('oldManWillow').battlefield, Array(5).fill('forest'));
   for (let seed = 1; seed <= 20; seed += 1) {
     const match = createMatch({ seed, opponentId: 'oldManWillow' });
     assert.ok(match.cpuDecks.flat().includes('oldManWillow'), `seed ${seed}`);
@@ -437,14 +438,16 @@ test('Old Man Willow’s own setup: his card in every pack, and ten Forests in h
 
   const match = createMatch({ seed: 11, opponentId: 'oldManWillow' });
   const setup = roundSetup(setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5))));
-  assert.deepEqual(setup.game.shufflesIn[CPU_ID], Array(10).fill('forest'));
+  assert.deepEqual(setup.game.shufflesIn[CPU_ID], Array(5).fill('forest'));
+  assert.deepEqual(setup.game.startsWith[CPU_ID], Array(5).fill('forest'));
   const game = new Game(setup.game);
   game.start();
   const cpu = game.serialize().zones[CPU_ID];
   // His hand is still his deck of five (and a Forest, if he has drawn one); the Forests are his library.
   assert.deepEqual(cpu.hand.map((c) => c.cardId).filter((id) => id !== 'forest').sort(), [...match.cpuDecks[0]].sort());
   assert.ok(cpu.library.every((c) => c.cardId === 'forest'));
-  assert.equal(cpu.library.length + cpu.hand.filter((c) => c.cardId === 'forest').length, 10);
+  assert.equal(cpu.library.length + cpu.hand.filter((c) => c.cardId === 'forest').length, 5);
+  assert.equal(game.getState().battlefield.filter((p) => p.cardId === 'forest' && p.controllerId === CPU_ID).length, 5);
   assert.equal(game.serialize().zones[PLAYER_ID].library.length, 0);
 });
 

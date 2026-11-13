@@ -68,7 +68,8 @@ rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `lib
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option); and
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring).
 For now only Old Man Willow has one: his pack always holds *Old Man Willow*, and he starts every round
-with a library of 10 Forests, so he draws one each turn (and his card grows with the lands he plays).
+with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
+power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 
 **Rings of Power:** every hero and every opponent has one planeswalker power, shown in the app as
 a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in

@@ -64,8 +64,8 @@ export const PAIGOW_OPPONENTS = deepFreeze({
   },
   oldManWillow: {
     name: 'Old Man Willow', color: 'green', emblem: 'oldManWillow', ai: strategist(),
-    // The Old Forest is all around him: a library of Forests to draw, and his own card in every pack.
-    setup: { pack: ['oldManWillow'], library: Array(10).fill('forest') },
+    // The Old Forest is all around him: Forests in play and more to draw, and his own card in every pack.
+    setup: { pack: ['oldManWillow'], battlefield: Array(5).fill('forest'), library: Array(5).fill('forest') },
     portrait: portrait('0/3/0362b7c4-fff5-4bc2-b32d-913f85c23cc4.jpg?1783916248', 86, 38, 300, 'Old Man Willow', 'Miklós Ligeti'),
     banter: {
       start: ['Sit down, little one. Rest by the river. There is no hurry.', 'Sleepy, are you? Lie down among my roots, and we shall play.', 'The Old Forest remembers every footstep. Yours too.'],
