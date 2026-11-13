@@ -833,7 +833,18 @@ stall coming. The variant survives `serialize()` and `clone()`.
   per turn (305.2). Afterwards the same player gets priority again (117.3c), and the run of
   passes starts over (117.4).
 - Activated abilities (602): the player needs priority and must be able to pay the whole cost.
-  The cost (tapping and/or mana) is paid automatically. A non-mana ability goes on the stack, and
+  The cost (tapping and/or mana) is paid automatically. **This differs from the rules:** in Magic
+  you announce the ability, choose X, targets and the like, and only then activate mana abilities
+  and pay (602.2b, following 601.2b–h). Here the mana must already be in the pool before the
+  activation counts as a valid action: `validActions` and `#xValues` look only at the pool
+  (plus infinite or restricted mana), never at untapped lands, and there's no step partway
+  through activating in which to tap them. The app hides this by dry-running the play and
+  tapping lands first (`prepare` and `perform` in `app/battle/play.js`, `payAndAct` in
+  `src/ai/macroActions.js`), so a player sees the choices the rules would give, but the order
+  isn't the rules' order. One consequence to watch for: when an ability's cost taps, sacrifices
+  or exiles its own source, that source must not also be tapped for the mana (`sourcesPaying`
+  in `src/ai/manaPlanning.js`), or the ability is never offered (Barad-dûr's
+  "{X}{X}{B}, {T}: Amass Orcs X" was hidden this way). A non-mana ability goes on the stack, and
   the player who activated it gets priority (117.3c). When all players pass in succession with
   something on the stack, the top object resolves (117.4, 608). Then the active player gets
   priority (117.3b), and the step continues.
