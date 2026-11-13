@@ -263,6 +263,7 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       // The opponent's own setup (opponentSetup in personas.js): a library to draw from, a board to start with.
       shufflesIn: { [CPU_ID]: [...setup.library] },
       startsWith: { [CPU_ID]: [...setup.battlefield] },
+      startsInGraveyard: { [CPU_ID]: [...setup.graveyard] },
       startingLife: { [PLAYER_ID]: playerFirst ? mine.first : mine.second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,

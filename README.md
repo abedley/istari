@@ -66,9 +66,11 @@ or reveal them, how many you hold, and what you did, as a person across the tabl
 **An opponent's own setup:** an opponent may have a `setup` in `src/paigow/personas.js` (read with
 `opponentSetup`): `pack`, cards its booster always holds (each takes the place of the last card of its
 rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `library`, cards shuffled into
-its library at the start of every round, after its hand of five (the Game's `shufflesIn` option); and
-`battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring).
-Old Man Willow and the Rider in Black have one. The Rider's packs always hold three *Nazgûl*. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
+its library at the start of every round, after its hand of five (the Game's `shufflesIn` option);
+`battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring); and
+`graveyard`, cards already in its graveyard as every round begins (the Game's `startsInGraveyard` option).
+Gandalf, Old Man Willow and the Rider in Black have one. Gandalf's packs always hold *Glamdring*, and he starts
+every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
 with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
 power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 

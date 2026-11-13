@@ -7,7 +7,8 @@
  *
  * An opponent may also have a `setup` of its own (see opponentSetup): `pack`, cards its booster always holds;
  * `library`, cards shuffled into its library at the start of every round (after its hand, which is still its
- * deck of five); and `battlefield`, permanents it starts every round with.
+ * deck of five); `battlefield`, permanents it starts every round with; and `graveyard`, cards already in its
+ * graveyard as every round begins.
  */
 import { AI_KIND } from '../ai/cpu.js';
 
@@ -53,6 +54,8 @@ export const PAIGOW_OPPONENTS = deepFreeze({
   },
   gandalf: {
     name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: strategist(),
+    // His sword in every pack, and his spells already spent: five Gandalf's Sanctions in his graveyard each round.
+    setup: { pack: ['glamdring'], graveyard: Array(5).fill('gandalfsSanction') },
     portrait: portrait('c/c/cc9cfcc7-be64-4871-8d52-851e43fe3305.jpg?1783916321', 68, 0, 300, 'Gandalf, Friend of the Shire', 'Dmitry Burmak'),
     banter: {
       start: ['Five cards each? A small game. Small things have a way of mattering.', 'Shall we? I have fireworks to see to afterwards.', 'Mind your hand. A wizard notices things.'],
@@ -235,5 +238,7 @@ export const paigowOpponent = (id) => PAIGOW_OPPONENTS[id];
  */
 export function opponentSetup(id) {
   const setup = PAIGOW_OPPONENTS[id]?.setup ?? {};
-  return { pack: setup.pack ?? [], library: setup.library ?? [], battlefield: setup.battlefield ?? [] };
+  return {
+    pack: setup.pack ?? [], library: setup.library ?? [], battlefield: setup.battlefield ?? [], graveyard: setup.graveyard ?? [],
+  };
 }

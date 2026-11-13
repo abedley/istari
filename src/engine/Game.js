@@ -288,8 +288,8 @@ export class Game extends EventEmitter {
   #processing = false;
   #silent = false;
   #limits = {};
-  /** What players begin the game with besides their decks: `startsWith`, `shufflesIn` (see the constructor). */
-  #setup = { startsWith: {}, shufflesIn: {} };
+  /** What players begin the game with besides their decks: `startsWith`, `shufflesIn`, `startsInGraveyard` (see the constructor). */
+  #setup = { startsWith: {}, shufflesIn: {}, startsInGraveyard: {} };
 
   /**
    * @param {object} options
@@ -323,11 +323,13 @@ export class Game extends EventEmitter {
    *   game with on the battlefield (as an emblem's `startsWith`).
    * @param {Record<string, string[]>} [options.shufflesIn] Card ids per player id: cards shuffled into the player's
    *   library after the opening hands are drawn (as an emblem's `shufflesIn`), so the hand is still the deck's own.
+   * @param {Record<string, string[]>} [options.startsInGraveyard] Card ids per player id: cards in the player's
+   *   graveyard as the game begins.
    */
   constructor({
     players, startingPlayerId, decks = {}, seed, cards = {}, shuffleLibraries = true,
     emblems = {}, emblemDefinitions = {}, startingLife = {}, limits = {}, silent = false, mulligans = false,
-    openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit, startsWith = {}, shufflesIn = {},
+    openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit, startsWith = {}, shufflesIn = {}, startsInGraveyard = {},
   } = {}) {
     super();
     if (!Array.isArray(players) || players.length < 2) {
@@ -348,7 +350,7 @@ export class Game extends EventEmitter {
     this.#silent = silent;
     this.#limits = { ...limits };
     this.#setVariant({ openingHandSize, deckingLoss, infiniteMana, stallDraw, turnLimit });
-    this.#setup = { startsWith: { ...startsWith }, shufflesIn: { ...shufflesIn } };
+    this.#setup = { startsWith: { ...startsWith }, shufflesIn: { ...shufflesIn }, startsInGraveyard: { ...startsInGraveyard } };
 
     for (const { id } of this.#players) {
       const deck = decks[id] ?? DEFAULT_DECK;
@@ -1689,6 +1691,7 @@ export class Game extends EventEmitter {
       // What the player's setup starts them with (a Pai Gow opponent's own, see src/paigow/personas.js).
       this.#startWith(id, this.#setup.startsWith[id] ?? [], null, 'setup');
       this.#shuffleIn(id, this.#setup.shufflesIn[id] ?? [], null, 'setup');
+      this.#startInGraveyard(id, this.#setup.startsInGraveyard[id] ?? []);
       for (const emblem of this.#zones.get(id).emblems) {
         const definition = this.#emblemDefinitions[emblem.emblemId];
         this.#startWith(id, definition.startsWith ?? [], emblem.id, `emblem ${emblem.emblemId}`);
@@ -1727,6 +1730,17 @@ export class Game extends EventEmitter {
     zone.library.push(...cards);
     if (this.#shuffleLibraries) shuffle(zone.library, this.#random);
     this.#emitEvent('cardsShuffledIntoLibrary', { playerId, cardIds: cards.map((c) => c.id), sourceId });
+  }
+
+  /** Cards a player begins the game with in their graveyard (the `startsInGraveyard` option). */
+  #startInGraveyard(playerId, cardIds) {
+    if (!cardIds.length) return;
+    const cards = cardIds.map((cardId) => {
+      if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for setup: ${cardId}`);
+      return this.#createCard(cardId, playerId, `${playerId}-grave-${this.#nextTokenNumber++}`);
+    });
+    this.#zones.get(playerId).graveyard.push(...cards);
+    this.#emitEvent('startedInGraveyard', { playerId, cardIds: cards.map((c) => c.id) });
   }
 
   /** Asks the first of `order` whether to keep; the rest decide after them. */

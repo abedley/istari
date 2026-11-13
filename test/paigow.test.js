@@ -424,7 +424,7 @@ test('a booster with cards it must hold: each takes the place of a card of its r
 });
 
 test('Old Man Willow’s own setup: his card in every pack, and five Forests in play and five in his library each round', () => {
-  assert.deepEqual(opponentSetup('gandalf'), { pack: [], library: [], battlefield: [] });
+  assert.deepEqual(opponentSetup('sauron'), { pack: [], library: [], battlefield: [], graveyard: [] });
   assert.deepEqual(opponentSetup('oldManWillow').library, Array(5).fill('forest'));
   assert.deepEqual(opponentSetup('oldManWillow').battlefield, Array(5).fill('forest'));
   for (let seed = 1; seed <= 20; seed += 1) {
@@ -433,7 +433,7 @@ test('Old Man Willow’s own setup: his card in every pack, and five Forests in 
     assert.equal(match.cpuDecks.flat().length, PAIGOW_RULES.cardsDealt);
   }
   // Other opponents' packs are as ever.
-  const other = createMatch({ seed: 5, opponentId: 'gandalf' });
+  const other = createMatch({ seed: 5, opponentId: 'sauron' });
   assert.deepEqual(other.cpuDecks.flat().sort(), openBooster((() => { const r = seededRandom(5); openBooster(r); return r; })()).sort());
 
   const match = createMatch({ seed: 11, opponentId: 'oldManWillow' });
@@ -456,6 +456,29 @@ test('a game can start a player with permanents on the battlefield', () => {
   const forests = game.getState().battlefield.filter((p) => p.cardId === 'forest');
   assert.equal(forests.length, 2);
   assert.ok(forests.every((p) => p.controllerId === 'p2'));
+});
+
+test('Gandalf always has Glamdring in his pack, and starts every round with five Gandalf’s Sanctions in his graveyard', () => {
+  assert.deepEqual(opponentSetup('gandalf').pack, ['glamdring']);
+  for (let seed = 1; seed <= 20; seed += 1) {
+    const cards = createMatch({ seed, opponentId: 'gandalf' }).cpuDecks.flat();
+    assert.equal(cards.filter((id) => id === 'glamdring').length >= 1, true, `seed ${seed}`);
+    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+  }
+  const match = createMatch({ seed: 3, opponentId: 'gandalf' });
+  const setup = roundSetup(setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5))));
+  assert.deepEqual(setup.game.startsInGraveyard[CPU_ID], Array(5).fill('gandalfsSanction'));
+  const game = new Game(setup.game);
+  game.start();
+  const cpu = game.getState().players.find((p) => p.id === CPU_ID);
+  assert.deepEqual(cpu.graveyard.map((c) => c.cardId), Array(5).fill('gandalfsSanction'));
+  assert.deepEqual(game.getState().players.find((p) => p.id === PLAYER_ID).graveyard, []);
+});
+
+test('a game can start a player with cards in the graveyard', () => {
+  const game = newGame({ p1: ['bear'], p2: ['bear'] }, { startsInGraveyard: { p2: ['bear', 'bear'] } });
+  assert.deepEqual(game.getState().players[1].graveyard.map((c) => c.cardId), ['bear', 'bear']);
+  assert.deepEqual(game.getState().players[0].graveyard, []);
 });
 
 test('the Rider in Black’s packs always hold three Nazgûl', () => {
