@@ -2,6 +2,7 @@ import { h, onPress } from '../dom.js';
 import { crest } from '../art.js';
 import { fullCard, cardBack } from '../cardView.js';
 import { header, personInfo } from './common.js';
+import { icon } from '../icons.js';
 import {
   createMatch, setDecks, score, outcome, nextRound, playerStartsRound, playerLife, cardStrength,
   PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
@@ -73,6 +74,71 @@ function slotChip(app, cardId, { onTap }) {
   return el;
 }
 
+/** How many of the booster's cards fit in a row of the deck builder's tray: pinch (or ⌘/Ctrl + wheel, or −/+) to change it. */
+export const TRAY_COLUMNS = Object.freeze({ min: 1, max: 5, default: 3 });
+
+/** The tray's columns from the settings, kept between TRAY_COLUMNS.min and .max. */
+export const trayColumns = (settings) => {
+  const n = Math.round(Number(settings?.trayColumns));
+  return Number.isFinite(n) ? Math.min(TRAY_COLUMNS.max, Math.max(TRAY_COLUMNS.min, n)) : TRAY_COLUMNS.default;
+};
+
+/**
+ * Zooming the tray: `tray`'s columns set from the settings, and changed (and saved) by a pinch, a ⌘/Ctrl + wheel (a
+ * trackpad's pinch too) or the buttons. Zooming in shows fewer, bigger cards; out, more and smaller.
+ * Returns the − and + buttons, and `update` to call once the tray is filled.
+ */
+function trayZoom(app, tray) {
+  let columns = trayColumns(app.settings);
+  const zoomOut = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Zoom out: more cards in a row', onclick: () => set(columns + 1) }, icon('minus'));
+  const zoomIn = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Zoom in: fewer cards in a row', onclick: () => set(columns - 1) }, icon('plus'));
+  const update = () => {
+    tray.style.setProperty('--tray-cols', String(columns));
+    tray.dataset.columns = String(columns);
+    zoomOut.disabled = columns >= TRAY_COLUMNS.max;
+    zoomIn.disabled = columns <= TRAY_COLUMNS.min;
+  };
+  const set = (next) => {
+    const n = Math.min(TRAY_COLUMNS.max, Math.max(TRAY_COLUMNS.min, next));
+    if (n === columns) return;
+    // Keep the same part of the booster in view.
+    const at = tray.scrollHeight > tray.clientHeight ? tray.scrollTop / (tray.scrollHeight - tray.clientHeight) : 0;
+    columns = n;
+    update();
+    tray.scrollTop = at * Math.max(0, tray.scrollHeight - tray.clientHeight);
+    app.updateSettings({ trayColumns: columns });
+  };
+
+  // A pinch: each time the fingers spread (or close) by a quarter of where they were, one column fewer (or more).
+  const STEP = 1.25;
+  let base = null;
+  const spread = (touches) => Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+  tray.addEventListener('touchstart', (event) => { if (event.touches.length === 2) base = spread(event.touches); }, { passive: true });
+  tray.addEventListener('touchmove', (event) => {
+    if (event.touches.length !== 2 || !base) return;
+    event.preventDefault();
+    const now = spread(event.touches);
+    if (now > base * STEP) { set(columns - 1); base = now; }
+    else if (now < base / STEP) { set(columns + 1); base = now; }
+  }, { passive: false });
+  tray.addEventListener('touchend', (event) => { if (event.touches.length < 2) base = null; });
+  tray.addEventListener('touchcancel', () => { base = null; });
+  // Safari's own pinch gesture would zoom the page.
+  for (const type of ['gesturestart', 'gesturechange']) tray.addEventListener(type, (event) => event.preventDefault());
+
+  // ⌘/Ctrl + wheel, and a trackpad's pinch (which the browser sends as a wheel with ctrlKey).
+  let wheel = 0;
+  tray.addEventListener('wheel', (event) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    wheel += event.deltaY;
+    if (Math.abs(wheel) >= 40) { set(columns + Math.sign(wheel)); wheel = 0; }
+  }, { passive: false });
+
+  update();
+  return { zoomOut, zoomIn, update };
+}
+
 function buildView(app, match) {
   const { decks: count, deckSize } = PAIGOW_RULES;
   /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
@@ -85,6 +151,7 @@ function buildView(app, match) {
   const board = h('div.pg-board');
   const tray = h('div.pg-tray');
   const trayTitle = h('h4');
+  const zoom = trayZoom(app, tray);
   const start = h('button.btn.primary.pg-start', { onclick: () => play() }, 'Start match');
   const autoFill = h('button.btn', { onclick: () => fill() }, 'Auto-fill');
   const clear = h('button.btn.ghost', { onclick: () => { placed.clear(); selected = 0; render(); } }, 'Clear');
@@ -148,7 +215,7 @@ function buildView(app, match) {
 
   const el = h('div',
     header({ title: '', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
-    h('div.pg-builder', board, h('section.pg-tray-wrap', trayTitle, tray)),
+    h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', zoom.zoomOut, zoom.zoomIn)), tray)),
     h('div.cta.pg-build-cta', h('div.row', clear, autoFill, start)));
   return { el };
 }

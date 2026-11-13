@@ -35,7 +35,8 @@ campaign's match, see *The campaign*):
    nonbasic lands included; the 8 left out of the game can't be opened. No foils or special editions.
 2. You split yours into three decks of five (in a campaign you may have more cards than that, and
    leave the spare ones out; tap a card to put it in the highlighted round,
-   hold it to read it, or Auto-fill). The CPU builds its three decks without a look at your cards
+   hold it to read it, or Auto-fill; pinch the booster's cards, ⌘/Ctrl + scroll, or tap −/+ to show 1 to 5
+   in a row, 3 at first, kept in the settings as `trayColumns`). The CPU builds its three decks without a look at your cards
    (`buildDecks` in `src/paigow/deckBuilder.js`, see *The Strategist*), then shuffles their order.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
    hand, infinite mana and their character's Ring of Power, and can't lose by drawing from an empty library. The player

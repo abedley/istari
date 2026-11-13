@@ -391,3 +391,14 @@ test('the AI’s limit on activations each turn doesn’t apply to the player', 
     settle();
   }
 });
+
+test('the deck builder’s tray shows 3 cards a row by default, zooming between 1 and 5', async () => {
+  const { trayColumns, TRAY_COLUMNS } = await import('../app/screens/paigow.js');
+  assert.deepEqual({ ...TRAY_COLUMNS }, { min: 1, max: 5, default: 3 });
+  assert.equal(trayColumns({}), 3);
+  assert.equal(trayColumns({ trayColumns: 1 }), 1);
+  assert.equal(trayColumns({ trayColumns: 5 }), 5);
+  assert.equal(trayColumns({ trayColumns: 9 }), 5);
+  assert.equal(trayColumns({ trayColumns: 0 }), 1);
+  assert.equal(trayColumns({ trayColumns: 'x' }), 3);
+});
