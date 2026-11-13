@@ -169,7 +169,7 @@ export class Battle {
     const power = (info) => {
       const rings = (info.powers ?? [info.power]).filter(Boolean);
       if (rings.length > 1) return h('div.vs-power', h('b', rings.map((r) => r.name).join(' · ')));
-      return rings.length ? h('div.vs-power', h('b', rings[0].name), ' ', rings[0].text) : null;
+      return rings.length ? h('div.vs-power', h('b', rings[0].name), ' ', (rings[0].powers ?? [rings[0]]).map((p) => p.text).join(' ')) : null;
     };
     const intro = h('div.versus',
       h('div.vs-side.vs-opp', crest(oppInfo, { size: 'lg' }), h('div.vs-name', oppInfo.name), subtitle ? h('div.vs-sub', subtitle) : null, power(oppInfo)),

@@ -457,3 +457,12 @@ test('a game can start a player with permanents on the battlefield', () => {
   assert.equal(forests.length, 2);
   assert.ok(forests.every((p) => p.controllerId === 'p2'));
 });
+
+test('the Rider in Black’s packs always hold three Nazgûl', () => {
+  assert.deepEqual(opponentSetup('riderInBlack').pack, ['nazgul', 'nazgul', 'nazgul']);
+  for (let seed = 1; seed <= 20; seed += 1) {
+    const cards = createMatch({ seed, opponentId: 'riderInBlack' }).cpuDecks.flat();
+    assert.equal(cards.filter((id) => id === 'nazgul').length, 3, `seed ${seed}`);
+    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+  }
+});

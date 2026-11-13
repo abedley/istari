@@ -7,14 +7,20 @@ import { EMBLEMS } from '../../src/cards/emblems.js';
 
 const HERO_KEY = 'istari.hero';
 
-/** A Ring of Power (an emblem id): its name, its power's name, and its rules text. */
+/**
+ * A Ring of Power (an emblem id): its name, its power's name, and its rules text (`power`, `text`); with more than
+ * one power (a passive one and one to activate, as the Rider in Black's), each in `powers` (`{ power, text }`).
+ */
 export function ringOf(emblemId) {
   const emblem = EMBLEMS[emblemId];
-  const ability = emblem?.abilities[0];
-  // A passive power has no ability, just its text.
-  if (emblem?.passive) return { name: emblem.name, power: emblem.power ?? null, text: emblem.text };
+  if (!emblem) return null;
   // A power that costs nothing doesn't show its "0: ".
-  return ability ? { name: emblem.name, power: emblem.power ?? null, text: ability.text.replace(/^0:\s*/, '') } : null;
+  const textOf = (ability) => ability.text.replace(/^0:\s*/, '');
+  // A passive power is just its text; any ability besides is a power of its own, under the ability's name.
+  const powers = emblem.passive
+    ? [{ power: emblem.power ?? null, text: emblem.text }, ...emblem.abilities.map((a) => ({ power: a.name ?? null, text: textOf(a) }))]
+    : emblem.abilities.slice(0, 1).map((a) => ({ power: emblem.power ?? null, text: textOf(a) }));
+  return powers.length ? { name: emblem.name, ...powers[0], powers } : null;
 }
 
 /** A character's Ring of Power (their planeswalker power): see ringOf. */
@@ -25,7 +31,7 @@ export const ringBlock = (emblemId, { note = null } = {}) => {
   const ring = ringOf(emblemId);
   return ring ? h('div.power',
     h('div.power-name', powerIcon(emblemId, 'power-sym') ?? h('span.ring-mark', { 'aria-hidden': 'true' }), ring.name),
-    h('div.power-text', ring.power ? h('i', `${ring.power}. `) : null, ring.text),
+    ring.powers.map((p) => h('div.power-text', p.power ? h('i', `${p.power}. `) : null, p.text)),
     note ? h('div.power-note', note) : null) : null;
 };
 

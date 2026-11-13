@@ -89,6 +89,8 @@ export const PAIGOW_OPPONENTS = deepFreeze({
   },
   riderInBlack: {
     name: 'Rider in Black', color: 'black', emblem: 'riderInBlack', ai: strategist(),
+    // The Nine ride together: three Nazgûl in every pack.
+    setup: { pack: ['nazgul', 'nazgul', 'nazgul'] },
     portrait: portrait('4/0/4023a6de-3ac7-488a-b1a9-b1e26681d9bc.jpg?1783916195', 45, 0, 300, 'Nazgûl', 'Lorenzo Mastroianni'),
     banter: {
       start: ['Shire... Baggins...', 'Where is the one you hide? I smell it on you.', 'Give it to me. Then you may go.'],

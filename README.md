@@ -68,7 +68,7 @@ or reveal them, how many you hold, and what you did, as a person across the tabl
 rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `library`, cards shuffled into
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option); and
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring).
-For now only Old Man Willow has one: his pack always holds *Old Man Willow*, and he starts every round
+Old Man Willow and the Rider in Black have one. The Rider's packs always hold three *Nazgûl*. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
 with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
 power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 
@@ -98,7 +98,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
-| Rider in Black | A Ring of the Nine | Hunting the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. |
+| Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you (once a turn, at any time). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |

@@ -68,7 +68,11 @@ test('every hero and opponent has a power of their own, once a turn', () => {
     assert.equal(emblem.ring, true);
     // A passive power has no ability, just its text and what the game starts with.
     if (emblem.passive) {
-      assert.equal(emblem.abilities.length, 0);
+      // Any ability besides is a second power, with a name of its own, once a turn.
+      if (emblem.abilities.length) {
+        assert.equal(emblem.activationsPerTurn, 1);
+        assert.ok(emblem.abilities.every((a) => a.name && a.text));
+      }
       assert.ok(emblem.text && [...(emblem.startsWith ?? []), ...(emblem.shufflesIn ?? [])].every((id) => CARDS[id]));
       assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length || emblem.staticAbilities?.length, `${person.name}'s passive power does something`);
       continue;
@@ -460,6 +464,22 @@ test("the Rider in Black's power: at his end step, each opponent with a Ring-bea
   // No Ring-bearer, no life lost.
   assert.equal(endStepLoss(powerGame(null, 'riderInBlack')), 0);
   assert.equal(EMBLEMS.riderInBlack.text, 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.');
+});
+
+test("the Rider in Black's second power: 0: the Ring tempts you, once a turn, at any time", () => {
+  const game = powerGame('riderInBlack', null);
+  let s = usePower(game);
+  assert.equal(s.players[0].ring.level, 1);
+  assert.ok(s.players[0].ring.bearerId);
+  assert.equal(activation(s, 'p1'), undefined, 'once a turn');
+  assert.equal(EMBLEMS.riderInBlack.abilities[0].text, '0: The Ring tempts you.');
+  assert.equal(EMBLEMS.riderInBlack.abilities[0].timing, undefined, 'not only as a sorcery');
+  // Next turn (the opponent's), it can be used again.
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) game.dispatch(passPriority(game.getState().priorityPlayerId ?? 'p1'));
+  for (let i = 0; i < 500 && !activation(game.getState(), 'p1'); i++) game.dispatch(passPriority(game.getState().priorityPlayerId));
+  s = game.getState();
+  assert.equal(s.activePlayerId, 'p2');
+  assert.ok(activation(s, 'p1'));
 });
 
 test("Strider's power can target any creature: an opponent's grows or shrinks to 4 power too", () => {
