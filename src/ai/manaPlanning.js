@@ -64,6 +64,15 @@ export function manaSources(state, mine) {
   return [...byCard.values()];
 }
 
+/**
+ * The mana sources that can pay for an ability of `sourceId` with `cost`: all of them, unless the cost taps,
+ * sacrifices or exiles the source itself. Then the source can't also be tapped for mana (Barad-dûr's
+ * "{X}{X}{B}, {T}: Amass Orcs X" can't be paid with its own "{T}: Add {B}").
+ */
+export const sourcesPaying = (sources, sourceId, cost) => (cost?.tap || cost?.sacrificeSelf || cost?.exileSelf
+  ? sources.filter((s) => s.cardId !== sourceId)
+  : sources);
+
 /** Colored mana a cost still needs beyond the pool: `{ G: 1, ... }`. */
 export function neededColors(cost, pool) {
   const needed = {};

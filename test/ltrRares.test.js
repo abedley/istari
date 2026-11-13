@@ -6,6 +6,7 @@ import {
   toggleAttacker, confirmAttackers, setBlocker, confirmBlockers,
 } from '../src/index.js';
 import { CHOICE } from '../src/engine/Game.js';
+import { playOptions, perform } from '../app/battle/play.js';
 import { choose, toggleChoice, confirmChoice } from '../src/engine/actions.js';
 import {
   setup, state, player, permanent, named, byCard, inHand, decision, ok, passRound, resolveAll, advanceTo, cast, actionFor, activate, untilDecision,
@@ -65,6 +66,30 @@ test("Barad-dûr amasses X, for {X}{X}{B}, only once a creature has died this tu
   resolveAll(game);
   const army = named(game, 'Orc Army')[0];
   assert.equal(army.counters[COUNTER.PLUS_ONE], 1);
+});
+
+test("Barad-dûr's Amass is offered with the mana still in untapped lands, never paid with its own {T}", () => {
+  for (const infiniteMana of [false, true]) {
+    const { game } = setup({ p1: ['baradDur', 'swamp', 'swamp', 'swamp', 'swamp', 'bear', 'shock'], fill: 'swamp', options: { infiniteMana } });
+    for (let turn = 1; turn <= 9; turn += 2) {
+      advanceTo(game, main(turn));
+      const land = state(game).validActions.find((a) => a.type === ACTION.PLAY_LAND && a.playerId === 'p1');
+      if (land) ok(game, land);
+    }
+    const barad = byCard(game, 'baradDur')[0];
+    const amass = () => playOptions(game, 'p1').find((o) => o.sourceId === barad.id && o.abilityId === 'ability2');
+    assert.equal(amass(), undefined, 'no creature has died');
+    cast(game, 'p1', 'bear');
+    cast(game, 'p1', 'shock', { targets: [byCard(game, 'bear')[0].id] });
+    const option = amass();
+    assert.ok(option, `offered${infiniteMana ? ' with infinite mana' : ''}`);
+    if (!infiniteMana) {
+      // Only the Swamps left untapped after the Bear and Shock can pay: at least X = 0, which is {B}.
+      assert.ok(option.variants.some((v) => v.x === 0));
+    }
+    assert.deepEqual(perform(game, 'p1', option, option.variants.at(-1)), { ok: true });
+    assert.equal(permanent(game, barad.id).tapped, true);
+  }
 });
 
 test("Boromir counters an opponent's spell cast without spending mana", () => {

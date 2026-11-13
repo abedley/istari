@@ -29,7 +29,7 @@ import {
 import { planLookaheadAttack } from './attacking.js';
 import { windowOf, windowAllows, permanentWindowAllows } from './timing.js';
 import {
-  bestBy, manaSources, neededColors, canReach, chooseManaAction, castsAtInstantSpeedFor, castCost, manaAvailable, capX, guardActivations,
+  bestBy, manaSources, sourcesPaying, neededColors, canReach, chooseManaAction, castsAtInstantSpeedFor, castCost, manaAvailable, capX, guardActivations,
 } from './manaPlanning.js';
 
 /** How many targets per spell or ability are worth considering (the best-scoring ones). */
@@ -321,7 +321,7 @@ function payAndAct(state, me, mine, macro) {
     return { action, done: true };
   }
   if (manaCost === undefined) return null;
-  const sources = manaSources(state, mine);
+  const sources = macro.kind === 'cast' ? manaSources(state, mine) : sourcesPaying(manaSources(state, mine), macro.cardId, cost);
   if (canPayMana(player.manaPool, manaCost) || !canReach(manaCost, player.manaPool, sources)) return null;
   const tap = chooseManaAction(sources, neededColors(manaCost, player.manaPool));
   return tap ? { action: tap, done: false } : null;

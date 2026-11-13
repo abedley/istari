@@ -36,7 +36,7 @@ const BASICS = {
  * `extra` adds hand-made definitions.
  */
 export function setup({
-  p1 = [], p2 = [], cards = [], library1 = [], library2 = [], freeAbilities = false, extra = {}, fill = 'forest',
+  p1 = [], p2 = [], cards = [], library1 = [], library2 = [], freeAbilities = false, extra = {}, fill = 'forest', options = {},
 } = {}) {
   const deck = (hand, library) => [...hand, ...Array(7 - hand.length).fill(fill), ...library, ...Array(Math.max(0, 33 - library.length)).fill(fill)];
   const game = new Game({
@@ -45,6 +45,7 @@ export function setup({
     shuffleLibraries: false,
     emblems: { p1: [], p2: [] },
     decks: { p1: deck(p1, library1), p2: deck(p2, library2) },
+    ...options,
   });
   const events = [];
   game.onAny((name, payload) => events.push({ name, payload }));

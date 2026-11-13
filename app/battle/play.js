@@ -12,7 +12,7 @@ import { ACTION } from '../../src/engine/actions.js';
 import { isLand } from '../../src/cards/cards.js';
 import { nextAction } from '../../src/ai/macroActions.js';
 import { actingPlayerId } from '../../src/ai/simulate.js';
-import { manaSources, chooseManaAction } from '../../src/ai/manaPlanning.js';
+import { manaSources, sourcesPaying, chooseManaAction } from '../../src/ai/manaPlanning.js';
 
 /**
  * Everything `me` can start doing, when they have priority: `[{ kind, sourceId,
@@ -85,6 +85,15 @@ function option(macro, variants) {
   };
 }
 
+/** The cost of the ability `macro` activates, wherever its source is (battlefield, emblem, hand, graveyard). */
+function abilityCost(state, me, macro) {
+  const player = state.players.find((p) => p.id === me);
+  const source = state.battlefield.find((p) => p.id === macro.cardId)
+    ?? [...player.emblems, ...player.hand, ...player.graveyard].find((c) => c.id === macro.cardId);
+  const abilities = [...(source?.abilities ?? []), ...(source?.handAbilities ?? []), ...(source?.graveyardAbilities ?? [])];
+  return abilities.find((a) => a.id === macro.abilityId)?.cost;
+}
+
 /**
  * The option for a cast or activation, if its cost can be paid; dry-runs the mana on a
  * clone. With {X} (`hasX`), every mana source is tapped in the dry run, so each X that
@@ -103,7 +112,8 @@ function prepare(game, state, me, macro, hasX = false) {
   if (!step?.done) return null;
   for (let i = 0; hasX && i < 30; i++) {
     const simState = sim.peekState();
-    const sources = manaSources(simState, simState.validActions.filter((a) => a.playerId === me)).filter((s) => !s.sacrifices);
+    const all = manaSources(simState, simState.validActions.filter((a) => a.playerId === me)).filter((s) => !s.sacrifices);
+    const sources = macro.kind === 'cast' ? all : sourcesPaying(all, macro.cardId, abilityCost(simState, me, macro));
     if (!sources.length) break;
     sim.applyTrusted(chooseManaAction(sources, {}));
   }
