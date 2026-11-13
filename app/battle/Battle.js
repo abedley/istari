@@ -1209,7 +1209,11 @@ export class Battle {
       return;
     }
     if (target.kind === 'land') {
-      this.#longPress(target);
+      // A land of ours with an ability beyond its mana (Barad-dûr's Amass): select it like any other
+      // permanent, to activate it. Other lands only show the card (their mana is paid automatically).
+      const land = this.#landToSelect(target.id);
+      if (land) this.#tapCard({ kind: 'card', id: land.id, zone: 'battlefield' });
+      else this.#longPress(target);
       return;
     }
     if (mode.kind !== 'idle') this.#cancel();
@@ -1263,6 +1267,17 @@ export class Battle {
       return;
     }
     this.#longPress(target);
+  }
+
+  /**
+   * The land to select when its chip (all our lands with that name) is tapped: one with an ability
+   * other than mana, preferring one whose ability can be activated now, then an untapped one.
+   */
+  #landToSelect(id) {
+    const tapped = this.#state.battlefield.find((p) => p.id === id);
+    if (!tapped || tapped.controllerId !== this.#me || !(tapped.abilities ?? []).some((a) => !a.isManaAbility)) return null;
+    const group = this.#state.battlefield.filter((p) => p.controllerId === this.#me && p.cardId === tapped.cardId);
+    return group.find((p) => this.#options.some((o) => o.sourceId === p.id)) ?? group.find((p) => !p.tapped) ?? tapped;
   }
 
   /** Tapping a card with priority: select it and show what it can do. */

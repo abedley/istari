@@ -424,6 +424,8 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .land-n { font: 800 13px/1 var(--display); color: #f3e9cf; }
 .land-u { font-size: 9.5px; line-height: 1; color: var(--muted); white-space: nowrap; }
 .land-group.spent { opacity: .55; }
+.land-group::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; }
+.land-group.playable::after { opacity: 1; box-shadow: 0 0 0 2px #7dffa7, 0 0 12px 3px rgba(80, 255, 140, .55); animation: glow 1.6s ease-in-out infinite; }
 .pool { display: flex; }
 .pool .pips { font-size: 13px; animation: glow 1.2s ease-in-out infinite; }
 /* Mana that can be spent as any color: a rainbow pip with its amount. */

@@ -43,6 +43,8 @@ export class BoardView {
   #cards = new Map();
   /** `${playerId}:${cardId}` → element, for grouped lands. */
   #landGroups = new Map();
+  /** The ids of the lands in each land group (same keys as #landGroups). */
+  #landIds = new Map();
   #abilityButtons = new Map();
   /** Each player's `{ name, color?, art? }`, for their crest. */
   #info = {};
@@ -547,13 +549,15 @@ export class BoardView {
       const groups = new Map();
       for (const land of state.battlefield.filter((p) => p.controllerId === pid && isLand(p))) {
         const key = `${pid}:${land.cardId}`;
-        if (!groups.has(key)) groups.set(key, { land, total: 0, untapped: 0 });
+        if (!groups.has(key)) groups.set(key, { land, total: 0, untapped: 0, ids: [] });
         const group = groups.get(key);
+        group.ids.push(land.id);
         group.total += 1;
         if (!land.tapped) group.untapped += 1;
       }
       const els = [];
-      for (const [key, { land, total, untapped }] of groups) {
+      for (const [key, { land, total, untapped, ids }] of groups) {
+        this.#landIds.set(key, ids);
         let el = this.#landGroups.get(key);
         if (!el) {
           el = h('div.land-group', { dataset: { land: land.id } }, chipFace(land, this.#app.definitions), h('span.land-count', h('span.land-n'), h('span.land-u')));
@@ -567,7 +571,10 @@ export class BoardView {
         els.push(el);
       }
       for (const key of [...this.#landGroups.keys()]) {
-        if (key.startsWith(`${pid}:`) && !groups.has(key)) this.#landGroups.delete(key);
+        if (key.startsWith(`${pid}:`) && !groups.has(key)) {
+          this.#landGroups.delete(key);
+          this.#landIds.delete(key);
+        }
       }
       reconcile(strip.lands, els);
       const player = state.players.find((p) => p.id === pid);
@@ -912,6 +919,8 @@ export class BoardView {
       toggle(record.el, 'selected', ctx.selected === id);
       toggle(record.el, 'picked', ctx.pickedBlocker === id);
     }
+    // A land whose ability can be activated now (Barad-dûr's Amass) lights up its chip.
+    for (const [key, el] of this.#landGroups) toggle(el, 'playable', (this.#landIds.get(key) ?? []).some((id) => ctx.playable?.has(id)));
     for (const side of ['me', 'opp']) {
       const pid = side === 'me' ? this.#me : this.#opp;
       toggle(this.#parts[side].avatar, 'targetable', ctx.targetable?.has(pid));
