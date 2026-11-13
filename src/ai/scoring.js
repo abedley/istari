@@ -9,6 +9,7 @@ import {
 } from '../cards/cards.js';
 import { creatureValue, anthemValue } from './combat.js';
 import { doomedSacrificeCost } from './doomed.js';
+import { auraPumps, trickPays } from './timing.js';
 
 /** A permanent's worth: creatures by creatureValue, other permanents a flat amount. */
 export const permanentValue = (p) => (isCreature(p) ? 2 + creatureValue(p) : 4);
@@ -201,6 +202,16 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           // Tapping a would-be blocker before attacking.
           if (!permanent.tapped && isCreature(permanent) && preCombat) score -= side(id) * 2;
           break;
+        case EFFECT.ATTACH: {
+          // Equipment attaching itself as it enters (Galadhrim Bow): its bonus on our creature, and far more on
+          // one it makes win this combat (cast as a combat trick, see timing.js).
+          const source = byId(sourceId);
+          const pumps = source ? auraPumps(source) : [];
+          if (!pumps.length || !isCreature(permanent) || side(id) <= 0) break;
+          score += pumps.reduce((sum, e) => sum + 0.3 * ((e.power ?? 0) + (e.toughness ?? 0)) + 0.5 * (e.keywords ?? []).length, 0);
+          if (trickPays(state, me, pumps, id, { sourceId, combine: false })) score += 6;
+          break;
+        }
         case EFFECT.UNTAP: {
           if (!permanent.tapped) break;
           // An untapped creature can block (or attack again); one with a {T} ability can use it again.

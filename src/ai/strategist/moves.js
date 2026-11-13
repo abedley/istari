@@ -35,7 +35,7 @@ import { guardActivations } from '../manaPlanning.js';
 import { BLOCK_PLAN, blockingPlans } from '../blocking.js';
 import { BasicAIController } from '../BasicAIController.js';
 import { actingPlayerId } from '../simulate.js';
-import { winsNow } from '../timing.js';
+import { winsNow, auraPumps } from '../timing.js';
 
 /** How many targets of one spell or ability are worth a look. */
 const TARGETS = 2;
@@ -257,12 +257,14 @@ function priorityCandidates(state, me, game) {
         break;
       case WINDOW.COMBAT:
       case WINDOW.RESPONSE:
-        // Tricks, removal, counterspells and powers: not a permanent, but for an Aura with flash.
-        if (what.spell && what.permanent && !isAura(what.card)) break;
+        // Tricks, removal, counterspells and powers: not a permanent, but for an Aura with flash, or flash
+        // Equipment that attaches itself as it enters (Galadhrim Bow).
+        if (what.spell && what.permanent && !isAura(what.card) && !auraPumps(what.card).length) break;
         probes.push({ option, move });
         break;
       case WINDOW.END:
-        if (trick || (harmful && onTheirCreature)) break;
+        // A permanent that's a combat trick (Galadhrim Bow) waits for a combat.
+        if (trick || (harmful && onTheirCreature) || (what.spell && what.permanent && auraPumps(what.card).length)) break;
         if (what.spell && what.permanent) forced.push(move);
         else if (what.spell || what.free) choices.push(move);
         break;

@@ -8,6 +8,7 @@ import {
 import { listMacros } from '../src/ai/macroActions.js';
 import { trickPays, permanentWindowAllows, windowAllows, WINDOW } from '../src/ai/timing.js';
 import { CARDS as ALL_CARDS } from '../src/cards/cards.js';
+import { scoreEffects } from '../src/ai/scoring.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
 const CARDS = {
@@ -17,6 +18,7 @@ const CARDS = {
   salve: { id: 'salve', name: 'Salve', manaCost: { generic: 1 }, types: ['Instant'], effects: [{ type: 'gainLife', amount: 3 }] },
   dreadfulAsTheStorm: ALL_CARDS.dreadfulAsTheStorm,
   giftOfStrands: ALL_CARDS.giftOfStrands,
+  galadhrimBow: ALL_CARDS.galadhrimBow,
   ambusher: { id: 'ambusher', name: 'Ambusher', manaCost: { generic: 1 }, types: ['Creature'], keywords: ['flash'], power: 3, toughness: 3 },
 };
 
@@ -167,6 +169,37 @@ test('a combat trick is worth it when it kills their creature or wins the game, 
   assert.equal(windowAllows(WINDOW.END, dreadful, true, 'b', combat(), 'p1'), false);
   assert.equal(permanentWindowAllows(WINDOW.END, ALL_CARDS.giftOfStrands, 'b', combat(), 'p1'), false);
   assert.equal(trickPays(combat({ blocker: { power: 1, toughness: 4 } }), 'p1', pump, 'x'), false);
+});
+
+test("Galadhrim Bow is a combat trick: cast after blocks when it wins the fight, never at the end of the opponent's turn", () => {
+  const bow = ALL_CARDS.galadhrimBow;
+  // It picks its creature as it enters, so there's no target as it's cast: any of ours in this combat.
+  // +1/+2 makes the 2/2 Bear a 3/4: it kills a 1/3 blocker that would survive, and survives it.
+  assert.equal(permanentWindowAllows(WINDOW.COMBAT, bow, null, combat({ blocker: { power: 1, toughness: 3 } }), 'p1'), true);
+  assert.equal(permanentWindowAllows(WINDOW.COMBAT, bow, null, combat({ blocker: { power: 1, toughness: 5 } }), 'p1'), false, 'kills nothing');
+  assert.equal(permanentWindowAllows(WINDOW.COMBAT, bow, null, combat({ life: 20 }), 'p1'), false, 'unblocked, not lethal');
+  assert.equal(permanentWindowAllows(WINDOW.END, bow, null, combat(), 'p1'), false);
+  assert.equal(permanentWindowAllows(WINDOW.END, bow), false);
+  assert.equal(permanentWindowAllows(WINDOW.ATTACKED, bow), false);
+
+  // As it enters, it goes on the creature it makes win this combat, not a bigger one sitting it out.
+  const state = { ...combat({ blocker: { power: 1, toughness: 3 } }), stack: [] };
+  state.battlefield.push(
+    { id: 'big', controllerId: 'p1', types: ['Creature'], power: 4, toughness: 4, damage: 0, keywords: [], tapped: true },
+    { ...bow, id: 'bow', controllerId: 'p1' },
+  );
+  const enters = bow.triggeredAbilities[0].effects;
+  assert.ok(scoreEffects(state, 'p1', enters, ['b'], 'bow') > scoreEffects(state, 'p1', enters, ['big'], 'bow'));
+
+  // In a game: with a Bear out and nobody blocking, the basic AI never casts it (not at the end of p2's turn).
+  const game = setup({ p1Hand: ['bear', 'galadhrimBow'] });
+  const { action } = firstCast(game);
+  assert.equal(game.getState().players[0].hand.find((c) => c.id === action.cardId).cardId, 'bear');
+  game.dispatch(action);
+  passTo(game, (s) => s.stack.length === 0 && s.priorityPlayerId === 'p1');
+  assert.equal(firstCast(game, { maxTurn: 6 }), null);
+  const atTheirEnd = passTo(game, (s) => s.activePlayerId === 'p2' && s.step === STEP.END && s.priorityPlayerId === 'p1');
+  assert.deepEqual(castsIn(atTheirEnd, 'galadhrimBow'), [], 'nor does the search AI');
 });
 
 test('a combat trick that only works with another trick in hand is cast first, if there is the mana for both', () => {

@@ -3,7 +3,8 @@
  * they're needed, never the AI's own main phase:
  * - removal on the opponent's creatures, and "can't block" effects: at the start of the AI's combat
  *   (clearing the way), or on attackers once the opponent attacks, or on combatants after blocks;
- * - combat tricks (pumps, "base 5/5", flash Auras that pump): after blockers are declared, and only if they
+ * - combat tricks (pumps, "base 5/5", flash Auras that pump, flash Equipment that attaches itself as it enters
+ *   like Galadhrim Bow): after blockers are declared, and only if they
  *   kill an opponent's creature that would otherwise survive, or make the combat damage lethal, alone or with
  *   other tricks in hand (trickPays);
  * - creatures with flash: as surprise blockers when the opponent attacks, otherwise at the end of the
@@ -15,7 +16,7 @@
  */
 import { STEP, PHASE } from '../engine/turnStructure.js';
 import {
-  isCreature, isLand, isHarmfulEffect, flattenEffects, manaValue, EFFECT, KEYWORD, AFFECTED, castsAtInstantSpeed, isAura, isCurse,
+  isCreature, isLand, isHarmfulEffect, flattenEffects, manaValue, EFFECT, KEYWORD, AFFECTED, castsAtInstantSpeed, isAura, isCurse, isEquipment,
 } from '../cards/cards.js';
 import { resolveCombat } from './combat.js';
 
@@ -64,9 +65,16 @@ export function winsNow(given, targetId, state, me) {
 /** A pump that makes a creature bigger (+X/+X, or "has base power and toughness 5/5"): a combat trick. */
 const isTrickPump = (e) => e.type === EFFECT.PUMP && (Boolean(e.setBase) || (e.power ?? 0) + (e.toughness ?? 0) > 0);
 
-/** What a bonus Aura (not a curse) gives the creature it enchants, as pumps: Gift of Strands' +3/+3. */
+/** Equipment that attaches itself to a creature of ours as it enters (Galadhrim Bow): with flash, a combat trick. */
+export const attachesOnEntering = (card) => isEquipment(card) && (card.triggeredAbilities ?? [])
+  .some((t) => t.trigger === 'entersBattlefield' && flattenEffects(t.effects ?? []).some((e) => e.type === EFFECT.ATTACH));
+
+/**
+ * What a bonus Aura (not a curse), or Equipment that attaches itself as it enters, gives the creature it's on,
+ * as pumps: Gift of Strands' +3/+3, Galadhrim Bow's +1/+2 and reach.
+ */
 export function auraPumps(card) {
-  if (!isAura(card) || isCurse(card)) return [];
+  if (!(isAura(card) && !isCurse(card)) && !attachesOnEntering(card)) return [];
   return (card.staticAbilities ?? []).filter((e) => e.affected === AFFECTED.ATTACHED_PERMANENT && (e.power || e.toughness))
     .map((e) => ({ type: EFFECT.PUMP, power: e.power ?? 0, toughness: e.toughness ?? 0, keywords: e.keywords ?? [] }));
 }
@@ -78,6 +86,10 @@ const pumped = (creature, pumps) => [...pumps].sort((a, b) => Boolean(b.setBase)
   toughness: e.setBase?.toughness ?? c.toughness + (e.toughness ?? 0),
   keywords: [...new Set([...(c.keywords ?? []), ...(e.keywords ?? [])])],
 }), creature);
+
+/** `me`'s creatures in this combat, attacking or blocking. */
+export const combatantsOf = (state, me) => [...new Set((state.combat?.attackers ?? []).flatMap((a) => [a.cardId, ...a.blockerIds]))]
+  .filter((id) => state.battlefield.some((p) => p.id === id && p.controllerId === me && isCreature(p)));
 
 /** A card's combat-trick pumps: an instant-speed spell's, or a flash Aura's bonus; [] if it isn't a trick. */
 const trickPumpsOf = (card) => (!castsAtInstantSpeed(card) ? []
@@ -212,12 +224,20 @@ export function windowAllows(window, given, instantSpeed, targetId, state, me, {
  * When a permanent spell with flash is worth casting: as a blocker once the opponent attacks (a
  * creature), or at the end of the opponent's turn. Sorcery-speed permanents only in the main phase.
  * A bonus Aura with flash is a combat trick: after blocks, on the creature it makes pay (trickPays);
- * without a `targetId` (and `state`), whether its window has come at all.
+ * so is flash Equipment that attaches itself as it enters (Galadhrim Bow), never at the end of the turn:
+ * after blocks, when it makes one of our creatures in this combat pay. Without `state`, whether its window
+ * has come at all.
  */
 export function permanentWindowAllows(window, card, targetId = null, state = null, me = null) {
   if (!castsAtInstantSpeed(card)) return window === WINDOW.MAIN;
   const pumps = auraPumps(card);
-  if (pumps.length) return window === WINDOW.COMBAT && (!state || trickPays(state, me, pumps, targetId, { sourceId: card.id }));
+  if (pumps.length) {
+    if (window !== WINDOW.COMBAT) return false;
+    if (!state) return true;
+    // The Equipment picks its creature as it enters: any of ours in this combat.
+    const ids = attachesOnEntering(card) ? combatantsOf(state, me) : [targetId];
+    return ids.some((id) => trickPays(state, me, pumps, id, { sourceId: card.id }));
+  }
   if (window === WINDOW.ATTACKED) return isCreature(card);
   return window === WINDOW.END;
 }

@@ -339,8 +339,8 @@ export class BasicAIController extends EventEmitter {
         const held = instant && window === WINDOW.MAIN;
         if (!held && !permanentWindowAllows(window, card)) continue;
         for (const { targetId, score } of permanentSpellOptions(state, me, card, held ? false : preCombat, this.#heuristics)) {
-          // A flash Aura that pumps: only on a creature it makes pay in this combat.
-          if (!held && targetId && !permanentWindowAllows(window, card, targetId, state, me)) continue;
+          // A flash Aura that pumps, or Galadhrim Bow: only when it makes a creature pay in this combat.
+          if (!held && !permanentWindowAllows(window, card, targetId, state, me)) continue;
           add({ score: held ? 0.6 * score : score, manaCost, cost, sourceId: card.id, now: !held, matches: held ? () => false : castMatches(targetId) });
         }
         continue;
