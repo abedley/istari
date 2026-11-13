@@ -168,7 +168,9 @@ export const EMBLEMS = deepFreeze({
     text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
     // A passive power and a second one to activate (its `name` is the power's name), once a turn.
     activationsPerTurn: 1,
-    abilities: [{ id: 'tempt', name: 'Drawn to the Ring', text: '0: The Ring tempts you.', cost: {}, effects: [{ type: EFFECT.RING_TEMPTS }] }],
+    abilities: [{
+      id: 'tempt', name: 'Drawn to the Ring', text: '0: The Ring tempts you. Activate only as a sorcery.', cost: {}, effects: [{ type: EFFECT.RING_TEMPTS }], timing: SORCERY,
+    }],
     triggeredAbilities: [{
       id: 'hunt',
       trigger: TRIGGER.END_STEP,

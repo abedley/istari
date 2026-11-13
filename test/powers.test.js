@@ -466,20 +466,33 @@ test("the Rider in Black's power: at his end step, each opponent with a Ring-bea
   assert.equal(EMBLEMS.riderInBlack.text, 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.');
 });
 
-test("the Rider in Black's second power: 0: the Ring tempts you, once a turn, at any time", () => {
+test("the Rider in Black's second power: 0: the Ring tempts you, once a turn, only as a sorcery", () => {
   const game = powerGame('riderInBlack', null);
   let s = usePower(game);
   assert.equal(s.players[0].ring.level, 1);
   assert.ok(s.players[0].ring.bearerId);
   assert.equal(activation(s, 'p1'), undefined, 'once a turn');
-  assert.equal(EMBLEMS.riderInBlack.abilities[0].text, '0: The Ring tempts you.');
-  assert.equal(EMBLEMS.riderInBlack.abilities[0].timing, undefined, 'not only as a sorcery');
-  // Next turn (the opponent's), it can be used again.
-  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) game.dispatch(passPriority(game.getState().priorityPlayerId ?? 'p1'));
-  for (let i = 0; i < 500 && !activation(game.getState(), 'p1'); i++) game.dispatch(passPriority(game.getState().priorityPlayerId));
+  assert.equal(EMBLEMS.riderInBlack.abilities[0].text, '0: The Ring tempts you. Activate only as a sorcery.');
+  /** Passes (or makes the first choice of a decision), nobody casting or activating anything. */
+  const step = () => {
+    const st = game.getState();
+    const actor = st.pendingDecision?.playerId ?? st.priorityPlayerId;
+    const acts = st.validActions.filter((a) => a.playerId === actor);
+    assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]).ok, true);
+  };
+  // Not on the opponent's turn.
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p1'; i++) step();
+  let seen = false;
+  for (let i = 0; i < 500 && game.getState().activePlayerId === 'p2'; i++) {
+    seen ||= Boolean(activation(game.getState(), 'p1'));
+    step();
+  }
+  assert.equal(seen, false, 'not on the opponent’s turn');
+  // On their own next main phase, again.
+  for (let i = 0; i < 500 && !activation(game.getState(), 'p1'); i++) step();
   s = game.getState();
-  assert.equal(s.activePlayerId, 'p2');
-  assert.ok(activation(s, 'p1'));
+  assert.equal(s.activePlayerId, 'p1');
+  assert.equal(s.phase, 'precombatMain');
 });
 
 test("Strider's power can target any creature: an opponent's grows or shrinks to 4 power too", () => {
