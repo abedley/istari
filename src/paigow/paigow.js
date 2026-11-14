@@ -258,12 +258,26 @@ export function playerStartsRound(match, round) {
   return playerFirst;
 }
 
-/** The match with the next round's result recorded: `ROUND_RESULT`. */
-export function recordRound(match, result) {
+/** The match with the next round's result recorded: `ROUND_RESULT`. `stats`: what happened in it (src/paigow/roundStats.js), kept with it. */
+export function recordRound(match, result, stats = null) {
   const round = nextRound(match);
   if (round === null) throw new Error('No round to play.');
   if (!Object.values(ROUND_RESULT).includes(result)) throw new Error(`Unknown result: ${result}`);
-  return { ...match, rounds: [...match.rounds, { result }] };
+  return { ...match, rounds: [...match.rounds, stats ? { result, stats } : { result }] };
+}
+
+/**
+ * The round that decided a finished match (0-based): the one in which the winner took their second round, or the
+ * last one played when nobody did. Null while the match is going on.
+ */
+export function decidingRound(match) {
+  if (!outcome(match)) return null;
+  const tally = { [ROUND_RESULT.WON]: 0, [ROUND_RESULT.LOST]: 0 };
+  for (let i = 0; i < match.rounds.length; i += 1) {
+    const { result } = match.rounds[i];
+    if (result in tally && (tally[result] += 1) >= PAIGOW_RULES.roundsToWin) return i;
+  }
+  return match.rounds.length - 1;
 }
 
 /**

@@ -227,16 +227,22 @@ export const PAIGOW_HEROES = deepFreeze({
     name: 'Frodo', color: 'gold', emblem: 'frodo',
     blurb: 'The Ring-bearer. Carries the burden, and it carries him.',
     portrait: portrait('d/e/de1c0399-9db8-4901-b72e-0010eb9b92b0.jpg?1783916257', 50, 10, 260, 'Frodo Baggins', 'Ekaterina Burmak'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('7/d/7d86dc2e-6f0c-4714-9d30-5d099d3b895c.jpg?1783916334', 29, 0, 400, 'Frodo, Sauron\'s Bane', 'Dmitry Burmak'),
   },
   strider: {
     name: 'Strider', color: 'gold', emblem: 'strider',
     blurb: 'A Ranger of the North, grim and weathered, who knows the wild paths.',
     portrait: portrait('5/4/54461d61-a745-467f-9fbe-b5e7a8edbdbf.jpg?1783916244', 5, 39, 300, 'Strider, Ranger of the North', 'Jarel Threat'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('7/3/73ca5f48-0117-49d6-8b00-b8482e3545b3.jpg?1783916260', 53, 1, 350, 'Aragorn, Company Leader', 'Anna Steinbauer'),
   },
   samwise: {
     name: 'Samwise', color: 'gold', emblem: 'samwise',
     blurb: 'A gardener of the Shire, and a pan that has seen some use.',
     portrait: portrait('a/1/a1b6f13e-63d0-46bf-aa57-23c2dbdf62dd.jpg?1783916249', 36, 8, 300, 'Samwise Gamgee', 'Ekaterina Burmak'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('2/1/214c270e-29ca-4d69-bea6-9252ae7707ad.jpg?1783916329', 41, 17, 300, 'Samwise the Stouthearted', 'Irvin Rodriguez'),
   },
   radagast: {
     name: 'Radagast', color: 'gold', emblem: 'radagast',
@@ -247,11 +253,15 @@ export const PAIGOW_HEROES = deepFreeze({
     name: 'Merry', color: 'gold', emblem: 'merry',
     blurb: 'A Brandybuck of Buckland, who brings his friends along and the provisions too.',
     portrait: portrait('8/8/885a3277-ef10-4dcf-ac63-eb8971cd627c.jpg?1783916264', 44, 18, 300, 'Meriadoc Brandybuck', 'Marie Magny'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('b/7/b7c5fe73-1684-4edc-9f9b-976b2246d5ea.jpg?1783916252', 47, 34, 350, 'Merry, Esquire of Rohan', 'Tomas Duchek'),
   },
   pippin: {
     name: 'Pippin', color: 'gold', emblem: 'pippin',
     blurb: 'A Took of the Shire, who has never once skipped second breakfast.',
     portrait: portrait('f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263', 48, 18, 300, 'Peregrin Took', 'Campbell White'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('0/8/08b7a4d8-1183-430e-8ea4-016844f33200.jpg?1783916249', 59, 10, 400, 'Pippin, Guard of the Citadel', 'Bartłomiej Gaweł'),
   },
 });
 

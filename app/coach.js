@@ -102,6 +102,11 @@ export function showHowToPlay(app) {
       `You face each opponent in turn, at a place on the road from Bag End to Barad-dûr. You set out with ${CAMPAIGN_RULES.lives} seed-cakes: losing a match costs one, and you face them again with new boosters. When the last is gone, the campaign is over.`,
       `Beat an opponent and you may take their Ring of Power (up to ${CAMPAIGN_RULES.maxRings}), for 1 less starting life each round, or add a common to every booster you open.`,
     ]),
+    section('Beside the campaign', [
+      'Today\'s road is one match a day: the same hero, opponent and boosters for everyone who plays that day. Nothing of your campaign is at stake in it, and you can share how it went.',
+      'The Red Book keeps the cards you\'ve found, your record against everyone you\'ve met, and the rings you\'ve borne.',
+      'Three heroes are met on the road: each joins you once you\'ve beaten the opponent named. Win a campaign with a hero and they get a second portrait.',
+    ]),
     section('Playing', [
       'Tap a card in your hand to see it big, then Cast. Or drag it up to play it, and onto a target if it has one.',
       'Hold any card, ring or ability to read it.',

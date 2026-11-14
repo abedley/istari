@@ -38,6 +38,10 @@ export {
 } from './paigow/paigow.js';
 export { PAIGOW_OPPONENTS, paigowOpponent } from './paigow/personas.js';
 export { PLACES, JOURNEYS_END, AMBIENCE, placeOf } from './paigow/places.js';
+export { RoundStats, matchStats } from './paigow/roundStats.js';
+export { emptyBook, readBook, recap } from './paigow/book.js';
+export { HERO_UNLOCKS, heroOpen, portraitOpen, unlocksOf } from './paigow/unlocks.js';
+export { dayOf, dailyMatch, shareText } from './paigow/daily.js';
 export { outOfActions, canFastForward, planFastForward } from './paigow/fastForward.js';
 export { CARD_PRESENTATION } from './cards/importedCards.js';
 export { TOKEN_PRESENTATION } from './cards/tokenArt.js';

@@ -10,6 +10,7 @@ import { symbolText } from './symbols.js';
 import { fit } from './fit.js';
 import { setVolume } from './audio.js';
 import { showHowToPlay, resetCoach } from './coach.js';
+import { eraseBook } from './book.js';
 import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
 import { PLACES, JOURNEYS_END, withArt } from '../src/paigow/places.js';
 
@@ -219,7 +220,10 @@ export function createOverlays(app) {
       h('div.row.settings-links',
         h('button.btn.small', { onclick: () => showHowToPlay(app) }, 'How Pai Gow plays'),
         h('button.btn.small', { onclick: () => { resetCoach(app); close(); } }, 'Show tips again'),
-        h('button.btn.small', { onclick: credits }, 'Credits')),
+        h('button.btn.small', { onclick: credits }, 'Credits'),
+        h('button.btn.small', { onclick: async () => {
+          if (await confirm({ title: 'Erase the Red Book?', text: 'Every card found, every record and everything unlocked will be forgotten. Your campaign is kept.', yes: 'Erase', danger: true })) eraseBook(app);
+        } }, 'Erase the Red Book')),
       h('button.btn.ghost', { onclick: close }, 'Done')), {});
   }
 

@@ -8,6 +8,9 @@ import {
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent } from '../../src/paigow/personas.js';
 import { placeOf } from '../../src/paigow/places.js';
+import { recordRoundPlayed } from '../../src/paigow/book.js';
+import { updateBook, heroLook } from '../book.js';
+import { currentHeroId, DEFAULT_HERO } from '../../src/paigow/personas.js';
 
 /** A round of a Pai Gow match (src/paigow/paigow.js): `match` is the match so far, with the decks set. */
 export function battleScreen(app, { match = null } = {}) {
@@ -27,12 +30,13 @@ export function battleScreen(app, { match = null } = {}) {
     return { [ROUND_RESULT.WON]: 'Round won', [ROUND_RESULT.LOST]: 'Round lost', [ROUND_RESULT.DRAWN]: 'Round drawn' }[result];
   };
   const onEnd = (end) => {
-    const next = recordRound(match, resultOf(end));
+    const next = recordRound(match, resultOf(end), end.stats ?? null);
+    updateBook(app, (book) => recordRoundPlayed(book, next, setup.encounter.round));
     app.go('paigow', { match: next, view: outcome(next) ? 'final' : 'scoreboard', played: setup.encounter.round });
   };
   const battle = new Battle(app, {
     setup,
-    meInfo: { ...personInfo(heroOf(match)), powers: [heroOf(match).emblem, ...(match.rings ?? [])].map(ringOf) },
+    meInfo: { ...personInfo(heroLook(app, heroOf(match), currentHeroId(match.heroId ?? DEFAULT_HERO))), powers: [heroOf(match).emblem, ...(match.rings ?? [])].map(ringOf) },
     oppInfo: { ...personInfo(opponent), power: powerOf(opponent) },
     subtitle: `Round ${setup.encounter.round + 1} · ${won}–${lost}`,
     place: placeOf(match.opponentId),

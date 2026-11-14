@@ -20,6 +20,7 @@ import {
 import { h, wait } from '../dom.js';
 import { icon } from '../icons.js';
 import { coach, coached } from '../coach.js';
+import { RoundStats } from '../../src/paigow/roundStats.js';
 import { crest, preloadImages } from '../art.js';
 import { BoardView } from './BoardView.js';
 import {
@@ -91,6 +92,8 @@ export class Battle {
   /** What the opponent says (banter.js): its lines, those said, and swings in its outlook. */
   #banter = null;
   #moments;
+  /** What happens in the round, counted for the recap and the Red Book (roundStats.js). */
+  #stats;
   #said = new Set();
   #swing = new SwingWatch();
   #outlookTurn = 0;
@@ -130,6 +133,7 @@ export class Battle {
       this.el.style.setProperty('--place-art', `url("${place.art}")`);
       this.el.style.setProperty('--place-at', `${place.x}% ${place.y}%`);
     }
+    this.#stats = new RoundStats({ me: this.#me });
     this.#banter = setup.cpu.banter ?? null;
     // The player's first emblem is their own character's; any other is a ring taken on the road.
     this.#moments = new MomentWatch({ cpu: this.#opp, ownEmblem: setup.game.emblems?.[this.#me]?.[0] ?? null });
@@ -215,6 +219,8 @@ export class Battle {
       return;
     }
     this.#history.record(this.#pending, payload);
+    // Every batch is counted, even those the board skips when it's far behind.
+    this.#stats.observe(this.#pending, payload);
     this.#queue.push({ events: this.#pending, state: payload });
     this.#pending = [];
     this.#pump();
@@ -510,7 +516,7 @@ export class Battle {
     if (!drawn) await this.#lastWord(won);
     await this.#view.finale(won, this.#app.settings.speed, { drawn, text: this.#resultText({ won, drawn }) });
     this.#cpu.detach();
-    this.#onEnd?.({ won, drawn, turns: state.turn });
+    this.#onEnd?.({ won, drawn, turns: state.turn, stats: this.#stats.stats });
   }
 
   /** The opponent says a line of `kind`, if it has one. Returns whether it spoke. */

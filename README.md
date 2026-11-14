@@ -23,10 +23,10 @@ tuning tools stay there.
 
 A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain match object), with
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
-scoreboard) and `app/screens/battle.js` (a round). Every match is a campaign's (see *The campaign*): the
-title screen has one way in, *Begin* (or *Continue*, with a campaign saved):
+scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see *The campaign*: *Begin* or
+*Continue* on the title screen) or the day's one match (see *Today's road*):
 0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry or Pippin (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
-   with a Ring of Power of their own (see *Rings of Power*). The app remembers the last one.
+   with a Ring of Power of their own (see *Rings of Power*). Three are open at first and three are met on the road (see *Unlocks*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
@@ -152,6 +152,38 @@ match, remembered as `istari.opened`). *Start match* parts the three decks under
 from a round, the scoreboard turns the opponent's cards for that round over one by one and then stamps the result;
 when the match ends, the cards of a round that wasn't played are turned over too. The present, the parting and
 the turning are skipped when the system asks for reduced motion.
+
+**The Red Book** (`src/paigow/book.js`, pure functions over a plain object; `app/book.js` keeps it in
+`localStorage` as `istari.book`; its screen is `app/screens/book.js`, from the title): what you've done across every
+campaign and daily match. *Cards*: every card that can be opened, by rarity, the found ones with their art (opened
+in a booster of yours, or *Met* in an opponent's deck) and the rest blank, with no picture fetched. *People*: each
+opponent at their place with your record against them, a stranger until you've played them. *Rings*: the Rings of
+Power you've borne. *Tale*: the totals, the hardest blow, today's road, and each hero's campaigns. It's written to
+when a booster is opened, a round ends, a match ends, a ring is taken and a campaign ends, each counted once
+(`counted` holds the keys, so a reload that shows the same screen again adds nothing). A campaign saved before the
+book existed is caught up with (`catchUp`: its matches, rings and how far it got). *Erase the Red Book* is in the
+settings.
+
+**The tale of a match:** each round is counted from the game's events (`RoundStats` in
+`src/paigow/roundStats.js`): damage dealt and taken, creatures felled and lost, spells cast, turns, and the hardest
+blow you struck. `recordRound` keeps a round's stats with its result, and the final scoreboard tells the match:
+the road that decided it (`decidingRound`), the hardest blow, the totals, and what it added to the Red Book (new
+cards, a first win against that opponent, anything unlocked).
+
+**Unlocks** (`src/paigow/unlocks.js`, worked out from the Red Book): Frodo, Samwise and Merry are open from the
+start; Pippin joins once you've beaten Birthday Bilbo, Radagast once you've beaten Old Man Willow, and Strider once
+you've beaten the Rider in Black (in any match, a daily one included). Until then the heroes screen shows them
+hooded, with what it takes. Winning a campaign with a hero opens their second portrait (`altPortrait` in
+`src/paigow/personas.js`, from another of their cards; Radagast has only the one), swapped on the heroes screen and
+remembered in `istari.portraits`. A campaign going on keeps its hero whatever the book says.
+
+**Today's road** (`src/paigow/daily.js`, from the title): one match a day, the same for everyone who plays that
+day. The day (the player's own calendar date) seeds the hero you're given (any of the six, open to you or not), the
+opponent, both boosters and the opponent's decks (`dailyMatch`). It's saved as it goes (`istari.daily`), so a
+reload goes on with it; once it's over the title shows the score until the next day. Nothing of the campaign is at
+stake in it, but it counts in the Red Book, with a streak of days played. Its last screen has *Share*: a line such
+as `Istari · 14 Nov · Saruman at Orthanc · ✅❌✅ 2–1` (`shareText`, which gives away no cards), through the system's
+share sheet where there is one and the clipboard otherwise.
 
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each
@@ -454,6 +486,7 @@ color) are drawn with the open-source [Mana](https://mana.andrewgioia.com) and
 - `app/fit.js`: text that shrinks to fit its box
 - `app/overlays.js`: sheets, inspect, deck viewer and settings
 - `app/audio.js`: synthesized sound (effects, an ambient bed per kind of place, the theme)
+- `app/book.js`: the Red Book, today's road and portrait choice in storage; `app/screens/book.js`: the Red Book to read
 - `app/coach.js`: coach marks and *How Pai Gow plays*; `app/screens/roadMap.js`: the campaign's map
 
 `play.js` and `autopass.js` are plain logic and are tested in Node (`test/app.test.js`).

@@ -17,6 +17,7 @@ import { battleScreen } from './screens/battle.js';
 import { paigowScreen } from './screens/paigow.js';
 import { heroesScreen } from './screens/heroes.js';
 import { campaignScreen } from './screens/campaign.js';
+import { bookScreen } from './screens/book.js';
 
 const SETTINGS_KEY = 'istari.settings';
 const DEFAULT_SETTINGS = { sound: true, music: true, volume: 1, haptics: true, speed: 1, autoPass: true };
@@ -27,6 +28,7 @@ const SCREENS = {
   campaign: campaignScreen,
   paigow: paigowScreen,
   battle: battleScreen,
+  book: bookScreen,
 };
 
 /** localStorage, or a stand-in when it's unavailable (private mode, blocked). */

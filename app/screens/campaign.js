@@ -11,6 +11,9 @@ import {
 import { playerLife, BOOSTER } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
 import { placeOf, withArt, JOURNEYS_END } from '../../src/paigow/places.js';
+import { recordRing, recordCampaignBegun, recordCampaignProgress } from '../../src/paigow/book.js';
+import { unlocksOf } from '../../src/paigow/unlocks.js';
+import { updateBook, loadBook, heroLook } from '../book.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
 
@@ -71,6 +74,7 @@ const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.c
  */
 export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
   let campaign = heroId ? saveCampaign(app, createCampaign({ heroId })) : loadCampaign(app);
+  if (campaign) updateBook(app, (book) => recordCampaignBegun(book, campaign));
   if (!campaign) {
     queueMicrotask(() => app.go('heroes'));
     return { el: h('div') };
@@ -78,7 +82,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
   if (campaign.offer) return offerView(app, campaign);
   if (campaignStatus(campaign) !== CAMPAIGN_STATUS.PLAYING) return overView(app, campaign);
 
-  const hero = paigowHero(campaign.heroId);
+  const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
   const opponentId = currentOpponent(campaign);
   const opponent = paigowOpponent(opponentId);
   const spot = placeOf(opponentId);
@@ -152,6 +156,7 @@ function offerView(app, campaign) {
   const decide = (ring) => {
     app.sound(ring ? 'reward' : 'select');
     saveCampaign(app, ring ? takeRing(campaign) : takeCommon(campaign));
+    if (ring) updateBook(app, (book) => recordRing(book, opponent.emblem));
     app.go('campaign', { walkFrom: campaign.stage - 1 });
   };
   const extra = (campaign.extraCommons ?? 0) + 1;
@@ -175,7 +180,12 @@ function offerView(app, campaign) {
 /** The campaign won (at the Grey Havens) or lost (at the place where the last seed-cake went). */
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
-  const hero = paigowHero(campaign.heroId);
+  const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
+  // The end goes in the Red Book (once): a campaign won may open the hero's second portrait.
+  const before = unlocksOf(loadBook(app));
+  const book = updateBook(app, (b) => recordCampaignProgress(b, campaign, { won, unlocksOf }));
+  const opened = won ? unlocksOf(book).filter((name) => name === `A new portrait for ${hero.name}`) : [];
+  const news = opened.filter((name) => !before.includes(name));
   const again = () => {
     saveCampaign(app, null);
     app.go('heroes');
@@ -196,6 +206,7 @@ function overView(app, campaign) {
       h('p.cp-offer-lead', won
         ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${cakesLeft(campaign.lives).replace(' left', '')} to spare.`
         : `The last seed-cake is gone at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),
+      news.map((name) => h('p.recap-unlock', `Unlocked: ${name}. Choose it when you next set out.`)),
       campaign.rings.length ? h('div.cp-rings', campaign.rings.map((id) => ringBlock(id))) : null,
       h('p.pg-help', `${campaign.history.length} ${campaign.history.length === 1 ? 'match' : 'matches'} played.`)),
     h('div.cta',

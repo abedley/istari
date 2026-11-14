@@ -1226,3 +1226,52 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
   .vs-place-line { display: none; }
   .versus.placed { padding-top: calc(var(--safe-top) + 44px); }
 }
+
+/* ---------------------------------------------------------------- the title's lesser ways in (today's road, the Red Book) */
+.begin.minor { font-size: 13px; padding: 9px 0; letter-spacing: .2em; color: #ecdcb0; min-height: 44px; }
+.begin.minor::before, .begin.minor::after { max-width: 40px; opacity: .7; }
+.menu { gap: 4px; }
+
+/* ---------------------------------------------------------------- the tale of a match (its recap) */
+.recap { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .28); }
+.recap h4 { margin: 0 0 6px; font: 700 12px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.recap ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 3px; }
+.recap li { font: 15px/1.3 var(--rules); color: var(--ink); }
+.recap-unlock { margin: 8px 0 0; padding: 7px 10px; border-radius: 9px; background: linear-gradient(180deg, rgba(233, 196, 106, .28), rgba(233, 196, 106, .12)); border: 1px solid var(--gold); font: 700 14px var(--display); color: #fff1c2; text-align: center; }
+
+/* ---------------------------------------------------------------- heroes not yet met, and a second portrait */
+.hero.locked { opacity: .6; cursor: default; }
+.hero.locked .hero-name { color: var(--muted); }
+.hero.locked .crest { filter: grayscale(1); }
+.hero-side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 4px; }
+.hero-side .crest { margin-top: 0; }
+.hero-swap { padding: 6px 4px; min-height: 32px; max-width: 96px; font: 600 11px/1.15 var(--ui); color: var(--gold); text-align: center; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* ---------------------------------------------------------------- the Red Book (app/screens/book.js) */
+.bk-tabs { flex: none; display: flex; gap: 6px; padding: 0 12px 8px; }
+.bk-tabbtn { flex: 1; appearance: none; min-height: 44px; border-radius: 11px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .04); color: var(--muted); font: 700 14px var(--display); letter-spacing: .03em; cursor: pointer; }
+.bk-tabbtn.on { border-color: var(--gold); background: rgba(233, 196, 106, .14); color: var(--gold); }
+.bk-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 12px calc(16px + var(--safe-bottom)); }
+.bk-tab { display: flex; flex-direction: column; gap: 14px; }
+.bk-lead { margin: 2px 0 0; font: 16px/1.3 var(--rules); color: #d6cdb4; text-align: center; }
+.bk-lead b { color: var(--gold); font-family: var(--display); }
+.bk-section h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+/* Every tile is the same size whether found or not, so the grid doesn't move as pictures arrive. */
+.bk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.bk-card { position: relative; appearance: none; aspect-ratio: 5 / 4; padding: 0; border: 0; border-radius: 7px; overflow: hidden; background: #15130d; color: #fff; cursor: pointer; box-shadow: 0 0 0 1px rgba(233, 196, 106, .35); }
+.bk-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bk-card-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 3px 2px; background: linear-gradient(transparent, rgba(0, 0, 0, .9) 55%); font: 600 10px/1.1 var(--ui); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bk-card-n { position: absolute; top: 2px; right: 2px; padding: 0 4px; border-radius: 7px; background: var(--gold); color: #2a1a02; font: 800 10px/14px var(--ui); }
+.bk-card-n.met { background: rgba(12, 10, 6, .8); color: #d6cdb4; box-shadow: 0 0 0 1px rgba(255, 255, 255, .25); }
+.bk-card.unfound { display: grid; place-items: center; cursor: default; background: rgba(255, 255, 255, .03); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .07); color: rgba(255, 255, 255, .22); font: 800 18px var(--title); }
+.bk-list { display: flex; flex-direction: column; gap: 6px; }
+.bk-row { display: flex; align-items: center; gap: 12px; padding: 8px 12px; min-height: 56px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .03); }
+.bk-row.unmet { opacity: .55; }
+.bk-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.bk-row-text b { font: 700 16px/1.15 var(--display); color: var(--ink); }
+.bk-row-text span { font-size: 12.5px; color: var(--muted); }
+.bk-badge { flex: none; padding: 2px 8px; border-radius: 9px; background: rgba(70, 195, 123, .16); border: 1px solid rgba(70, 195, 123, .6); font: 700 11px var(--ui); letter-spacing: .04em; text-transform: uppercase; color: #8fe3b0; }
+.bk-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.bk-stat { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .03); text-align: center; }
+.bk-stat b { font: 800 22px var(--display); color: var(--gold); }
+.bk-stat span { font-size: 11px; line-height: 1.15; color: var(--muted); }
