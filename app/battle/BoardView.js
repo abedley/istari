@@ -35,6 +35,12 @@ const DRAW_WARNINGS = {
   turnLimit: 'Last turn: draw if nobody wins',
 };
 
+/**
+ * What a card can do or is doing, as a symbol on its top edge, so it doesn't rest on the color of its glow alone:
+ * a spark (playable), a sword (can attack, attacking) or a shield (can block, blocking). CSS shows the one that applies.
+ */
+const stateBadge = () => h('div.state-badge', { 'aria-hidden': 'true' }, icon('sparkle', 'sb-play'), icon('sword', 'sb-attack'), icon('shield', 'sb-block'));
+
 export class BoardView {
   #app;
   #me;
@@ -303,7 +309,9 @@ export class BoardView {
       const sig = this.#signature(entry.zone, entry, state);
       if (record.zone !== entry.zone || record.sig !== sig) {
         if (record.zone !== entry.zone) record.el.className = `card z-${entry.zone.split('-')[0]}${entry.object && !entry.card ? ' ability' : ''}`;
-        record.el.replaceChildren(this.#face(entry.zone, entry, state));
+        // With the face, a badge that says in a shape what the card's glow says in a color (app.css, "state badge").
+        const badged = entry.zone.startsWith('creatures') || entry.zone.startsWith('hand');
+        record.el.replaceChildren(this.#face(entry.zone, entry, state), ...(badged ? [stateBadge()] : []));
         record.zone = entry.zone;
         record.sig = sig;
         redrawn.push(record.el);
@@ -770,7 +778,7 @@ export class BoardView {
       if (!target) return;
       const player = targetId === this.#me || targetId === this.#opp;
       // A buzz when you're hit, where phones support it (not iOS).
-      if (targetId === this.#me) navigator.vibrate?.(40);
+      if (targetId === this.#me && this.#app.settings.haptics !== false) navigator.vibrate?.(40);
       floatText(fx, target.rect.cx, target.rect.cy, `−${amount}`, 'damage', { speed });
       impact(fx, target.rect.cx, target.rect.cy, { speed, strength: Math.min(2, 0.5 + amount / 3), color });
       shake(target.el, { speed });

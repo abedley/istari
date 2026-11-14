@@ -8,7 +8,7 @@ import { TOKEN_PRESENTATION } from '../src/cards/tokenArt.js';
 import { h, wait } from './dom.js';
 import { installIcons } from './icons.js';
 import { fit } from './fit.js';
-import { unlockAudio, setSoundEnabled, play } from './audio.js';
+import { unlockAudio, setSoundEnabled, setVolume, play } from './audio.js';
 import { createOverlays } from './overlays.js';
 import { titleScreen } from './screens/title.js';
 import { battleScreen } from './screens/battle.js';
@@ -17,7 +17,7 @@ import { heroesScreen } from './screens/heroes.js';
 import { campaignScreen } from './screens/campaign.js';
 
 const SETTINGS_KEY = 'istari.settings';
-const DEFAULT_SETTINGS = { sound: true, speed: 1, autoPass: true };
+const DEFAULT_SETTINGS = { sound: true, volume: 1, haptics: true, speed: 1, autoPass: true };
 
 const SCREENS = {
   title: titleScreen,
@@ -51,6 +51,7 @@ function createApp(root) {
     settings = { ...DEFAULT_SETTINGS, ...JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') };
   } catch { /* defaults */ }
   setSoundEnabled(settings.sound);
+  setVolume(settings.volume);
 
   const stage = h('div.stage');
   root.append(stage);

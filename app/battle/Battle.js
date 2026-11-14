@@ -19,6 +19,7 @@ import {
 } from '../../src/ai/banter.js';
 import { h, wait } from '../dom.js';
 import { icon } from '../icons.js';
+import { coach, coached } from '../coach.js';
 import { crest, preloadImages } from '../art.js';
 import { BoardView } from './BoardView.js';
 import {
@@ -77,6 +78,7 @@ export class Battle {
   #state = null;
   #options = [];
   #interactive = false;
+  #coachTried = false;
   // The main button shows the opponent's move: kept until the player can act, so it doesn't flash.
   #waitingShown = false;
   #mode = { kind: 'idle' };
@@ -101,7 +103,7 @@ export class Battle {
 
   /**
    * `setup`: matchSetup()'s result (`game` options, `cpu`, `encounter`), or the
-   * same shape for a quick match. `meInfo`/`oppInfo`: `{ name, color?, art?, portrait?, power?, powers? }`
+   * same shape. `meInfo`/`oppInfo`: `{ name, color?, art?, portrait?, power?, powers? }`
    * (`power`: `{ name, text }`, a Ring of Power, that is a planeswalker power, shown on the intro;
    * `powers`: several, for a campaign's player, shown by name when there's more than one).
    * `onEnd({ won, drawn, turns })` is called after the final banner (`drawn`: nobody won, as when a
@@ -259,6 +261,24 @@ export class Battle {
       this.#openDecisionSheet(state);
     }
     this.#setInteractive(acting);
+    this.#coach(state, acting);
+  }
+
+  /** The first time the player can act in a main phase of their own, ever: what the hand, the main button and the ring do. */
+  #coach(state, acting) {
+    if (this.#coachTried || !acting || state.pendingDecision || state.activePlayerId !== this.#me || state.stack.length) return;
+    if (this.#app.overlays.isOpen || coached(this.#app, 'battle')) return;
+    this.#coachTried = true;
+    // Once the board has settled (cards still fly into the hand as the round starts).
+    wait(700).then(() => {
+      if (this.#finished || this.#app.overlays.isOpen) return;
+      coach(this.#app, 'battle', [
+        { target: '.hand .card', text: 'Your whole deck is in your hand, and mana is unlimited. Tap a card to see it big, then Cast. Or drag it up to play it, onto its target if it has one.' },
+        { target: '.main-btn', text: 'This button says what passing priority does now: Combat, Attack, Resolve, End turn. Hold it for full control, to stop at every step.' },
+        { target: '.bar-me .ability-btn', text: 'Your Ring of Power, once each turn. Hold it, or any card on the board, to read it.' },
+        { target: '.bar-opp .avatar', text: 'Your opponent, with their life total. Going first you start on less life than they do. If a full turn cycle changes nothing, the round is a draw.' },
+      ], { root: this.el, stillValid: () => !this.#finished });
+    });
   }
 
   /** Decisions made on a sheet rather than on the board: damage, mulligans, modes, the legend rule, graveyard cards. */
@@ -1380,7 +1400,8 @@ export class Battle {
     if (card.types.includes('Land')) return state.activePlayerId !== this.#me ? 'Play lands on your turn' : 'One land per turn';
     const sorcerySpeed = !castsAtInstantSpeedFor(state, this.#me, card);
     if (sorcerySpeed && (state.activePlayerId !== this.#me || state.stack.length)) return 'Cast on your main phase';
-    return 'Not enough mana';
+    // With unlimited mana (Pai Gow) it's never the mana: no legal target, or another cost it can't pay.
+    return state.infiniteMana ? 'No legal target, or a cost you can\'t pay' : 'Not enough mana';
   }
 
   /** For tests and debugging: what the battle is doing. */

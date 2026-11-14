@@ -39,10 +39,10 @@ export const ringBlock = (emblemId, { note = null } = {}) => {
 export const powerBlock = (person) => ringBlock(person?.emblem);
 
 /**
- * Choosing your character for a Pai Gow match or a campaign (`mode` 'campaign'; PAIGOW_HEROES in
- * src/paigow/personas.js): each has a portrait and a Ring of Power. The last one chosen is remembered.
+ * Choosing your character for a campaign (PAIGOW_HEROES in src/paigow/personas.js): each has a portrait and a
+ * Ring of Power. The last one chosen is remembered.
  */
-export function heroesScreen(app, { mode = 'match' } = {}) {
+export function heroesScreen(app) {
   let chosen = currentHeroId(app.storage.getItem(HERO_KEY));
   if (!PAIGOW_HEROES[chosen]) chosen = DEFAULT_HERO;
   const cards = Object.entries(PAIGOW_HEROES).map(([id, hero]) => {
@@ -59,13 +59,12 @@ export function heroesScreen(app, { mode = 'match' } = {}) {
   };
   const begin = () => {
     app.storage.setItem(HERO_KEY, chosen);
-    if (mode === 'campaign') app.go('campaign', { heroId: chosen });
-    else app.go('paigow', { heroId: chosen });
+    app.go('campaign', { heroId: chosen });
   };
   render();
   const el = h('div',
     header({ title: 'Choose your hero', onBack: () => app.go('title') }),
     h('div.heroes', cards.map(([, el]) => el)),
-    h('div.cta', h('button.btn.primary.big', { onclick: begin }, mode === 'campaign' ? 'Begin the campaign' : 'Open your booster')));
+    h('div.cta', h('button.btn.primary.big', { onclick: begin }, 'Begin the campaign')));
   return { el };
 }

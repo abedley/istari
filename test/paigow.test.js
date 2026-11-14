@@ -10,7 +10,7 @@ import { AI_ACTIVATIONS_PER_TURN } from '../src/ai/manaPlanning.js';
 import { playout } from '../src/ai/simulate.js';
 import {
   PAIGOW_POOL, POOL_BY_RARITY, PAIGOW_RULES, openBooster, createMatch, setDecks, validDecks, recordRound, roundSetup, nextRound, outcome, score,
-  arrangeCpuDecks, playerStartsRound, withCards, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
+  arrangeCpuDecks, playerStartsRound, withCards, spreadDecks, cardStrength, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
 } from '../src/paigow/paigow.js';
 import { seededRandom } from '../src/engine/random.js';
 import { outOfActions, canFastForward, planFastForward } from '../src/paigow/fastForward.js';
@@ -488,4 +488,30 @@ test('the Rider in Black’s packs always hold three Nazgûl', () => {
     assert.equal(cards.filter((id) => id === 'nazgul').length, 3, `seed ${seed}`);
     assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
   }
+});
+
+test('spreadDecks: Auto-fill fills the decks about evenly, strongest cards first, and keeps what was placed', () => {
+  const { decks, deckSize } = PAIGOW_RULES;
+  const cards = openBooster(seededRandom(7), { extraCommons: 2 });
+  const placed = new Map([[0, 2], [1, 2]]);
+  const filled = spreadDecks(cards, placed);
+  assert.equal(filled.get(0), 2);
+  assert.equal(filled.get(1), 2);
+  assert.equal(placed.size, 2, 'the given placements are left alone');
+  const size = Array(decks).fill(0);
+  const total = Array(decks).fill(0);
+  for (const [n, deck] of filled) { size[deck] += 1; total[deck] += cardStrength(cards[n]); }
+  assert.deepEqual(size, Array(decks).fill(deckSize));
+  // The cards left out are no stronger than any that Auto-fill put in.
+  const out = cards.map((_, n) => n).filter((n) => !filled.has(n));
+  assert.equal(out.length, cards.length - decks * deckSize);
+  const weakestIn = Math.min(...[...filled.keys()].filter((n) => !placed.has(n)).map((n) => cardStrength(cards[n])));
+  assert.ok(out.every((n) => cardStrength(cards[n]) <= weakestIn));
+  // From an empty board, no deck is far ahead: less than the strongest card apart.
+  const even = spreadDecks(cards);
+  const sums = Array(decks).fill(0);
+  for (const [n, deck] of even) sums[deck] += cardStrength(cards[n]);
+  assert.ok(Math.max(...sums) - Math.min(...sums) <= Math.max(...cards.map(cardStrength)), `${sums}`);
+  // Full decks take no more.
+  assert.equal(spreadDecks(cards, even).size, decks * deckSize);
 });

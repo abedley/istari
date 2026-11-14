@@ -8,14 +8,20 @@ import { fullCard } from './cardView.js';
 import { manaValue } from '../src/cards/cards.js';
 import { symbolText } from './symbols.js';
 import { fit } from './fit.js';
+import { setVolume } from './audio.js';
+import { showHowToPlay, resetCoach } from './coach.js';
+import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
 
 export function createOverlays(app) {
   let open = null;
 
   function close() {
     if (!open) return;
-    const { el, onClose } = open;
+    const { el, onClose, onKey, returnTo } = open;
     open = null;
+    document.removeEventListener('keydown', onKey);
+    // Focus goes back to what opened it, when that's still there.
+    if (returnTo?.isConnected) returnTo.focus({ preventScroll: true });
     el.style.pointerEvents = 'none';
     el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }).finished
       .catch(() => {}).then(() => el.remove());
@@ -23,8 +29,21 @@ export function createOverlays(app) {
   }
 
   function show(content, { onClose, kind = 'sheet', dismissable = true } = {}) {
+    // What had focus before any overlay opened: where focus returns when the last one closes.
+    const returnTo = open?.returnTo ?? (document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null);
+    if (open) open.returnTo = null;
     close();
     const el = h(`div.overlay.overlay-${kind}`, h('div.backdrop'), content);
+    // A dialog, to assistive technology: modal, named by its heading, and holding the focus.
+    content.setAttribute('role', 'dialog');
+    content.setAttribute('aria-modal', 'true');
+    content.setAttribute('tabindex', '-1');
+    const heading = content.querySelector('h3');
+    if (heading) content.setAttribute('aria-label', heading.textContent);
+    const onKey = (event) => {
+      if (event.key === 'Escape' && dismissable) close();
+    };
+    document.addEventListener('keydown', onKey);
     // A tap that opened this overlay (on pointerup) still sends its click, which lands
     // here, on the backdrop or on whatever option is under the finger. Only clicks whose
     // press (or key) also started here count.
@@ -46,7 +65,8 @@ export function createOverlays(app) {
     fit(el);
     el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
     content.animate([{ transform: 'translateY(24px) scale(.97)' }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
-    open = { el, onClose };
+    open = { el, onClose, onKey, returnTo };
+    content.focus({ preventScroll: true });
     return el;
   }
 
@@ -136,32 +156,65 @@ export function createOverlays(app) {
     grid.scrollTop = scrollTop;
   }
 
-  /** Sound, speed and auto-pass; plus `extra` buttons (e.g. concede, abandon run). */
+  /** Who made what: the fonts, the symbols, the cards, and the art each portrait comes from. */
+  function credits() {
+    const people = [...Object.values(PAIGOW_HEROES), ...Object.values(PAIGOW_OPPONENTS)].filter((person) => person.portrait?.artist);
+    const body = h('div.how',
+      h('section.how-section', h('h4', 'Cards'),
+        h('p', 'The cards are from Magic: The Gathering\'s The Lord of the Rings: Tales of Middle-earth, © Wizards of the Coast. Their images come from Scryfall. Hold a card to see it in full, with its artist.')),
+      h('section.how-section', h('h4', 'Portraits'),
+        h('ul', people.map((person) => h('li', h('b', person.name), `: ${person.portrait.card}, art by ${person.portrait.artist}`)))),
+      h('section.how-section', h('h4', 'Type and symbols'),
+        h('p', 'Faustina, Crimson Pro and Cinzel, under the SIL Open Font License. Mana and Keyrune symbol fonts by Andrew Gioia.')));
+    sheet({ title: 'Credits', body, options: [], cancel: 'Close' });
+  }
+
+  /** Sound, volume, haptics, speed and auto-pass; help and credits; plus `extra` buttons (e.g. concede). */
   function settings({ extra = [] } = {}) {
     const s = app.settings;
-    const toggleRow = (label, key, on, offLabel = 'Off', onLabel = 'On') => h('div.setting',
-      h('span', label),
-      h('button.btn.small', {
-        class: on ? 'primary' : '',
-        onclick: (event) => {
-          app.updateSettings({ [key]: !app.settings[key] });
-          event.currentTarget.classList.toggle('primary', app.settings[key]);
-          event.currentTarget.textContent = app.settings[key] ? onLabel : offLabel;
-        },
-      }, on ? onLabel : offLabel));
+    // A switch: its position is the setting's state, not what tapping it would do.
+    const switchRow = (label, key, note = null) => {
+      const id = `setting-${key}`;
+      return h('div.setting',
+        h('span.setting-label', { id }, label, note ? h('small', note) : null),
+        h('button.switch', {
+          type: 'button', role: 'switch', 'aria-checked': String(Boolean(s[key])), 'aria-labelledby': id,
+          onclick: (event) => {
+            app.updateSettings({ [key]: !app.settings[key] });
+            event.currentTarget.setAttribute('aria-checked', String(Boolean(app.settings[key])));
+            if (key === 'sound' && app.settings.sound) app.sound('select');
+          },
+        }, h('span.switch-knob')));
+    };
     show(h('div.sheet.settings',
       h('h3', 'Settings'),
-      toggleRow('Sound', 'sound', s.sound),
-      h('div.setting', h('span', 'Animation speed'), h('div.seg', [['Normal', 1], ['Fast', 0.6], ['Turbo', 0.35]].map(([label, value]) => h('button.btn.small', {
+      switchRow('Sound', 'sound'),
+      h('label.setting', h('span.setting-label', 'Volume'), h('input.volume', {
+        type: 'range', min: '0', max: '1', step: '0.05', value: String(s.volume ?? 1), 'aria-label': 'Volume',
+        oninput: (event) => {
+          app.updateSettings({ volume: Number(event.currentTarget.value) });
+          setVolume(app.settings.volume);
+        },
+        onchange: () => app.sound('select'),
+      })),
+      navigator.vibrate ? switchRow('Vibration', 'haptics') : null,
+      h('div.setting', h('span.setting-label', 'Animation speed'), h('div.seg', { role: 'group', 'aria-label': 'Animation speed' }, [['Normal', 1], ['Fast', 0.6], ['Turbo', 0.35]].map(([label, value]) => h('button.btn.small', {
         class: s.speed === value ? 'primary' : '',
+        'aria-pressed': String(s.speed === value),
         onclick: (event) => {
           app.updateSettings({ speed: value });
-          for (const b of event.currentTarget.parentElement.children) b.classList.remove('primary');
-          event.currentTarget.classList.add('primary');
+          for (const b of event.currentTarget.parentElement.children) {
+            b.classList.toggle('primary', b === event.currentTarget);
+            b.setAttribute('aria-pressed', String(b === event.currentTarget));
+          }
         },
       }, label)))),
-      toggleRow('Auto-pass priority', 'autoPass', s.autoPass, 'Full control', 'Smart'),
+      switchRow('Auto-pass priority', 'autoPass', 'Off is full control: you stop at every step.'),
       extra.map((e) => h('button.btn', { class: e.danger ? 'danger' : '', onclick: () => { close(); e.onPick(); } }, e.label)),
+      h('div.row.settings-links',
+        h('button.btn.small', { onclick: () => showHowToPlay(app) }, 'How Pai Gow plays'),
+        h('button.btn.small', { onclick: () => { resetCoach(app); close(); } }, 'Show tips again'),
+        h('button.btn.small', { onclick: credits }, 'Credits')),
       h('button.btn.ghost', { onclick: close }, 'Done')), {});
   }
 

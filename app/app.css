@@ -362,7 +362,7 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
   opacity: .6;
   box-shadow: 0 2px 0 rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .08);
 }
-.ability-btn.opp { height: 32px; width: auto; min-width: 30px; opacity: .9; }
+.ability-btn.opp { height: 32px; width: auto; min-width: 36px; opacity: .9; }
 .ability-btn.ready { opacity: 1; border-color: var(--gold); }
 .ability-btn.selected { opacity: 1; border-color: #fff; box-shadow: 0 0 0 2px #fff, 0 0 16px 4px rgba(255, 255, 255, .6); }
 .ability-btn.selected::after { animation: none; opacity: 0; }
@@ -404,14 +404,14 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .main-btn .spinner { display: none; }
 .main-btn.waiting .main-label { opacity: .7; }
 .main-btn.waiting .spinner { display: inline-block; width: 12px; height: 12px; margin-left: 6px; border-radius: 50%; border: 2px solid #9a9378; border-top-color: transparent; animation: spin .9s linear infinite; vertical-align: -1px; }
-.main-btn .full-badge { display: none; position: absolute; top: -9px; right: 6px; font: 700 8px var(--ui); background: var(--blue); color: #001; padding: 1px 5px; border-radius: 6px; }
+.main-btn .full-badge { display: none; position: absolute; top: -9px; right: 6px; font: 700 10px var(--ui); background: var(--blue); color: #001; padding: 1px 5px; border-radius: 6px; }
 .main-btn.full .full-badge { display: block; }
 @keyframes glow { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
 
 /* The top right, left of the menu: Fast forward and the draw warning (Pai Gow), stacked. */
 .top-actions { position: absolute; z-index: 6; right: 50px; top: calc(var(--safe-top) + 20px); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; pointer-events: none; }
 .top-actions > * { pointer-events: auto; }
-.ff-btn { height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 17px; border: 1px solid var(--gold2); background: linear-gradient(180deg, #f3d488, var(--gold2)); color: #2a1a02; font: 700 13px var(--display); box-shadow: 0 2px 10px rgba(233, 196, 106, .35); cursor: pointer; }
+.ff-btn { position: relative; height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; border-radius: 17px; border: 1px solid var(--gold2); background: linear-gradient(180deg, #f3d488, var(--gold2)); color: #2a1a02; font: 700 13px var(--display); box-shadow: 0 2px 10px rgba(233, 196, 106, .35); cursor: pointer; }
 .ff-btn[hidden] { display: none; }
 .menu-btn { position: absolute; z-index: 6; right: 8px; top: calc(var(--safe-top) + 20px); width: 34px; height: 34px; border-radius: 11px; border: 1px solid rgba(255, 255, 255, .08); background: rgba(255, 255, 255, .06); color: var(--muted); display: grid; place-items: center; font-size: 17px; }
 
@@ -422,21 +422,21 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .land-group .chip-face { width: 24px; height: 24px; }
 .land-count { display: flex; align-items: baseline; gap: 3px; line-height: 1; }
 .land-n { font: 800 13px/1 var(--display); color: #f3e9cf; }
-.land-u { font-size: 9.5px; line-height: 1; color: var(--muted); white-space: nowrap; }
+.land-u { font-size: 10px; line-height: 1; color: var(--muted); white-space: nowrap; }
 .land-group.spent { opacity: .55; }
 .land-group::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; }
 .land-group.playable::after { opacity: 1; box-shadow: 0 0 0 2px #7dffa7, 0 0 12px 3px rgba(80, 255, 140, .55); animation: glow 1.6s ease-in-out infinite; }
 .pool { display: flex; }
 .pool .pips { font-size: 13px; animation: glow 1.2s ease-in-out infinite; }
 /* Mana that can be spent as any color: a rainbow pip with its amount. */
-.pip-any { display: inline-grid; place-items: center; min-width: 15px; height: 15px; margin-left: 2px; padding: 0 3px; border-radius: 8px; background: conic-gradient(#f8f0d0, #4a8fd8, #2a2230, #d8452e, #3d8a4a, #f8f0d0); font: 800 9.5px var(--display); color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000; box-shadow: 0 0 0 1px #0c0b0f; animation: glow 1.2s ease-in-out infinite; }
+.pip-any { display: inline-grid; place-items: center; min-width: 15px; height: 15px; margin-left: 2px; padding: 0 3px; border-radius: 8px; background: conic-gradient(#f8f0d0, #4a8fd8, #2a2230, #d8452e, #3d8a4a, #f8f0d0); font: 800 10px var(--display); color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000; box-shadow: 0 0 0 1px #0c0b0f; animation: glow 1.2s ease-in-out infinite; }
 .perms { display: flex; gap: 4px; margin-left: auto; min-width: 0; }
 .chip-face { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; padding: 2px; background: linear-gradient(160deg, var(--c), var(--c2)); box-shadow: 0 0 0 1px #0c0b0f, 0 0 0 2px rgba(233, 196, 106, .55), 0 2px 4px rgba(0, 0, 0, .5); }
 .chip-face .art { border-radius: 50%; height: 100%; box-shadow: none; }
 .chip-face .gen-glyph { width: 60%; height: 60%; }
 /* A Saga's chapter (its lore counters), on its chip. */
 .chip-face { position: relative; }
-.chip-lore { position: absolute; right: 0; bottom: 0; min-width: 14px; padding: 0 2px; border-radius: 6px; background: #3b2a12; border: 1px solid var(--gold); font: 800 8px/12px var(--display); color: var(--gold); text-align: center; }
+.chip-lore { position: absolute; right: 0; bottom: 0; min-width: 14px; padding: 0 2px; border-radius: 6px; background: #3b2a12; border: 1px solid var(--gold); font: 800 10px/13px var(--display); color: var(--gold); text-align: center; }
 .card.z-perms { position: relative; width: 30px; height: 30px; transition: rotate .2s var(--ease); }
 .card.z-perms.tapped { rotate: 30deg; opacity: .65; }
 .card.z-perms.attached .chip-face { box-shadow: 0 0 0 1px var(--gold2), 0 2px 4px rgba(0, 0, 0, .5); }
@@ -476,18 +476,18 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .board-face .art { border-radius: 5px; }
 /* Shade at the top and bottom of the art, so badges and stats read over it. */
 .board-face .art::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0, 0, 0, .35), transparent 28%, transparent 72%, rgba(0, 0, 0, .45)); pointer-events: none; }
-.board-name { position: absolute; left: 4px; right: 4px; top: 50%; transform: translateY(-50%); padding: 2px 3px; border-radius: 3px; background: rgba(0, 0, 0, .6); color: #fff; font: 700 9px/1.2 var(--display); text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-height: 2.4em; z-index: 2; }
+.board-name { position: absolute; left: 4px; right: 4px; top: 50%; transform: translateY(-50%); padding: 2px 3px; border-radius: 3px; background: rgba(0, 0, 0, .6); color: #fff; font: 700 10px/1.2 var(--display); text-align: center; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; max-height: 2.4em; z-index: 2; }
 .board-face::after { content: ''; position: absolute; inset: -1.5px; border-radius: 8px; background: #000; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 3; }
 .tapped .board-face::after { opacity: .45; }
 .board-face .kws { position: absolute; top: 5px; left: 5px; right: 5px; display: flex; gap: 2px; z-index: 2; }
 .board-face .restrict { position: absolute; top: 24px; left: 3px; right: 3px; display: flex; flex-direction: column; align-items: center; gap: 2px; pointer-events: none; z-index: 2; }
-.rb { max-width: 100%; overflow: hidden; padding: 1px 4px; border-radius: 6px; font: 800 7.5px/1.25 var(--ui); letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+.rb { max-width: 100%; overflow: hidden; padding: 1px 4px; border-radius: 6px; font: 800 10px/1.2 var(--ui); letter-spacing: 0; white-space: nowrap; color: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
 .rb.no-block, .rb.no-attack { background: rgba(150, 30, 34, .92); }
 .rb.unblockable { background: rgba(32, 78, 150, .92); }
 .rb.lure { background: rgba(176, 98, 18, .92); }
 .rb.protect { background: rgba(196, 170, 90, .95); color: #1a1408; }
 .counter-badges { position: absolute; left: 3px; bottom: 26px; display: flex; flex-direction: column; gap: 1px; z-index: 4; pointer-events: none; }
-.cb { padding: 0 4px; border-radius: 6px; font: 800 8.5px/12px var(--display); color: #fff; background: rgba(44, 38, 28, .9); border: 1px solid rgba(255, 255, 255, .35); }
+.cb { padding: 0 4px; border-radius: 6px; font: 800 10px/13px var(--display); color: #fff; background: rgba(44, 38, 28, .9); border: 1px solid rgba(255, 255, 255, .35); }
 .cb-stun { background: rgba(70, 90, 160, .95); }
 /* The One Ring: a player with protection from everything. */
 .avatar.protected .crest { box-shadow: 0 0 0 3px var(--gold), 0 0 14px 4px rgba(233, 196, 106, .7); }
@@ -564,11 +564,11 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .draw-warn { max-width: 150px; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(255, 196, 80, .6); background: rgba(58, 38, 6, .92); color: #ffd98a; font: 600 11.5px/1.2 var(--ui); text-align: right; box-shadow: 0 2px 10px rgba(0, 0, 0, .5); pointer-events: none; }
 .draw-warn[hidden] { display: none; }
 .pips-turn { display: flex; align-items: center; gap: 3px; flex: none; margin-left: auto; }
-.tp { font: 700 8.5px var(--ui); letter-spacing: .05em; text-transform: uppercase; width: 7px; height: 7px; padding: 0; border-radius: 4px; color: transparent; background: rgba(255, 255, 255, .14); overflow: hidden; white-space: nowrap; transition: width .2s var(--ease); }
+.tp { font: 700 10px var(--ui); letter-spacing: .05em; text-transform: uppercase; width: 7px; height: 7px; padding: 0; border-radius: 4px; color: transparent; background: rgba(255, 255, 255, .14); overflow: hidden; white-space: nowrap; transition: width .2s var(--ease); }
 .tp.now { width: auto; height: auto; padding: 3px 6px; color: #241a03; background: var(--gold); overflow: visible; }
 .pips-turn.theirs .tp.now { color: #fff; background: #b8414b; }
 /* In combat its pip names the step, over four segments (start, attackers, blockers, damage). */
-.tp-combat.now { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 7px 4px; font-size: 9.5px; box-shadow: 0 0 10px rgba(233, 196, 106, .55); }
+.tp-combat.now { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 7px 4px; font-size: 10px; box-shadow: 0 0 10px rgba(233, 196, 106, .55); }
 .pips-turn.theirs .tp-combat.now { box-shadow: 0 0 10px rgba(229, 72, 77, .6); }
 .tp-steps { display: none; gap: 2px; }
 .tp-combat.now .tp-steps { display: flex; }
@@ -578,7 +578,7 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 /* Whose turn it is */
 .turn-badge { flex: none; display: flex; align-items: center; gap: 5px; padding: 3px 4px 3px 9px; border-radius: 12px; font: 800 12px var(--display); letter-spacing: .03em; color: #2a1a02; background: linear-gradient(180deg, #f7dc93, #c4952f); box-shadow: 0 0 12px rgba(233, 196, 106, .45), inset 0 1px 0 rgba(255, 255, 255, .5); white-space: nowrap; }
 .turn-badge.theirs { color: #fff; background: linear-gradient(180deg, #d5545d, #8f1f28); box-shadow: 0 0 12px rgba(229, 72, 77, .45), inset 0 1px 0 rgba(255, 255, 255, .3); }
-.tb-n { min-width: 18px; height: 16px; padding: 0 4px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font: 700 9.5px var(--ui); background: rgba(0, 0, 0, .25); color: inherit; }
+.tb-n { min-width: 18px; height: 16px; padding: 0 4px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font: 700 10px var(--ui); background: rgba(0, 0, 0, .25); color: inherit; }
 .tb-n::before { content: 'T'; opacity: .7; margin-right: 1px; }
 .battle.my-turn .zone-me::before { box-shadow: inset 0 0 0 1px rgba(233, 196, 106, .5), inset 0 0 30px rgba(233, 196, 106, .13); }
 .battle.their-turn .zone-opp::before { box-shadow: inset 0 0 0 1px rgba(229, 72, 77, .5), inset 0 0 30px rgba(229, 72, 77, .13); }
@@ -805,6 +805,11 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .begin-label::before { margin-left: 10px; }
 .begin:active { transform: scale(.97); color: #fff4d4; }
 .begin:focus-visible { outline: 1px solid rgba(233, 196, 106, .8); outline-offset: 2px; border-radius: 4px; }
+/* Back at the title in the same visit: the camera is already where its pull-back ends, and drifts. */
+.rv.settled .rv-layer { animation: rv-camera 24s ease-in-out infinite alternate; }
+.screen-title:has(.rv.settled.ready) .tagline { animation-delay: .2s; }
+.title-how { padding: 10px 14px; border-radius: 22px; background: rgba(12, 9, 4, .5); min-height: 44px; color: #f2e3b8; font: 600 14px var(--display); letter-spacing: .04em; text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 12px rgba(0, 0, 0, .8); }
+.title-foot .icon-btn { background: rgba(12, 9, 4, .5); }
 .title-foot { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--safe-bottom)); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; }
 
 .node { width: 54px; height: 54px; flex: none; border-radius: 50%; display: grid; place-items: center; font: 800 20px var(--display); background: #1f2216; color: #6f6a52; box-shadow: inset 0 0 0 2px #35382a; }
@@ -819,6 +824,8 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .result-title { font: 900 46px var(--title); letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
 .result-title.victory { color: var(--gold); text-shadow: 0 0 24px rgba(233, 196, 106, .6); }
 .result-title.defeat { color: #cfd4e4; }
+/* A tied match: neither side's color. */
+.result-title.tie { color: #d9cfae; text-shadow: 0 0 18px rgba(217, 207, 174, .35); }
 
 .note { color: var(--muted); font-size: 13px; text-align: center; }
 
@@ -858,7 +865,25 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .dmg-n { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 11px; display: grid; place-items: center; background: #c5303b; color: #fff; font: 800 12px var(--ui); box-shadow: 0 2px 4px rgba(0, 0, 0, .5); }
 .dmg-player { position: relative; margin-left: auto; align-self: center; }
 .dmg-player.spared { opacity: .45; }
-.setting { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 2px; }
+.setting { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 2px; min-height: 44px; }
+.setting-label { display: flex; flex-direction: column; gap: 1px; }
+.setting-label small { font-size: 12px; color: var(--muted); }
+/* A switch: the knob's side and the track's color are the setting's state. */
+.switch { position: relative; flex: none; appearance: none; width: 52px; height: 30px; padding: 0; border-radius: 15px; border: 1px solid #59533f; background: #211f17; cursor: pointer; transition: background .15s, border-color .15s; }
+.switch::before { content: ''; position: absolute; inset: -7px -4px; }
+.switch-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #9a9378; box-shadow: 0 1px 3px rgba(0, 0, 0, .6); transition: transform .15s var(--ease), background .15s; }
+.switch[aria-checked="true"] { background: linear-gradient(180deg, #e2b650, #b7862a); border-color: #ffe7a6; }
+.switch[aria-checked="true"] .switch-knob { transform: translateX(22px); background: #fffaf0; }
+.volume { width: 150px; height: 32px; margin: 0; accent-color: var(--gold); }
+.sheet .btn.small { min-height: 40px; }
+.settings-links { flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.settings-links .btn { flex: 1 1 auto; }
+.sheet:focus, .inspect:focus, .deck-view:focus { outline: none; }
+/* How Pai Gow plays, and the credits: sections of short lines. */
+.how { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.how-section h4 { margin: 0 0 4px; font: 700 12px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
+.how-section ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; }
+.how-section li, .how-section p { margin: 0; font: 15px/1.3 var(--rules); color: var(--ink); }
 .seg { display: flex; gap: 4px; }
 .inspect { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; width: min(300px, 82vw); }
 .inspect > .card-face { width: 100%; aspect-ratio: 63 / 88; height: auto; }
@@ -888,8 +913,9 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
   .ability-btn { width: 50px; }
   .main-btn { min-width: 84px; padding: 0 10px; font-size: 15px; }
 }
+/* Wide screens: the whole app keeps a phone's width, centered. */
 @media (min-width: 600px) {
-  .battle { max-width: 480px; margin: 0 auto; }
+  #app { max-width: 480px; margin: 0 auto; box-shadow: 0 0 60px rgba(0, 0, 0, .7); }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
@@ -907,7 +933,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pick-card { position: relative; width: 92px; padding: 0; border: 0; background: none; border-radius: 9px; transition: transform .12s; }
 .pick-card .card-face { width: 92px; }
 .pick-card.chosen { transform: translateY(-4px); box-shadow: 0 0 0 2px var(--gold), 0 0 12px rgba(233, 196, 106, .7); }
-.pick-n { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 1px 6px; border-radius: 8px; background: #241d14; border: 1px solid #6b5a3a; font: 800 9.5px var(--ui); color: var(--muted); white-space: nowrap; }
+.pick-n { position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); padding: 1px 6px; border-radius: 8px; background: #241d14; border: 1px solid #6b5a3a; font: 800 10px var(--ui); color: var(--muted); white-space: nowrap; }
 .pick-n:empty { display: none; }
 .pick-card.chosen .pick-n { background: var(--gold); border-color: var(--gold); color: #241d14; }
 .pick-done { flex-basis: 100%; display: flex; justify-content: center; margin-top: 10px; }
@@ -922,23 +948,23 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-opp b { color: var(--ink); }
 .pg-help { margin: 0; font-size: 13px; color: var(--muted); text-align: center; }
 /* The deck builder, on one screen: the three decks side by side, then the booster's cards five across. */
-.pg-head-opp { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 42%; font-size: 13px; color: #d6cdb4; text-align: right; line-height: 1.15; }
+.pg-head-opp { min-height: 44px; appearance: none; background: none; border: 0; padding: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; max-width: 42%; font-size: 13px; color: #d6cdb4; text-align: right; line-height: 1.15; }
 .pg-builder { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 0 10px; }
 .pg-board { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .pg-col { display: flex; flex-direction: column; gap: 4px; padding: 5px 4px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .06); background: rgba(255, 255, 255, .03); cursor: pointer; }
 .pg-col.selected { border-color: var(--gold); background: rgba(233, 196, 106, .12); }
-.pg-col-label { text-align: center; white-space: nowrap; font: 700 min(10px, 2.7vw) var(--ui); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.pg-col-label { text-align: center; white-space: nowrap; font: 700 10px var(--ui); letter-spacing: .02em; text-transform: uppercase; color: var(--muted); }
 .pg-col.selected .pg-col-label { color: var(--gold); }
 .pg-chip { position: relative; display: block; width: 100%; aspect-ratio: 5 / 2; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #111 center / cover no-repeat; cursor: pointer; -webkit-touch-callout: none; user-select: none; }
-.pg-chip span { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 3px 2px; background: linear-gradient(transparent, rgba(0, 0, 0, .88) 45%); color: #fff; font: 600 10px/1.1 var(--ui); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pg-chip .pg-chip-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 3px 2px; background: linear-gradient(transparent, rgba(0, 0, 0, .88) 45%); color: #fff; font: 600 10px/1.1 var(--ui); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pg-chip.empty { background: none; border: 1.5px dashed rgba(233, 196, 106, .3); cursor: inherit; }
 .pg-tray { display: grid; grid-template-columns: repeat(var(--tray-cols, 3), minmax(0, 1fr)); gap: 8px; }
 /* The tray zooms by its own pinch (see trayZoom in app/screens/paigow.js); the browser only scrolls it. */
 .pg-tray-wrap .pg-tray { touch-action: pan-y; }
 .pg-tray[data-columns="4"], .pg-tray[data-columns="5"] { gap: 5px; }
 .pg-tray-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.pg-zooms { display: flex; gap: 6px; }
-.pg-zoom { width: 30px; height: 30px; border-radius: 9px; font-size: 16px; }
+.pg-zooms { display: flex; align-items: center; gap: 10px; }
+.pg-zoom { width: 34px; height: 34px; border-radius: 10px; font-size: 16px; }
 .pg-zoom:disabled { opacity: .35; cursor: default; }
 .pg-board { position: relative; z-index: 1; }
 .pg-card.full { width: 100%; }
@@ -1026,4 +1052,61 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .ring-mark { display: inline-block; width: .8em; height: .8em; margin-right: .45em; vertical-align: -.08em; border-radius: 50%; border: 2px solid currentColor; box-shadow: 0 0 5px rgba(233, 196, 106, .6); }
 .power-note { margin-top: 4px; font-size: 13px; color: var(--muted); }
 .power-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.begin.quick { font-size: 14px; padding: 10px 0; color: #e8d6a8; }
+
+/* ---------------------------------------------------------------- the deck builder's placed cards */
+.pg-chip-cost { position: absolute; top: 2px; left: 2px; padding: 1.5px 2px; border-radius: 9px; background: rgba(10, 9, 6, .78); font-size: 10px; }
+.pg-chip-cost:empty { display: none; }
+.pg-chip-pt { position: absolute; top: 2px; right: 2px; padding: 0 4px; border-radius: 4px / 6px; background: linear-gradient(180deg, #fbf6e6, #ddd2b0); color: #15120d; font: 800 10.5px/1.35 var(--display); box-shadow: 0 0 0 1px rgba(0, 0, 0, .6); }
+/* Picked up, to move to another deck or swap with a card there. */
+.pg-chip.picked { outline: 2px solid #fff; outline-offset: 1px; box-shadow: 0 0 14px 3px rgba(255, 255, 255, .55); z-index: 1; }
+.pg-hint { flex: none; margin: 0; min-height: 2.5em; font-size: 12.5px; line-height: 1.25; color: var(--muted); text-align: center; }
+.pg-tray-empty { grid-column: 1 / -1; margin: 18px 8px 0; font: italic 16px/1.35 var(--rules); color: var(--muted); text-align: center; }
+.pg-clear { min-height: 34px; padding: 4px 8px; }
+.pg-clear[hidden] { display: none; }
+
+/* ---------------------------------------------------------------- state badge
+   What a card can do or is doing, as a shape on its top edge as well as the color of its glow:
+   a spark (playable), a sword (can attack, attacking), a shield (can block, blocking). */
+.state-badge { position: absolute; top: -10px; left: 50%; z-index: 5; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; display: none; place-items: center; color: #1a1205; box-shadow: 0 0 0 1.5px #0c0b0f, 0 2px 4px rgba(0, 0, 0, .6); pointer-events: none; }
+.state-badge .icon { display: none; width: 12px; height: 12px; }
+.hand .card .state-badge { left: 14px; }
+.hand .card.playable .state-badge { display: grid; background: #7dffa7; }
+.hand .card.playable .sb-play { display: block; }
+.card.z-creatures.can-block .state-badge, .card.z-creatures.blocking .state-badge { display: grid; background: #8cc3ff; }
+.card.z-creatures.can-block .sb-block, .card.z-creatures.blocking .sb-block { display: block; }
+.card.z-creatures.can-attack .state-badge { display: grid; background: #ffb347; }
+.card.z-creatures.attacking .state-badge { display: grid; background: #ff5d4a; color: #fff; }
+.card.z-creatures.can-attack .sb-attack, .card.z-creatures.attacking .sb-attack { display: block; }
+.card.z-creatures.attacking .sb-block, .card.z-creatures.can-attack .sb-block { display: none; }
+/* Not yet chosen: hollow. Chosen (attacking, blocking): solid. */
+.card.z-creatures.can-attack:not(.attacking) .state-badge, .card.z-creatures.can-block:not(.blocking) .state-badge { opacity: .92; scale: .9; }
+
+/* ---------------------------------------------------------------- touch targets: at least 44px to the finger, whatever the eye sees */
+.icon-btn { position: relative; }
+.icon-btn::before, .menu-btn::before, .ff-btn::before { content: ''; position: absolute; inset: -5px; }
+.icon-btn:not(.pg-zoom)::before { inset: -2px; }
+.count { position: relative; }
+.count::before { content: ''; position: absolute; inset: -16px -3px -10px; }
+.ability-btn.opp::before { content: ''; position: absolute; inset: -6px -4px; }
+.land-group::before { content: ''; position: absolute; inset: -8px -2px; }
+
+/* ---------------------------------------------------------------- focus, for a keyboard */
+:where(button, input, [role="switch"]):focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------- coach marks (coach.js) */
+.coach { position: absolute; inset: 0; z-index: 90; cursor: pointer; }
+.coach-ring { position: absolute; border-radius: 12px; box-shadow: 0 0 0 2px var(--gold), 0 0 14px 2px rgba(233, 196, 106, .7), 0 0 0 200vmax rgba(5, 5, 3, .66); pointer-events: none; transition: top .25s var(--ease), left .25s var(--ease), width .25s var(--ease), height .25s var(--ease); }
+.coach-bubble { position: absolute; left: 16px; right: 16px; max-width: 360px; margin: 0 auto; padding: 12px 14px 10px; border-radius: 14px; background: linear-gradient(180deg, #fbf7ea, #ece3cb); color: #241c10; box-shadow: 0 0 0 1px rgba(233, 196, 106, .8), 0 8px 24px rgba(0, 0, 0, .6); }
+.coach-text { margin: 0 0 8px; font: 500 16px/1.3 var(--rules); }
+.coach-foot { display: flex; align-items: center; gap: 8px; }
+.coach-count { margin-right: auto; font-size: 12px; color: #6b5f45; }
+.coach-foot .btn { min-height: 40px; }
+.coach-foot .btn.ghost { color: #6b5f45; }
+.coach-foot .btn[hidden] { display: none; }
+
+/* ---------------------------------------------------------------- rotate: the game is laid out for a phone held upright */
+#rotate { display: none; }
+@media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
+  #rotate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: var(--bg0); color: var(--ink); font: 700 20px var(--display); text-align: center; }
+  #rotate p { margin: 0; }
+}

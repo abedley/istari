@@ -126,6 +126,33 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
 }
 
 /**
+ * Auto-fill for the deck builder: which deck each loose card goes in. `cards`: the booster; `placed`: a Map from a
+ * card's place in `cards` to its deck (0-based), for the ones already placed. The loose cards go in from strongest
+ * to weakest (cardStrength), each into the deck with room whose cards so far are weakest in all (the lowest-numbered
+ * on a tie), so the three decks come out about as strong as each other. Cards left over when the decks are full stay out.
+ * Returns a new Map with every placement.
+ */
+export function spreadDecks(cards, placed = new Map(), { decks = PAIGOW_RULES.decks, deckSize = PAIGOW_RULES.deckSize } = {}) {
+  const result = new Map(placed);
+  const size = Array(decks).fill(0);
+  const total = Array(decks).fill(0);
+  for (const [n, deck] of result) { size[deck] += 1; total[deck] += cardStrength(cards[n]); }
+  const loose = cards.map((_, n) => n).filter((n) => !result.has(n))
+    .sort((a, b) => cardStrength(cards[b]) - cardStrength(cards[a]) || a - b);
+  for (const n of loose) {
+    let target = -1;
+    for (let deck = 0; deck < decks; deck += 1) {
+      if (size[deck] < deckSize && (target < 0 || total[deck] < total[target])) target = deck;
+    }
+    if (target < 0) break;
+    result.set(n, target);
+    size[target] += 1;
+    total[target] += cardStrength(cards[n]);
+  }
+  return result;
+}
+
+/**
  * A new match: a booster opened for each side, the CPU's decks built (buildDecks in deckBuilder.js, to its opponent's tastes,
  * without a look at the player's cards) and put in a random order, its opponent picked from
  * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).

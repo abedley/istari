@@ -1,27 +1,32 @@
 import { h, onPress } from '../dom.js';
 import { crest } from '../art.js';
-import { fullCard, cardBack } from '../cardView.js';
+import { fullCard, cardBack, manaPips } from '../cardView.js';
 import { header, personInfo } from './common.js';
 import { icon } from '../icons.js';
 import {
-  createMatch, setDecks, score, outcome, nextRound, playerStartsRound, playerLife, cardStrength,
+  setDecks, score, outcome, nextRound, playerStartsRound, playerLife, spreadDecks,
   PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, DEFAULT_HERO } from '../../src/paigow/personas.js';
 import { powerBlock, ringBlock } from './heroes.js';
-import { saveCampaignMatch, finishCampaignMatch } from './campaign.js';
+import { loadCampaign, saveCampaignMatch, finishCampaignMatch } from './campaign.js';
+import { coach } from '../coach.js';
 
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
  * Pai Gow (src/paigow/paigow.js): split 15 cards (or more, with a campaign's extra commons, leaving the
  * spare ones out) into three decks of five, then a best of three against
- * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Without a `match`, a
- * new one is dealt, for the hero `heroId` (see the heroes screen). A campaign's match (`match.campaign`,
- * see the campaign screen) is saved after each round, and its outcome recorded in the campaign.
+ * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Every match is a campaign's
+ * (see the campaign screen): it's saved after each round, and its outcome recorded in the campaign. Without a
+ * `match`, the campaign's current one is shown, and with none going on, the campaign screen.
  */
-export function paigowScreen(app, { match: given = null, view = null, heroId = DEFAULT_HERO } = {}) {
-  const match = given ?? createMatch({ heroId });
+export function paigowScreen(app, { match: given = null, view = null } = {}) {
+  const match = given ?? loadCampaign(app)?.match ?? null;
+  if (!match) {
+    queueMicrotask(() => app.go('campaign'));
+    return { el: h('div') };
+  }
   const shown = view ?? (match.decks ? (outcome(match) ? 'final' : 'scoreboard') : 'build');
   return shown === 'build' ? buildView(app, match) : scoreView(app, match, shown === 'final');
 }
@@ -43,8 +48,8 @@ function miniCard(app, cardId, { onTap = null, full = false } = {}) {
 /** The match's hero, or the default for a match from before heroes. */
 export const heroOf = (match) => paigowHero(match.heroId ?? DEFAULT_HERO);
 
-/** Where Back goes: a campaign's match back to the campaign (it's saved), any other to the title. */
-const backTo = (app, match) => app.go(match.campaign ? 'campaign' : 'title');
+/** Where Back goes: the campaign (the match is saved). */
+const backTo = (app) => app.go('campaign');
 
 /** The opponent, for the header: their portrait and name. Tap to read the Rings of Power. */
 const opponentBadge = (app, match) => {
@@ -61,14 +66,17 @@ function showPowers(app, match) {
   app.overlays.sheet({ title: 'Rings of Power', body: h('div.powers', side(opponent), side(hero, match.rings ?? [])), options: [], cancel: 'Close' });
 }
 
-/** A placed card, small: its art and name. Tap for `onTap`, hold to read it. */
-function slotChip(app, cardId, { onTap }) {
+/** A placed card, small: its art, name, mana cost and power/toughness. Tap for `onTap`, hold to read it. `picked`: chosen to move. */
+function slotChip(app, cardId, { onTap, picked = false }) {
   const card = { ...app.definitions[cardId], cardId, id: cardId };
   const art = card.image?.art;
-  const el = h('button.pg-chip', {
-    type: 'button', 'aria-label': card.name, dataset: { card: cardId },
+  const el = h(`button.pg-chip${picked ? '.picked' : ''}`, {
+    type: 'button', 'aria-label': card.name, 'aria-pressed': picked ? 'true' : 'false', dataset: { card: cardId },
     style: art ? { backgroundImage: `url("${art}")` } : {},
-  }, h('span', card.name));
+  },
+  manaPips(card.manaCost, 'pg-chip-cost'),
+  card.types?.includes('Creature') ? h('span.pg-chip-pt', `${card.power}/${card.toughness}`) : null,
+  h('span.pg-chip-name', card.name));
   onPress(el, { onTap, onLong: () => app.overlays.inspect(card) });
   el.addEventListener('contextmenu', (event) => event.preventDefault());
   return el;
@@ -90,8 +98,8 @@ export const trayColumns = (settings) => {
  */
 function trayZoom(app, tray) {
   let columns = trayColumns(app.settings);
-  const zoomOut = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Zoom out: more cards in a row', onclick: () => set(columns + 1) }, icon('minus'));
-  const zoomIn = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Zoom in: fewer cards in a row', onclick: () => set(columns - 1) }, icon('plus'));
+  const zoomOut = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Smaller cards: more in a row', onclick: () => set(columns + 1) }, icon('gridSmall'));
+  const zoomIn = h('button.icon-btn.pg-zoom', { type: 'button', 'aria-label': 'Bigger cards: fewer in a row', onclick: () => set(columns - 1) }, icon('gridLarge'));
   const update = () => {
     tray.style.setProperty('--tray-cols', String(columns));
     tray.dataset.columns = String(columns);
@@ -142,47 +150,88 @@ function trayZoom(app, tray) {
 function buildView(app, match) {
   const { decks: count, deckSize } = PAIGOW_RULES;
   /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
-  const placed = new Map();
+  let placed = new Map();
   let selected = 0;
+  /** A placed card chosen to move (its place in `match.cards`), or null. */
+  let picked = null;
+  /** What Undo goes back to: each earlier `placed` and `selected`. */
+  const history = [];
   const indexes = match.cards.map((_, n) => n);
+  const deckIds = [...Array(count).keys()];
 
   const deckOf = (i) => indexes.filter((n) => placed.get(n) === i);
   const free = (i) => deckOf(i).length < deckSize;
   const board = h('div.pg-board');
+  const hint = h('p.pg-hint', { 'aria-live': 'polite' });
   const tray = h('div.pg-tray');
   const trayTitle = h('h4');
   const zoom = trayZoom(app, tray);
-  const start = h('button.btn.primary.pg-start', { onclick: () => play() }, 'Start match');
+  const start = h('button.btn.primary.pg-start', { onclick: () => play() });
   const autoFill = h('button.btn', { onclick: () => fill() }, 'Auto-fill');
-  const clear = h('button.btn.ghost', { onclick: () => { placed.clear(); selected = 0; render(); } }, 'Clear');
+  const undo = h('button.btn.ghost', { onclick: () => back() }, 'Undo');
+  const clear = h('button.btn.ghost.small.pg-clear', { onclick: () => change(() => { placed = new Map(); selected = 0; }) }, 'Clear');
 
-  const place = (n) => {
-    const target = free(selected) ? selected : [...Array(count).keys()].find(free);
-    if (target === undefined) return;
-    placed.set(n, target);
-    app.sound('select');
-    // Keep filling the same deck until it's full, then move on to the next one with room.
-    if (!free(target)) selected = [...Array(count).keys()].find(free) ?? target;
+  /** Makes a change that Undo can take back. */
+  const change = (make) => {
+    history.push({ placed: new Map(placed), selected });
+    picked = null;
+    make();
     render();
   };
-  const unplace = (n) => {
-    selected = placed.get(n);
-    placed.delete(n);
+  const back = () => {
+    const last = history.pop();
+    if (!last) return;
+    ({ placed, selected } = last);
+    picked = null;
+    render();
+  };
+  const place = (n) => {
+    const target = free(selected) ? selected : deckIds.find(free);
+    if (target === undefined) return;
+    app.sound('select');
+    change(() => {
+      placed.set(n, target);
+      // Keep filling the same deck until it's full, then move on to the next one with room.
+      if (!free(target)) selected = deckIds.find(free) ?? target;
+    });
+  };
+  /** A placed card tapped: pick it up to move; with one picked up already, swap the two; tapped again, back to the booster. */
+  const tapPlaced = (n) => {
+    if (picked === n) {
+      change(() => { selected = placed.get(n); placed.delete(n); });
+    } else if (picked !== null && placed.get(picked) !== placed.get(n)) {
+      const other = picked;
+      app.sound('select');
+      change(() => {
+        const deck = placed.get(n);
+        placed.set(n, placed.get(other));
+        placed.set(other, deck);
+      });
+    } else {
+      picked = n;
+      app.sound('tap');
+      render();
+    }
+  };
+  /** A deck tapped: the picked card moves there (when there's room), and it becomes the deck that tapped cards go to. */
+  const tapDeck = (i) => {
+    if (picked !== null && placed.get(picked) !== i && free(i)) {
+      const n = picked;
+      app.sound('select');
+      change(() => { placed.set(n, i); selected = i; });
+      return;
+    }
+    picked = null;
+    selected = i;
     render();
   };
   const fill = () => {
-    // With more cards than the decks hold, the strongest go in first.
-    const order = [...indexes].sort((a, b) => cardStrength(match.cards[b]) - cardStrength(match.cards[a]) || a - b);
-    for (const n of order) {
-      if (placed.has(n)) continue;
-      const target = [...Array(count).keys()].find(free);
-      if (target === undefined) break;
-      placed.set(n, target);
-    }
-    render();
+    // With more cards than the decks hold, the strongest go in first; the decks come out about even.
+    app.sound('select');
+    change(() => { placed = spreadDecks(match.cards, placed); });
   };
   const play = () => {
-    const decks = [...Array(count).keys()].map((i) => deckOf(i).map((n) => match.cards[n]));
+    const decks = deckIds.map((i) => deckOf(i).map((n) => match.cards[n]));
     const ready = setDecks(match, decks);
     saveCampaignMatch(app, ready);
     app.go('battle', { match: ready });
@@ -190,34 +239,49 @@ function buildView(app, match) {
 
   const render = () => {
     // The three decks side by side, the selected one (where a tapped card goes) highlighted.
-    board.replaceChildren(...[...Array(count).keys()].map((i) => {
+    board.replaceChildren(...deckIds.map((i) => {
       const cards = deckOf(i);
       return h('div.pg-col', { class: i === selected ? 'selected' : '', onclick: (event) => {
         if (event.target.closest('.pg-chip:not(.empty)')) return;
-        selected = i;
-        render();
+        tapDeck(i);
       } },
-      h('div.pg-col-label', `Round ${i + 1}`),
-      ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => unplace(n) })),
+      h('div.pg-col-label', `Round ${i + 1} · ${cards.length}/${deckSize}`),
+      ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked })),
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
     const left = indexes.filter((n) => !placed.has(n));
-    const full = [...Array(count).keys()].every((i) => !free(i));
+    const toPlace = count * deckSize - placed.size;
+    const full = toPlace === 0;
+    hint.textContent = picked !== null
+      ? 'Tap another deck to move it there, a card in another deck to swap them, or tap it again to take it out.'
+      : full ? 'Tap a placed card to move it or swap it. Hold any card to read it.'
+        : 'Tap a card to add it to the highlighted deck. Hold any card to read it.';
     trayTitle.textContent = full
       ? (left.length ? `All decks full · ${left.length} left out` : 'All cards placed')
-      : `Your booster · ${left.length} left${left.length > count * deckSize - placed.size ? ` · ${count * deckSize - placed.size} to place` : ''}`;
-    tray.replaceChildren(...left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true })));
+      : `Your booster · ${left.length} left${left.length > toPlace ? ` · ${toPlace} to place` : ''}`;
+    tray.replaceChildren(...(left.length
+      ? left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true }))
+      : [h('p.pg-tray-empty', `Deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
+    start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
     start.disabled = !full;
     autoFill.disabled = full;
-    clear.disabled = placed.size === 0;
+    undo.disabled = history.length === 0;
+    clear.hidden = placed.size === 0;
   };
   render();
 
   const el = h('div',
-    header({ title: '', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
-    h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', zoom.zoomOut, zoom.zoomIn)), tray)),
-    h('div.cta.pg-build-cta', h('div.row', clear, autoFill, start)));
-  return { el };
+    header({ title: 'Three decks', onBack: () => backTo(app), right: opponentBadge(app, match) }),
+    h('div.pg-builder', board, hint, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
+    h('div.cta.pg-build-cta', h('div.row', undo, autoFill, start)));
+  return {
+    el,
+    enter: () => coach(app, 'builder', [
+      { target: '.pg-tray .pg-card', text: 'This is your booster. Tap a card to put it in the highlighted deck. Hold a card to read it.' },
+      { target: '.pg-board', text: 'Three decks of five: deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent splits theirs the same way, and you don\'t see how. Tap a deck to fill that one.' },
+      { target: '.pg-head-opp', text: 'Who you\'re facing. Tap to read both sides\' Rings of Power before you split your cards.' },
+    ], { root: el, stillValid: () => el.isConnected }),
+  };
 }
 
 function scoreView(app, match, final) {
@@ -227,8 +291,8 @@ function scoreView(app, match, final) {
   const opponent = paigowOpponent(match.opponentId);
   const hero = heroOf(match);
   const life = playerLife(match);
-  // A campaign's match: saved as it goes, and its outcome counted once it's over.
-  const campaign = !match.campaign ? null : final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
+  // Saved as it goes, and its outcome counted once it's over.
+  const campaign = final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
 
   const roundRows = h('div.pg-rounds', match.decks.map((deck, i) => {
     const played = match.rounds[i];
@@ -243,12 +307,10 @@ function scoreView(app, match, final) {
   }));
 
   const title = final
-    ? h(`div.result-title.${result === MATCH_OUTCOME.WON ? 'victory' : 'defeat'}`, { WON: 'Victory', LOST: 'Defeat', TIE: 'Tie' }[result.toUpperCase()])
+    ? h(`div.result-title.${{ [MATCH_OUTCOME.WON]: 'victory', [MATCH_OUTCOME.LOST]: 'defeat' }[result] ?? 'tie'}`,
+      { [MATCH_OUTCOME.WON]: 'Victory', [MATCH_OUTCOME.LOST]: 'Defeat' }[result] ?? 'Tie')
     : null;
-  const leave = async () => {
-    if (match.campaign) backTo(app, match);
-    else if (final || await app.overlays.confirm({ title: 'Leave the match?', text: 'This match will be lost.', yes: 'Leave', danger: true })) app.go('title');
-  };
+  const leave = () => backTo(app);
   const el = h('div',
     header({ title: '', onBack: leave }),
     h('div.pg-body',
@@ -262,10 +324,8 @@ function scoreView(app, match, final) {
         : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${life.second}.`) : null,
       final && campaign ? h('p.pg-help', campaignNote(result, campaign)) : null,
       roundRows),
-    h('div.cta', final && match.campaign
+    h('div.cta', final
       ? h('button.btn.primary.big', { onclick: () => app.go('campaign') }, 'Continue')
-      : final
-      ? [h('button.btn.primary.big', { onclick: () => app.go('paigow', { heroId: match.heroId ?? DEFAULT_HERO }) }, 'New match'), h('button.btn.ghost', { onclick: () => app.go('title') }, 'Title')]
       : h('button.btn.primary.big', { onclick: () => app.go('battle', { match }) }, `Play round ${round + 1}`)));
   return {
     el,

@@ -23,8 +23,8 @@ tuning tools stay there.
 
 A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain match object), with
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
-scoreboard) and `app/screens/battle.js` (a round), from *Quick match* on the title screen (or as a
-campaign's match, see *The campaign*):
+scoreboard) and `app/screens/battle.js` (a round). Every match is a campaign's (see *The campaign*): the
+title screen has one way in, *Begin* (or *Continue*, with a campaign saved):
 0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry or Pippin (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
    with a Ring of Power of their own (see *Rings of Power*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
@@ -59,8 +59,8 @@ picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
-Burglar Bilbo are Raiders, Saruman, Denethor, Elrond and Old Man Willow are Wardens, the rest Tricksters. The match lives in memory: reloading the page starts a
-new one. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
+Burglar Bilbo are Raiders, Saruman, Denethor, Elrond and Old Man Willow are Wardens, the rest Tricksters. The match is saved with its campaign
+after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
 **An opponent's own setup:** an opponent may have a `setup` in `src/paigow/personas.js` (read with
@@ -261,8 +261,32 @@ card images, so it then works offline. It's registered only when not on localhos
 edits show up on reload.
 
 **Screens:** title → choosing your hero → Pai Gow's deck builder (your 15 cards and three decks) → a round (the
-battle) → the scoreboard → … → the final score. The title has a settings sheet (sound, animation
-speed, auto-pass). The match lives in memory, so reloading starts a new one.
+battle) → the scoreboard → … → the final score, inside a campaign. The title has a settings sheet (see
+*Settings*). The match is saved with its campaign after each round.
+
+**Teaching the format** (`app/coach.js`): the first time you reach the deck builder, and the first time you can
+act in a round, a few coach marks ring something on the screen and say what it does (a tap moves on; *Skip*
+ends them). They're shown once, remembered in `localStorage` (`istari.seen`); *Show tips again* in the settings
+forgets that. *How Pai Gow plays*, on the title screen and in the settings, is a sheet with the format's rules
+(taken from `PAIGOW_RULES` and `CAMPAIGN_RULES`), the campaign's, and the gestures. They teach Pai Gow and the
+app, not Magic: Magic's terms, costs and card frames are the game's own and stay as printed.
+
+**The deck builder:** tap a booster card to put it in the highlighted deck. A placed card shows its mana cost
+and power/toughness; tap it to pick it up, then tap another deck to move it, a card in another deck to swap the
+two, or the card again to send it back to the booster. *Undo* takes back one change at a time (*Clear* and
+*Auto-fill* included). *Auto-fill* (`spreadDecks` in `src/paigow/paigow.js`) deals the loose cards strongest
+first, each to the deck with room that is weakest so far, so the three come out about even. The start button
+says how many cards are still to place.
+
+**Settings:** sound (a switch) and volume, vibration (where the phone has it), animation speed, auto-pass
+priority (off is full control), *How Pai Gow plays*, *Show tips again* and *Credits* (the cards, each portrait's
+card and artist, the fonts). Sheets are dialogs to assistive technology, close on Escape, and hand the focus back.
+
+**Seeing and touching:** interface labels are 10px or more (the miniature card faces in hand, on the stack and
+on the scoreboard are thumbnails: tap or hold for the card at full size). Small controls have a touch area
+bigger than they look. A card's glow also has a shape on its top edge: a spark (playable), a sword (can attack,
+attacking), a shield (can block, blocking). A phone held sideways gets a note to turn it; on a wide screen the
+app keeps a phone's width.
 
 **Playing:**
 - **Whose turn:** the badge in the middle lane reads *Your turn* (gold) or *Opponent's turn*
@@ -328,7 +352,8 @@ artist it comes from (see `src/paigow/personas.js`), and so do the heroes.
 
 **Fonts** stand in for the ones printed on cards: Faustina for Beleren (names, type lines and the
 interface) and Crimson Pro for MPlantin (rules text), both SIL OFL and vendored in `app/vendor/`
-(Latin only, about 125 KB); Cinzel, from Google Fonts, is for titles and banners. Card faces have
+(Latin only, about 125 KB); Cinzel, vendored the same way (about 26 KB), is for titles and banners, so nothing
+is loaded from Google Fonts and titles look the same offline. Card faces have
 light name and type plates with dark text, like a printed card's.
 
 **Attacking and blocking restrictions:** a creature that can't attack, can't block, or can't be

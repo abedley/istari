@@ -50,7 +50,7 @@ const hearts = (lives) => h('div.cp-lives', { 'aria-label': `${lives} ${lives ==
 /** What a set of rings costs in starting life, in words. */
 const lifeLine = (rings) => {
   const { first, second } = playerLife({ rings });
-  return `You start each game on ${first} life going first, ${second} going second.`;
+  return `You start each round on ${first} life going first, ${second} going second.`;
 };
 
 /** How many commons your boosters hold with `extra` more, in words. */
@@ -63,7 +63,7 @@ const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.c
 export function campaignScreen(app, { heroId = null } = {}) {
   let campaign = heroId ? saveCampaign(app, createCampaign({ heroId })) : loadCampaign(app);
   if (!campaign) {
-    queueMicrotask(() => app.go('heroes', { mode: 'campaign' }));
+    queueMicrotask(() => app.go('heroes'));
     return { el: h('div') };
   }
   if (campaign.offer) return offerView(app, campaign);
@@ -136,7 +136,7 @@ function offerView(app, campaign) {
       h('p.cp-offer-lead', `${opponent.name} is beaten. Choose your reward: their Ring of Power, or a common more in every booster.`),
       ringBlock(opponent.emblem),
       h('p.pg-help', able
-        ? `Take the ring, and you start every game with 1 less life. ${lifeLine(after)}`
+        ? `Take the ring, and you start every round with 1 less life. ${lifeLine(after)}`
         : `You already bear ${CAMPAIGN_RULES.maxRings} rings. You can bear no more.`),
       h('p.pg-help', `Or add a common: from now on ${commonsLine(extra, 'your')}`)),
     h('div.cta',
@@ -151,7 +151,7 @@ function overView(app, campaign) {
   const hero = paigowHero(campaign.heroId);
   const again = () => {
     saveCampaign(app, null);
-    app.go('heroes', { mode: 'campaign' });
+    app.go('heroes');
   };
   const home = () => {
     saveCampaign(app, null);
@@ -170,6 +170,6 @@ function overView(app, campaign) {
       h('p.pg-help', `${campaign.history.length} ${campaign.history.length === 1 ? 'match' : 'matches'} played.`)),
     h('div.cta',
       h('button.btn.primary.big', { onclick: again }, 'New campaign'),
-      h('button.btn.ghost', { onclick: home }, 'Title')));
+      h('button.btn.ghost', { onclick: home }, 'Back to the title')));
   return { el };
 }

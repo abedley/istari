@@ -17,9 +17,12 @@ trademarks of Wizards of the Coast; this project isn't endorsed by Wizards of th
 
 `faustina.woff2`, `crimson-pro.woff2` and `crimson-pro-italic.woff2` (Latin subsets, from
 Google Fonts, written with `fonts.css` by `tools/vendor-fonts.js --text`) stand in for the
-fonts printed on cards: Beleren (names, type lines) and MPlantin (rules text).
+fonts printed on cards: Beleren (names, type lines) and MPlantin (rules text). `cinzel.woff2`,
+made the same way, is for titles and banners.
 
 - **Faustina** by Omnibus-Type, https://github.com/Omnibus-Type/Faustina. SIL Open Font
   License 1.1.
 - **Crimson Pro** by Jacques Le Bailly, https://github.com/Fonthausen/CrimsonPro. SIL Open
   Font License 1.1.
+- **Cinzel** by Natanael Gama, https://github.com/NDISCOVER/Cinzel. SIL Open Font License
+  1.1.

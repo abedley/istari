@@ -33,7 +33,7 @@ export {
 export { AI_KIND, createCpuController } from './ai/cpu.js';
 export {
   PAIGOW_RULES, PAIGOW_POOL, POOL_BY_RARITY, BOOSTER, PLAYER_ID, CPU_ID, ROUND_RESULT, MATCH_OUTCOME,
-  cardStrength, openBooster, arrangeCpuDecks, createMatch, validDecks, setDecks, score, outcome, nextRound,
+  cardStrength, spreadDecks, openBooster, arrangeCpuDecks, createMatch, validDecks, setDecks, score, outcome, nextRound,
   playerStartsRound, recordRound, roundSetup,
 } from './paigow/paigow.js';
 export { PAIGOW_OPPONENTS, paigowOpponent } from './paigow/personas.js';

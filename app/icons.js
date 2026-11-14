@@ -42,6 +42,9 @@ const PATHS = {
   plus: 'M12 4v16M4 12h16',
   minus: 'M4 12h16',
   check: 'M4 12l5 5L20 6',
+  // A tray of small cards, and of big ones (the deck builder's zoom).
+  gridSmall: 'M4 4h4v4h-4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4h-4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4h-4zM10 16h4v4h-4zM16 16h4v4h-4z',
+  gridLarge: 'M4 4h7v7h-7zM13 4h7v7h-7zM4 13h7v7h-7zM13 13h7v7h-7z',
   bolt: 'M13 2 4 14h7l-1 8 9-12h-7z',
   flag: 'M5 21V3m0 1h12l-3 4 3 4H5',
   zzz: 'M4 5h6L4 12h6M13 12h5l-5 6h5',

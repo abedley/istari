@@ -6,9 +6,18 @@ let context = null;
 let master = null;
 let noiseBuffer = null;
 let enabled = true;
+let volume = 1;
+/** The master gain at full volume. */
+const FULL = 0.22;
 
 export function setSoundEnabled(on) {
   enabled = on;
+}
+
+/** The volume, 0 to 1 (the settings' slider). */
+export function setVolume(value) {
+  volume = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 1));
+  if (master) master.gain.value = FULL * volume;
 }
 
 /** Call from a user gesture (the app does on the first pointerdown). */
@@ -21,7 +30,7 @@ export function unlockAudio() {
   if (!AudioContext) return;
   context = new AudioContext();
   master = context.createGain();
-  master.gain.value = 0.22;
+  master.gain.value = FULL * volume;
   const compressor = context.createDynamicsCompressor();
   master.connect(compressor).connect(context.destination);
   noiseBuffer = context.createBuffer(1, context.sampleRate * 0.5, context.sampleRate);

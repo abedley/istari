@@ -11,7 +11,7 @@ import { paigowOpponent } from '../../src/paigow/personas.js';
 /** A round of a Pai Gow match (src/paigow/paigow.js): `match` is the match so far, with the decks set. */
 export function battleScreen(app, { match = null } = {}) {
   if (!match?.decks) {
-    queueMicrotask(() => app.go('paigow'));
+    queueMicrotask(() => app.go('campaign'));
     return { el: h('div') };
   }
   const setup = roundSetup(match);
@@ -22,7 +22,7 @@ export function battleScreen(app, { match = null } = {}) {
   const resultText = (end) => {
     const result = resultOf(end);
     const decided = outcome(recordRound(match, result));
-    if (decided) return { [MATCH_OUTCOME.WON]: 'Victory', [MATCH_OUTCOME.LOST]: 'Defeat', [MATCH_OUTCOME.TIE]: 'Match tied' }[decided];
+    if (decided) return { [MATCH_OUTCOME.WON]: 'Victory', [MATCH_OUTCOME.LOST]: 'Defeat', [MATCH_OUTCOME.TIE]: 'Tie' }[decided];
     return { [ROUND_RESULT.WON]: 'Round won', [ROUND_RESULT.LOST]: 'Round lost', [ROUND_RESULT.DRAWN]: 'Round drawn' }[result];
   };
   const onEnd = (end) => {
