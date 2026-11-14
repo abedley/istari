@@ -210,35 +210,23 @@ function buildView(app, match) {
   let selected = 0;
   /** A placed card chosen to move (its place in `match.cards`), or null. */
   let picked = null;
-  /** What Undo goes back to: each earlier `placed` and `selected`. */
-  const history = [];
   const indexes = match.cards.map((_, n) => n);
   const deckIds = [...Array(count).keys()];
 
   const deckOf = (i) => indexes.filter((n) => placed.get(n) === i);
   const free = (i) => deckOf(i).length < deckSize;
   const board = h('div.pg-board');
-  const hint = h('p.pg-hint', { 'aria-live': 'polite' });
   const tray = h('div.pg-tray');
   const trayTitle = h('h4');
   const zoom = trayZoom(app, tray);
   const start = h('button.btn.primary.pg-start', { onclick: () => play() });
   const autoFill = h('button.btn', { onclick: () => fill() }, 'Auto-fill');
-  const undo = h('button.btn.ghost', { onclick: () => back() }, 'Undo');
   const clear = h('button.btn.ghost.small.pg-clear', { onclick: () => change(() => { placed = new Map(); selected = 0; }) }, 'Clear');
 
-  /** Makes a change that Undo can take back. */
+  /** Makes a change to the decks, dropping any card picked up to move. */
   const change = (make) => {
-    history.push({ placed: new Map(placed), selected });
     picked = null;
     make();
-    render();
-  };
-  const back = () => {
-    const last = history.pop();
-    if (!last) return;
-    ({ placed, selected } = last);
-    picked = null;
     render();
   };
   const place = (n) => {
@@ -320,17 +308,13 @@ function buildView(app, match) {
         if (event.target.closest('.pg-chip:not(.empty)')) return;
         tapDeck(i);
       } },
-      h('div.pg-col-label', h('b', ROADS[i] ?? `Road ${i + 1}`), h('span', `Round ${i + 1} · ${cards.length}/${deckSize}`)),
+      h('div.pg-col-label', { 'aria-label': `${ROADS[i] ?? `Road ${i + 1}`}, round ${i + 1}, ${cards.length} of ${deckSize}` }, h('b', ROADS[i] ?? `Road ${i + 1}`), h('span', `${cards.length}/${deckSize}`)),
       ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked })),
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
     const left = indexes.filter((n) => !placed.has(n));
     const toPlace = count * deckSize - placed.size;
     const full = toPlace === 0;
-    hint.textContent = picked !== null
-      ? 'Tap another deck to move it there, a card in another deck to swap them, or tap it again to take it out.'
-      : full ? 'Tap a placed card to move it or swap it. Hold any card to read it.'
-        : 'Tap a card to add it to the highlighted deck. Hold any card to read it.';
     trayTitle.textContent = full
       ? (left.length ? `All decks full · ${left.length} left out` : 'All cards placed')
       : `Your booster · ${left.length} left${left.length > toPlace ? ` · ${toPlace} to place` : ''}`;
@@ -340,15 +324,14 @@ function buildView(app, match) {
     start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
     start.disabled = !full;
     autoFill.disabled = full;
-    undo.disabled = history.length === 0;
     clear.hidden = placed.size === 0;
   };
   render();
 
   const el = h('div',
     header({ title: 'Three roads', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
-    h('div.pg-builder', board, hint, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
-    h('div.cta.pg-build-cta', h('div.row', undo, autoFill, start)));
+    h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
+    h('div.cta.pg-build-cta', h('div.row', autoFill, start)));
   return {
     el,
     enter: async () => {
