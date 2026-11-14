@@ -213,7 +213,10 @@ function buildView(app, match) {
   const indexes = match.cards.map((_, n) => n);
   const deckIds = [...Array(count).keys()];
 
-  const deckOf = (i) => indexes.filter((n) => placed.get(n) === i);
+  /** Where each placed card sits in its deck: a card keeps its spot, a new one goes at the end, and a swap trades spots. */
+  let slot = new Map();
+  let nextSlot = 0;
+  const deckOf = (i) => indexes.filter((n) => placed.get(n) === i).sort((a, b) => slot.get(a) - slot.get(b));
   const free = (i) => deckOf(i).length < deckSize;
   const board = h('div.pg-board');
   const tray = h('div.pg-tray');
@@ -227,6 +230,8 @@ function buildView(app, match) {
   const change = (make) => {
     picked = null;
     make();
+    for (const n of [...slot.keys()]) if (!placed.has(n)) slot.delete(n);
+    for (const n of placed.keys()) if (!slot.has(n)) slot.set(n, nextSlot++);
     render();
   };
   const place = (n) => {
@@ -250,6 +255,9 @@ function buildView(app, match) {
         const deck = placed.get(n);
         placed.set(n, placed.get(other));
         placed.set(other, deck);
+        const spot = slot.get(n);
+        slot.set(n, slot.get(other));
+        slot.set(other, spot);
       });
     } else {
       picked = n;
@@ -262,7 +270,7 @@ function buildView(app, match) {
     if (picked !== null && placed.get(picked) !== i && free(i)) {
       const n = picked;
       app.sound('select');
-      change(() => { placed.set(n, i); selected = i; });
+      change(() => { placed.set(n, i); slot.set(n, nextSlot++); selected = i; });
       return;
     }
     picked = null;
