@@ -14,6 +14,12 @@ export const BANTER = Object.freeze({
   COMEBACK: 'comeback',
   /** Was winning, now losing. */
   COLLAPSE: 'collapse',
+  /** A creature of the other player's died. */
+  KILL: 'kill',
+  /** A creature of its own that mattered died. */
+  LOSS: 'loss',
+  /** The other player used a Ring of Power that isn't their own character's: one taken on the road. */
+  RING: 'ring',
 });
 
 export const BANTER_KINDS = Object.freeze(Object.values(BANTER));
@@ -59,6 +65,59 @@ export class SwingWatch {
     this.#mood = mood;
     if (!was) return null;
     return mood === 'winning' ? BANTER.COMEBACK : BANTER.COLLAPSE;
+  }
+}
+
+/** A creature that mattered: a legend, or one whose power and toughness come to this much. */
+const MATTERS_AT = 6;
+
+/**
+ * Watches what happens on the board for moments worth a word from `cpu` (a player id): a creature of the other
+ * player's dying (BANTER.KILL), one of its own that mattered dying (BANTER.LOSS: a legend, or power plus toughness
+ * of 6 or more; tokens never count), and the other player using a Ring of Power besides their own character's
+ * (BANTER.RING; `ownEmblem` is that character's emblem id). It speaks at most once in `gap` turns (`spoke` records
+ * a line said for any reason, a swing included), so it doesn't chatter.
+ */
+export class MomentWatch {
+  #cpu;
+  #ownEmblem;
+  #gap;
+  /** The battlefield as last seen: what died is looked up here, since it's gone from the new state. */
+  #before = new Map();
+  #lastSpoke = -Infinity;
+
+  constructor({ cpu, ownEmblem = null, gap = 2 } = {}) {
+    this.#cpu = cpu;
+    this.#ownEmblem = ownEmblem;
+    this.#gap = gap;
+  }
+
+  /** A line was said on `turn`. */
+  spoke(turn) {
+    this.#lastSpoke = turn;
+  }
+
+  /**
+   * The events since the last state, and that state. Returns a moment's kind, or null. Asking doesn't count as
+   * speaking: call `spoke` when the line is said.
+   */
+  observe(events, state) {
+    const before = this.#before;
+    this.#before = new Map((state.battlefield ?? []).map((permanent) => [permanent.id, permanent]));
+    if (state.turn - this.#lastSpoke < this.#gap) return null;
+    let kind = null;
+    for (const { name, payload } of events) {
+      if (name === 'abilityActivated' && payload.playerId !== this.#cpu) {
+        const emblem = state.players.find((p) => p.id === payload.playerId)?.emblems?.find((e) => e.id === payload.cardId);
+        if (emblem && emblem.emblemId !== this.#ownEmblem) kind = kind ?? BANTER.RING;
+      }
+      if (name !== 'creatureDied' && name !== 'permanentDestroyed') continue;
+      const dead = before.get(payload.cardId);
+      if (!dead || dead.token || !dead.types?.includes('Creature')) continue;
+      if (dead.controllerId !== this.#cpu) kind = BANTER.KILL;
+      else if (kind !== BANTER.KILL && (dead.supertypes?.includes('Legendary') || (dead.power ?? 0) + (dead.toughness ?? 0) >= MATTERS_AT)) kind = BANTER.LOSS;
+    }
+    return kind;
   }
 }
 

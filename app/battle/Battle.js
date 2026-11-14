@@ -15,7 +15,7 @@ import { actingPlayerId } from '../../src/ai/simulate.js';
 import { createCpuController } from '../../src/ai/cpu.js';
 import { castsAtInstantSpeedFor } from '../../src/ai/manaPlanning.js';
 import {
-  BANTER, SwingWatch, outlook, pickLine,
+  BANTER, SwingWatch, MomentWatch, outlook, pickLine,
 } from '../../src/ai/banter.js';
 import { h, wait } from '../dom.js';
 import { icon } from '../icons.js';
@@ -90,6 +90,7 @@ export class Battle {
   #unsubscribe = [];
   /** What the opponent says (banter.js): its lines, those said, and swings in its outlook. */
   #banter = null;
+  #moments;
   #said = new Set();
   #swing = new SwingWatch();
   #outlookTurn = 0;
@@ -112,7 +113,7 @@ export class Battle {
    * not Victory, Defeat or Draw (null keeps those).
    */
   constructor(app, {
-    setup, meInfo, oppInfo, onEnd, subtitle = '', fastForward = false, resultText = () => null,
+    setup, meInfo, oppInfo, onEnd, subtitle = '', fastForward = false, resultText = () => null, place = null,
   }) {
     this.#app = app;
     this.#onEnd = onEnd;
@@ -123,7 +124,15 @@ export class Battle {
     this.#game = new Game(setup.game);
     this.#view = new BoardView(app, { me: this.#me, opp: this.#opp, meInfo, oppInfo });
     this.el = this.#view.el;
+    // Where the round is fought (src/paigow/places.js): its picture behind the board, dimmed (app.css, "place").
+    if (place?.art) {
+      this.el.classList.add('placed');
+      this.el.style.setProperty('--place-art', `url("${place.art}")`);
+      this.el.style.setProperty('--place-at', `${place.x}% ${place.y}%`);
+    }
     this.#banter = setup.cpu.banter ?? null;
+    // The player's first emblem is their own character's; any other is a ring taken on the road.
+    this.#moments = new MomentWatch({ cpu: this.#opp, ownEmblem: setup.game.emblems?.[this.#me]?.[0] ?? null });
     this.#cpu = createCpuController(this.#game, setup.cpu, { delayMs: Math.round(650 * app.settings.speed) });
     if (this.#cpu.on) this.#unsubscribe.push(this.#cpu.on('thinking', ({ active }) => this.#view.setThinking(active)));
     this.#unsubscribe.push(this.#game.onAny((name, payload) => this.#onEvent(name, payload)));
@@ -134,7 +143,7 @@ export class Battle {
       // At the top right, above the draw warning (BoardView's top actions).
       this.#view.parts.topActions.prepend(this.#fastForwardBtn);
     }
-    this.#intro = { meInfo, oppInfo, subtitle, setup };
+    this.#intro = { meInfo, oppInfo, subtitle, setup, place };
     // Re-measure whenever the board changes size. iOS fires `resize` on rotation before
     // the new layout settles, so the board's own size (ResizeObserver) is what counts;
     // the events, with a late second look, are a fallback.
@@ -161,19 +170,20 @@ export class Battle {
   async start() {
     if (this.#intro.started) return;
     this.#intro.started = true;
-    const { meInfo, oppInfo, subtitle, setup } = this.#intro;
+    const { meInfo, oppInfo, subtitle, setup, place } = this.#intro;
     const defs = this.#app.definitions;
     // The decks' art, the portraits, and the tokens' (few) art, so tokens don't arrive blank.
     const tokens = Object.keys(defs).filter((id) => id.startsWith('token:'));
     const urls = [...setup.game.decks[this.#me], ...setup.game.decks[this.#opp], ...tokens].map((id) => defs[id]?.image?.art)
-      .concat(meInfo.portrait?.art, oppInfo.portrait?.art);
+      .concat(meInfo.portrait?.art, oppInfo.portrait?.art, place?.art);
     // A side's Rings of Power, when it has any (`{ name, text }` each): one in full, several by name.
     const power = (info) => {
       const rings = (info.powers ?? [info.power]).filter(Boolean);
       if (rings.length > 1) return h('div.vs-power', h('b', rings.map((r) => r.name).join(' · ')));
       return rings.length ? h('div.vs-power', h('b', rings[0].name), ' ', (rings[0].powers ?? [rings[0]]).map((p) => p.text).join(' ')) : null;
     };
-    const intro = h('div.versus',
+    const intro = h(`div.versus${place?.art ? '.placed' : ''}`,
+      place ? h('div.vs-place', h('div.vs-place-name', place.name), h('div.vs-place-line', place.line)) : null,
       h('div.vs-side.vs-opp', crest(oppInfo, { size: 'lg' }), h('div.vs-name', oppInfo.name), subtitle ? h('div.vs-sub', subtitle) : null, power(oppInfo)),
       h('div.vs-mark', 'VS'),
       h('div.vs-side.vs-me', crest(meInfo, { size: 'lg' }), h('div.vs-name', meInfo.name), power(meInfo)));
@@ -229,6 +239,7 @@ export class Battle {
       await timed('render', () => this.#view.render(batch.state, { events: batch.events, speed, animate }));
       this.#greet(batch.state);
       this.#watchSwing(batch.state);
+      this.#watchMoments(batch.events, batch.state);
     }
     this.#presenting = false;
     if (!this.#finished) this.#settle();
@@ -505,8 +516,17 @@ export class Battle {
   /** The opponent says a line of `kind`, if it has one. Returns whether it spoke. */
   #say(kind) {
     const line = pickLine(this.#banter, kind, { used: this.#said });
-    if (line) this.#view.say(line);
+    if (line) {
+      this.#view.say(line);
+      this.#moments.spoke(this.#state?.turn ?? 0);
+    }
     return Boolean(line);
+  }
+
+  /** A creature dying, or a taken ring used: the opponent may have a word for it (MomentWatch, banter.js). */
+  #watchMoments(events, state) {
+    const moment = this.#moments.observe(events, state);
+    if (moment && this.#banter && this.#greeted && state.status === GAME_STATUS.IN_PROGRESS) this.#say(moment);
   }
 
   /** The opening line, once both players have kept their hands. */

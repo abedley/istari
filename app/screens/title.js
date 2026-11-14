@@ -18,5 +18,5 @@ export function titleScreen(app) {
     h('footer.title-foot',
       h('button.icon-btn', { onclick: () => app.overlays.settings(), 'aria-label': 'Settings' }, icon('gear')),
       h('button.btn.ghost.title-how', { onclick: () => showHowToPlay(app) }, 'How Pai Gow plays')));
-  return { el };
+  return { el, ambience: 'shire' };
 }

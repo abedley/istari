@@ -42,6 +42,9 @@ const PATHS = {
   plus: 'M12 4v16M4 12h16',
   minus: 'M4 12h16',
   check: 'M4 12l5 5L20 6',
+  // A seed-cake for the road (a life in the campaign), and the crumbs of one that's been eaten.
+  seedCake: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM7.9 9a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM13.4 8.5a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM10.9 12.5a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM7.4 15a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM14.4 15a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0z',
+  crumbs: 'M5.8 15a2.2 2.2 0 1 0 4.4 0 2.2 2.2 0 1 0-4.4 0zM12.9 16.5a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0zM10.7 11a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0zM16 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0zM5.1 10.5a0.9 0.9 0 1 0 1.8 0 0.9 0.9 0 1 0-1.8 0z',
   // A tray of small cards, and of big ones (the deck builder's zoom).
   gridSmall: 'M4 4h4v4h-4zM10 4h4v4h-4zM16 4h4v4h-4zM4 10h4v4h-4zM10 10h4v4h-4zM16 10h4v4h-4zM4 16h4v4h-4zM10 16h4v4h-4zM16 16h4v4h-4z',
   gridLarge: 'M4 4h7v7h-7zM13 4h7v7h-7zM4 13h7v7h-7zM13 13h7v7h-7z',
@@ -81,7 +84,7 @@ const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'ar
   'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'pan', 'willow', 'mug', 'teapot']);
 
 /** Icons whose inner shapes are holes. */
-const EVEN_ODD = new Set(['eye']);
+const EVEN_ODD = new Set(['eye', 'seedCake']);
 
 /**
  * Each planeswalker power's symbol (by emblem id), so several side by side can be told apart at a glance.

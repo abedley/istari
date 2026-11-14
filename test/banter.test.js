@@ -65,3 +65,67 @@ test('outlook is even at the start, and doesn\'t look at the other hand', () => 
   const swapped = { ...state, players: [{ ...state.players[0], hand: lands }, state.players[1]] };
   assert.equal(outlook(swapped, 'p2'), outlook(state, 'p2'));
 });
+
+test('MomentWatch: a death or a taken ring gets a word, but not twice in two turns', async () => {
+  const { MomentWatch } = await import('../src/ai/banter.js');
+  const creature = (id, controllerId, more = {}) => ({ id, controllerId, types: ['Creature'], power: 2, toughness: 2, ...more });
+  const players = [
+    { id: 'me', emblems: [{ id: 'me-emblem-1', emblemId: 'frodo' }, { id: 'me-emblem-2', emblemId: 'gandalf' }] },
+    { id: 'cpu', emblems: [{ id: 'cpu-emblem-1', emblemId: 'sauron' }] },
+  ];
+  const board = [creature('a', 'me'), creature('b', 'cpu'), creature('c', 'cpu', { power: 4, toughness: 4 }),
+    creature('d', 'cpu', { supertypes: ['Legendary'] }), creature('t', 'me', { token: true }), { id: 'x', controllerId: 'me', types: ['Artifact'] }];
+  const state = (turn, battlefield = board) => ({ turn, players, battlefield });
+  const died = (cardId, name = 'creatureDied') => ({ name, payload: { cardId } });
+  const watch = () => {
+    const w = new MomentWatch({ cpu: 'cpu', ownEmblem: 'frodo' });
+    assert.equal(w.observe([], state(1)), null);
+    return w;
+  };
+  // One of yours dies: a gloat. A token, or an artifact, doesn't count.
+  assert.equal(watch().observe([died('a')], state(1)), BANTER.KILL);
+  assert.equal(watch().observe([died('a', 'permanentDestroyed')], state(1)), BANTER.KILL);
+  assert.equal(watch().observe([died('t'), died('x', 'permanentDestroyed')], state(1)), null);
+  // One of its own: only when it mattered (big, or a legend).
+  assert.equal(watch().observe([died('b')], state(1)), null);
+  assert.equal(watch().observe([died('c')], state(1)), BANTER.LOSS);
+  assert.equal(watch().observe([died('d')], state(1)), BANTER.LOSS);
+  // A trade: the gloat wins.
+  assert.equal(watch().observe([died('c'), died('a')], state(1)), BANTER.KILL);
+  // A ring taken on the road, not your own character's, and not the CPU's.
+  const ring = (cardId, playerId = 'me') => ({ name: 'abilityActivated', payload: { playerId, cardId } });
+  assert.equal(watch().observe([ring('me-emblem-2')], state(1)), BANTER.RING);
+  assert.equal(watch().observe([ring('me-emblem-1')], state(1)), null);
+  assert.equal(watch().observe([ring('cpu-emblem-1', 'cpu')], state(1)), null);
+  // Having spoken on turn 3, it holds its tongue on turn 4 and speaks again on turn 5.
+  const w = watch();
+  w.spoke(3);
+  assert.equal(w.observe([died('a')], state(4, board.slice(1))), null);
+  assert.equal(w.observe([], state(4)), null);
+  assert.equal(w.observe([died('a')], state(5)), BANTER.KILL);
+});
+
+test('MomentWatch reads a real game: the state has what it looks for', async () => {
+  const { MomentWatch } = await import('../src/ai/banter.js');
+  const { createMatch, setDecks, roundSetup, PLAYER_ID, CPU_ID } = await import('../src/paigow/paigow.js');
+  // Tom Bombadil's ring, taken on the road: "Untap target creature you control", so it needs a creature.
+  let match = createMatch({ seed: 3, heroId: 'frodo', opponentId: 'oldManWillow', rings: ['galadriel'] });
+  match = setDecks(match, [match.cards.slice(0, 5), match.cards.slice(5, 10), match.cards.slice(10, 15)]);
+  const setup = roundSetup(match);
+  assert.equal(setup.game.emblems[PLAYER_ID][0], 'frodo');
+  const game = new Game(setup.game);
+  const events = [];
+  game.onAny((name, payload) => { if (name !== 'state') events.push({ name, payload }); });
+  game.start();
+  const state = game.getState();
+  const mine = state.players.find((p) => p.id === PLAYER_ID);
+  assert.deepEqual(mine.emblems.map((e) => e.emblemId), ['frodo', 'galadriel']);
+  // Old Man Willow starts with Forests: permanents carry what the watch reads.
+  const forest = state.battlefield.find((p) => p.controllerId === CPU_ID);
+  assert.ok(forest.types.includes('Land') && forest.supertypes.includes('Basic'), JSON.stringify(Object.keys(forest)));
+  const watch = new MomentWatch({ cpu: CPU_ID, ownEmblem: setup.game.emblems[PLAYER_ID][0] });
+  assert.equal(watch.observe(events, state), null);
+  // An activation of the taken ring, as the engine reports one.
+  const taken = mine.emblems[1];
+  assert.equal(watch.observe([{ name: 'abilityActivated', payload: { playerId: PLAYER_ID, cardId: taken.id, abilityId: taken.abilities[0].id } }], state), BANTER.RING);
+});

@@ -953,7 +953,10 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-board { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .pg-col { display: flex; flex-direction: column; gap: 4px; padding: 5px 4px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, .06); background: rgba(255, 255, 255, .03); cursor: pointer; }
 .pg-col.selected { border-color: var(--gold); background: rgba(233, 196, 106, .12); }
-.pg-col-label { text-align: center; white-space: nowrap; font: 700 10px var(--ui); letter-spacing: .02em; text-transform: uppercase; color: var(--muted); }
+.pg-col-label { display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap; color: var(--muted); }
+.pg-col-label b { font: 700 13px var(--display); letter-spacing: .03em; color: #d6cdb4; }
+.pg-col-label span { font: 700 10px var(--ui); letter-spacing: .04em; text-transform: uppercase; }
+.pg-col.selected .pg-col-label b { color: var(--gold); }
 .pg-col.selected .pg-col-label { color: var(--gold); }
 .pg-chip { position: relative; display: block; width: 100%; aspect-ratio: 5 / 2; padding: 0; border: 0; border-radius: 6px; overflow: hidden; background: #111 center / cover no-repeat; cursor: pointer; -webkit-touch-callout: none; user-select: none; }
 .pg-chip .pg-chip-name { position: absolute; left: 0; right: 0; bottom: 0; padding: 8px 3px 2px; background: linear-gradient(transparent, rgba(0, 0, 0, .88) 45%); color: #fff; font: 600 10px/1.1 var(--ui); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -1024,9 +1027,10 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .power-side .hero-name { font-size: 17px; }
 
 /* ---------------------------------------------------------------- campaign */
-.cp-lives { display: flex; gap: 3px; font-size: 20px; line-height: 1; padding-right: 4px; }
-.cp-heart { color: rgba(255, 255, 255, .25); }
-.cp-heart.full { color: #e0524f; text-shadow: 0 0 8px rgba(224, 82, 79, .55); }
+/* Lives: seed-cakes for the road, and crumbs where one was eaten. */
+.cp-lives { display: flex; gap: 4px; font-size: 22px; line-height: 1; padding-right: 4px; }
+.cp-cake { display: grid; color: rgba(255, 255, 255, .28); }
+.cp-cake.full { color: #e2b96a; filter: drop-shadow(0 0 5px rgba(226, 185, 106, .5)); }
 .cp-body { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 8px; display: flex; flex-direction: column; gap: 14px; }
 .cp-section h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .cp-path { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -1109,4 +1113,116 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 @media (orientation: landscape) and (max-height: 520px) and (pointer: coarse) {
   #rotate { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 24px; background: var(--bg0); color: var(--ink); font: 700 20px var(--display); text-align: center; }
   #rotate p { margin: 0; }
+}
+
+/* ---------------------------------------------------------------- place: where a round is fought (src/paigow/places.js)
+   Its picture behind the board, dimmed enough that cards, glows and text read as they did on the plain table. */
+.battle.placed::before {
+  content: ''; position: absolute; inset: -10px; z-index: -1; pointer-events: none;
+  background:
+    /* Darkest behind the two players' bars, where the dimmest text is (card counts); lighter over the board. */
+    linear-gradient(180deg, rgba(8, 8, 6, .92) 0%, rgba(8, 8, 6, .9) 9%, rgba(8, 8, 6, .74) 20%, rgba(8, 8, 6, .78) 48%, rgba(8, 8, 6, .74) 76%, rgba(6, 6, 4, .9) 86%, rgba(6, 6, 4, .95) 100%),
+    var(--place-art) var(--place-at, 50% 50%) / cover no-repeat;
+  filter: blur(2px) saturate(.9);
+}
+/* The versus screen: the place undimmed at the middle, with its name. */
+.versus.placed { background: linear-gradient(180deg, rgba(8, 8, 6, .88), rgba(8, 8, 6, .5) 45%, rgba(8, 8, 6, .5) 55%, rgba(8, 8, 6, .9)), var(--place-art) var(--place-at, 50% 50%) / cover no-repeat; }
+.vs-place { position: absolute; left: 16px; right: 16px; top: calc(var(--safe-top) + 14px); text-align: center; animation: tagline-in .6s .2s ease-out both; }
+.vs-place-name { font: 800 20px var(--title); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 6px rgba(0, 0, 0, .9); }
+.vs-place-line { margin-top: 4px; font: italic 15px/1.25 var(--rules); color: #e6dcc0; text-shadow: 0 1px 4px rgba(0, 0, 0, .95); }
+
+/* ---------------------------------------------------------------- road map (app/screens/roadMap.js)
+   A parchment with the road drawn on it. --paper/--ink/--mapgold shift with the rings you bear (.burden-N):
+   each ring darkens the parchment and cools its gold. */
+.rm { --paper1: #d9c69a; --paper2: #b99f6c; --ink: #2c2113; --ink-soft: rgba(44, 33, 19, .8); --mapgold: #b8862b; --eye: .22;
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin: 0 10px; border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(233, 196, 106, .45), 0 4px 14px rgba(0, 0, 0, .5); background: var(--paper2); }
+.rm.burden-1 { --paper1: #c9b68d; --paper2: #a48d62; --mapgold: #a5822f; --eye: .42; }
+.rm.burden-2 { --paper1: #b3a283; --paper2: #8a7858; --mapgold: #94803f; --eye: .62; }
+/* From the third ring the parchment is dark enough that its ink is light. */
+.rm.burden-3 { --paper1: #7d7260; --paper2: #5a5042; --mapgold: #a39a6c; --eye: .82; --ink: #f2e4c4; --ink-soft: rgba(242, 228, 196, .8); }
+.rm.burden-4 { --paper1: #645c52; --paper2: #453e37; --mapgold: #a09d88; --eye: 1; --ink: #f2e4c4; --ink-soft: rgba(242, 228, 196, .8); }
+.rm-inner { position: relative; width: 100%; color: var(--ink);
+  background: var(--grain), radial-gradient(120% 60% at 50% 100%, var(--paper1), transparent 70%), linear-gradient(0deg, var(--paper1) 0%, var(--paper2) 70%, #4a2f24 100%);
+  background-size: 96px 96px, auto, auto; transition: background .6s; }
+/* The edges of an old map: darker, as if handled. */
+.rm-inner::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 40px rgba(60, 40, 15, .55); }
+.rm-road { position: absolute; inset: 0; }
+.rm-road svg { width: 100%; height: 100%; display: block; }
+.rm-road path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: round; }
+.rm-road-edge { stroke: rgba(60, 42, 18, .22); stroke-width: 9; }
+.rm-road-line { stroke: rgba(60, 42, 18, .7); stroke-width: 2.5; stroke-dasharray: 2 8; }
+.rm-road-done { stroke: var(--mapgold); stroke-width: 4; }
+.rm-region { position: absolute; left: 0; right: 0; text-align: center; font: 800 12px var(--title); letter-spacing: .42em; text-transform: uppercase; color: var(--ink-soft); pointer-events: none; }
+.rm-region-foot { bottom: 14px; }
+.rm-region-head { top: 14px; color: rgba(255, 210, 190, .6); }
+.rm-eye { position: absolute; top: 34px; left: 50%; width: 46px; height: 46px; margin-left: -23px; display: grid; place-items: center; font-size: 40px; color: #ff6a3a; opacity: calc(.25 + var(--eye) * .75); transform: scaleY(calc(.3 + var(--eye) * .7)); filter: drop-shadow(0 0 calc(var(--eye) * 12px) rgba(255, 90, 40, .9)); transition: transform .8s var(--ease), opacity .8s; pointer-events: none; }
+/* A stop: a round picture of its place on the road, with its name to the side that has room. */
+.rm-stop { position: absolute; width: 60px; height: 60px; margin: 0 0 -30px -30px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.rm-vignette { position: absolute; inset: 0; border-radius: 50%; background: #3a2c18 center / cover no-repeat; box-shadow: 0 0 0 2px #2a1c06, 0 0 0 4px var(--mapgold), 0 0 0 5px rgba(255, 241, 194, .8), 0 4px 10px rgba(0, 0, 0, .5); display: grid; place-items: center; }
+.rm-stop.later .rm-vignette { filter: grayscale(.75) brightness(.8); box-shadow: 0 0 0 2px #2a1c06, 0 0 0 3.5px rgba(90, 70, 40, .8), 0 3px 8px rgba(0, 0, 0, .4); }
+.rm-stop.beaten .rm-vignette::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: rgba(20, 30, 14, .45); }
+.rm-mark { position: relative; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #3f8f57; color: #fff; font-size: 16px; box-shadow: 0 0 0 2px #fff6d8, 0 2px 5px rgba(0, 0, 0, .5); }
+.rm-stop.next { width: 84px; height: 84px; margin: 0 0 -42px -42px; z-index: 2; }
+.rm-stop.next .rm-vignette { box-shadow: 0 0 0 2px #2a1c06, 0 0 0 5px var(--gold), 0 0 0 6px #fff1c2, 0 0 22px 6px rgba(233, 196, 106, .8), 0 6px 14px rgba(0, 0, 0, .55); }
+.rm-stop.next .rm-vignette::after { content: ''; position: absolute; inset: -9px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255, 241, 194, .7); animation: glow 1.6s ease-in-out infinite; }
+.rm-face { position: absolute; right: -10px; bottom: -8px; z-index: 1; }
+.rm-face .crest { width: 40px; height: 40px; font-size: 28px; }
+.rm-label { position: absolute; top: 50%; width: 132px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 1px; text-align: left; pointer-events: none; }
+.rm-stop.left .rm-label { left: calc(100% + 12px); }
+.rm-stop.right .rm-label { right: calc(100% + 12px); text-align: right; align-items: flex-end; }
+.rm-stop.next.left .rm-label { left: calc(100% + 18px); }
+.rm-stop.next.right .rm-label { right: calc(100% + 18px); }
+.rm-place { font: 800 14px/1.15 var(--display); color: var(--ink); }
+.rm-who { font: italic 13px/1.15 var(--rules); color: var(--ink-soft); }
+.rm-stop.next .rm-place { font-size: 17px; }
+.rm-stop.next .rm-who { font: 700 14px/1.15 var(--display); color: var(--ink); }
+.rm-stop.later .rm-place, .rm-stop.later .rm-who { color: var(--ink-soft); }
+.rm-note { font: 700 11px var(--ui); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
+.rm-note.lost { align-self: flex-start; padding: 1px 6px; border-radius: 8px; background: #8f1f26; color: #fff; }
+.rm-stop.right .rm-note.lost { align-self: flex-end; }
+/* Near the Dark Tower the parchment is dark: light ink there. */
+.rm-stop:nth-last-of-type(-n+2) .rm-place { color: #f2e4c4; }
+.rm-stop:nth-last-of-type(-n+2) .rm-who { color: rgba(242, 228, 196, .8); }
+/* You, standing at the next stop. */
+.rm-hero { position: absolute; z-index: 3; width: 38px; height: 38px; margin: 0 0 -58px -62px; pointer-events: none; }
+.rm-hero .crest { box-shadow: 0 0 0 2px #2a1c06, 0 0 0 3.5px #fff6d8, 0 4px 10px rgba(0, 0, 0, .6); }
+/* Your rings, in a line under the map: tap for what they do. */
+.cp-ringsbar { appearance: none; display: flex; align-items: center; gap: 12px; margin: 10px 10px 0; padding: 8px 12px; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .28); color: inherit; text-align: left; cursor: pointer; }
+.cp-ringsbar-icons { display: flex; gap: 2px; font-size: 20px; color: var(--gold); }
+.cp-ringsbar-icons .power-sym { margin-right: 4px; }
+.cp-ringsbar-text { display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; color: var(--muted); }
+.cp-ringsbar-text b { font: 700 13px var(--display); letter-spacing: .04em; color: var(--gold); }
+/* A stop's sheet. */
+.stop-sheet { display: flex; flex-direction: column; gap: 10px; }
+.stop-art { height: 150px; border-radius: 12px; background: #111 center / cover no-repeat; box-shadow: 0 0 0 1px var(--line); }
+.stop-line { margin: 0; font: italic 17px/1.3 var(--rules); color: var(--ink); text-align: center; }
+.stop-state { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.stop-credit { margin: 0; font-size: 11px; color: var(--muted); text-align: center; }
+/* The campaign's end, at a place. */
+.cp-over { background: linear-gradient(180deg, rgba(8, 8, 6, .55), rgba(8, 8, 6, .8) 55%, rgba(8, 8, 6, .95)), var(--place-art, none) var(--place-at, 50% 50%) / cover no-repeat; }
+.cp-over-place { font: 800 14px var(--title); letter-spacing: .3em; text-transform: uppercase; color: #f2e3b8; text-shadow: 0 1px 4px rgba(0, 0, 0, .9); }
+
+/* ---------------------------------------------------------------- the booster as a present, and the parting of the decks */
+.present { position: absolute; inset: 0; z-index: 50; appearance: none; border: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; background: radial-gradient(circle at 50% 45%, rgba(46, 56, 32, .96), rgba(8, 9, 6, .97) 75%); color: var(--ink); cursor: pointer; }
+.present-tag { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 18px; border-radius: 6px; background: linear-gradient(180deg, #fbf7ea, #ece3cb); color: #241c10; box-shadow: 0 4px 12px rgba(0, 0, 0, .5); transform: rotate(-3deg); }
+.present-tag b { font: 700 22px var(--display); }
+.present-tag span { font: italic 15px var(--rules); }
+/* A parcel in brown paper, tied with string. */
+.present-parcel { position: relative; width: 170px; height: 220px; border-radius: 8px; background: var(--grain), linear-gradient(160deg, #b89466, #7d5c36 70%, #5e4226); background-size: 96px 96px, auto; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15), inset 0 -18px 30px rgba(0, 0, 0, .25), 0 14px 30px rgba(0, 0, 0, .65); }
+.present-string { position: absolute; background: #e9dfc4; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
+.present-string.across { left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; }
+.present-string.down { top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1.5px; }
+.present-knot { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; border: 3px solid #e9dfc4; box-shadow: 0 1px 3px rgba(0, 0, 0, .6), 14px -10px 0 -7px #e9dfc4, -14px -10px 0 -7px #e9dfc4; }
+.present-hint { font: 700 13px var(--title); letter-spacing: .26em; text-transform: uppercase; color: #f7e0a0; animation: glow 1.6s ease-in-out infinite; }
+.pg-parting { position: absolute; left: 0; right: 0; top: 34%; z-index: 40; height: 76px; display: grid; place-items: center; background: linear-gradient(90deg, transparent, rgba(18, 15, 9, .94) 14%, rgba(18, 15, 9, .94) 86%, transparent); box-shadow: inset 0 1px 0 rgba(233, 196, 106, .7), inset 0 -1px 0 rgba(233, 196, 106, .7); pointer-events: none; }
+.pg-parting span { font: 800 21px var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 0 rgba(0, 0, 0, .6), 0 0 18px rgba(233, 196, 106, .6); }
+.pg-match .pg-side { perspective: 600px; }
+/* The versus screen leaves the top for the place's name; on a short screen the portraits make room. */
+.versus.placed { padding-top: calc(var(--safe-top) + 62px); }
+@media (max-height: 700px) {
+  .versus.placed .vs-side .crest-lg { width: 84px; height: 84px; font-size: 60px; }
+  .versus.placed .vs-side { gap: 8px; }
+  .vs-place-line { display: none; }
+  .versus.placed { padding-top: calc(var(--safe-top) + 44px); }
 }

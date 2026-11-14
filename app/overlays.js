@@ -11,6 +11,7 @@ import { fit } from './fit.js';
 import { setVolume } from './audio.js';
 import { showHowToPlay, resetCoach } from './coach.js';
 import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { PLACES, JOURNEYS_END, withArt } from '../src/paigow/places.js';
 
 export function createOverlays(app) {
   let open = null;
@@ -164,6 +165,9 @@ export function createOverlays(app) {
         h('p', 'The cards are from Magic: The Gathering\'s The Lord of the Rings: Tales of Middle-earth, © Wizards of the Coast. Their images come from Scryfall. Hold a card to see it in full, with its artist.')),
       h('section.how-section', h('h4', 'Portraits'),
         h('ul', people.map((person) => h('li', h('b', person.name), `: ${person.portrait.card}, art by ${person.portrait.artist}`)))),
+      h('section.how-section', h('h4', 'Places'),
+        h('ul', [...Object.values(PLACES), JOURNEYS_END].map(withArt).filter((spot) => spot.artist)
+          .map((spot) => h('li', h('b', spot.name), `: ${spot.card}, art by ${spot.artist}`)))),
       h('section.how-section', h('h4', 'Type and symbols'),
         h('p', 'Faustina, Crimson Pro and Cinzel, under the SIL Open Font License. Mana and Keyrune symbol fonts by Andrew Gioia.')));
     sheet({ title: 'Credits', body, options: [], cancel: 'Close' });
@@ -188,7 +192,8 @@ export function createOverlays(app) {
     };
     show(h('div.sheet.settings',
       h('h3', 'Settings'),
-      switchRow('Sound', 'sound'),
+      switchRow('Sound', 'sound', 'Cards, blows and buttons.'),
+      switchRow('Music and ambience', 'music', 'The theme, and the sound of each place.'),
       h('label.setting', h('span.setting-label', 'Volume'), h('input.volume', {
         type: 'range', min: '0', max: '1', step: '0.05', value: String(s.volume ?? 1), 'aria-label': 'Volume',
         oninput: (event) => {

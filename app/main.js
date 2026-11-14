@@ -8,7 +8,9 @@ import { TOKEN_PRESENTATION } from '../src/cards/tokenArt.js';
 import { h, wait } from './dom.js';
 import { installIcons } from './icons.js';
 import { fit } from './fit.js';
-import { unlockAudio, setSoundEnabled, setVolume, play } from './audio.js';
+import {
+  unlockAudio, setSoundEnabled, setMusicEnabled, setVolume, setAmbience, setAudioSuspended, whenAudioReady, playTheme, play,
+} from './audio.js';
 import { createOverlays } from './overlays.js';
 import { titleScreen } from './screens/title.js';
 import { battleScreen } from './screens/battle.js';
@@ -17,7 +19,7 @@ import { heroesScreen } from './screens/heroes.js';
 import { campaignScreen } from './screens/campaign.js';
 
 const SETTINGS_KEY = 'istari.settings';
-const DEFAULT_SETTINGS = { sound: true, volume: 1, haptics: true, speed: 1, autoPass: true };
+const DEFAULT_SETTINGS = { sound: true, music: true, volume: 1, haptics: true, speed: 1, autoPass: true };
 
 const SCREENS = {
   title: titleScreen,
@@ -51,6 +53,7 @@ function createApp(root) {
     settings = { ...DEFAULT_SETTINGS, ...JSON.parse(storage.getItem(SETTINGS_KEY) ?? '{}') };
   } catch { /* defaults */ }
   setSoundEnabled(settings.sound);
+  setMusicEnabled(settings.music);
   setVolume(settings.volume);
 
   const stage = h('div.stage');
@@ -74,7 +77,10 @@ function createApp(root) {
       settings = { ...settings, ...changes };
       storage.setItem(SETTINGS_KEY, JSON.stringify(settings));
       setSoundEnabled(settings.sound);
+      setMusicEnabled(settings.music);
     },
+    /** The theme (app/audio.js), when music is on. */
+    theme: playTheme,
     sound: play,
     /** Shows a screen; the old one fades out as the new one fades in. */
     async go(name, params = {}) {
@@ -84,6 +90,8 @@ function createApp(root) {
       const next = SCREENS[name](app, params);
       current = next;
       next.name = name;
+      // Each screen's ambience (a kind of place: app/audio.js), or none.
+      setAmbience(next.ambience ?? null);
       next.el.classList.add('screen', `screen-${name}`);
       stage.append(next.el);
       fit(next.el);
@@ -112,6 +120,9 @@ function boot() {
   document.addEventListener('gesturestart', (event) => event.preventDefault());
   document.addEventListener('dblclick', (event) => event.preventDefault());
   app.go('title');
+  // The theme, once, when sound first can play (the first tap), if that's still on the title.
+  whenAudioReady(() => { if (document.querySelector('.screen-title')) playTheme(); });
+  document.addEventListener('visibilitychange', () => setAudioSuspended(document.hidden));
   if ('serviceWorker' in navigator && !['localhost', '127.0.0.1'].includes(location.hostname)) {
     wait(2000).then(() => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }

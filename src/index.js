@@ -37,6 +37,7 @@ export {
   playerStartsRound, recordRound, roundSetup,
 } from './paigow/paigow.js';
 export { PAIGOW_OPPONENTS, paigowOpponent } from './paigow/personas.js';
+export { PLACES, JOURNEYS_END, AMBIENCE, placeOf } from './paigow/places.js';
 export { outOfActions, canFastForward, planFastForward } from './paigow/fastForward.js';
 export { CARD_PRESENTATION } from './cards/importedCards.js';
 export { TOKEN_PRESENTATION } from './cards/tokenArt.js';

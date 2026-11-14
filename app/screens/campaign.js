@@ -1,6 +1,8 @@
 import { h } from '../dom.js';
 import { crest } from '../art.js';
 import { header, personInfo } from './common.js';
+import { icon, powerIcon } from '../icons.js';
+import { roadMap } from './roadMap.js';
 import { ringBlock } from './heroes.js';
 import {
   createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
@@ -8,6 +10,7 @@ import {
 } from '../../src/paigow/campaign.js';
 import { playerLife, BOOSTER } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
+import { placeOf, withArt, JOURNEYS_END } from '../../src/paigow/places.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
 
@@ -43,9 +46,14 @@ export function finishCampaignMatch(app, match, outcome) {
   return campaign ? saveCampaign(app, recordMatch(campaign, outcome, match)) : null;
 }
 
-/** Your lives, as hearts: full ones left, empty ones lost. */
-const hearts = (lives) => h('div.cp-lives', { 'aria-label': `${lives} ${lives === 1 ? 'life' : 'lives'} left` },
-  Array.from({ length: CAMPAIGN_RULES.lives }, (_, i) => h(`span.cp-heart${i < lives ? '.full' : ''}`, i < lives ? '♥' : '♡')));
+/**
+ * Your lives, as seed-cakes for the road: whole ones left, crumbs where one was eaten. A lost match costs one.
+ */
+export const cakes = (lives) => h('div.cp-lives', { role: 'img', 'aria-label': cakesLeft(lives) },
+  Array.from({ length: CAMPAIGN_RULES.lives }, (_, i) => h(`span.cp-cake${i < lives ? '.full' : ''}`, icon(i < lives ? 'seedCake' : 'crumbs'))));
+
+/** "3 seed-cakes left", "1 seed-cake left". */
+export const cakesLeft = (lives) => `${lives} seed-${lives === 1 ? 'cake' : 'cakes'} left`;
 
 /** What a set of rings costs in starting life, in words. */
 const lifeLine = (rings) => {
@@ -57,10 +65,11 @@ const lifeLine = (rings) => {
 const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.commons + extra} commons, ${BOOSTER.commons + BOOSTER.uncommons + BOOSTER.rares + BOOSTER.wildcards + extra} cards in all: make three decks of five and leave the rest out.`;
 
 /**
- * The campaign (src/paigow/campaign.js): a line of opponents, three lives, and the rewards you take
+ * The campaign (src/paigow/campaign.js): a road of opponents (drawn as a map, roadMap.js), three lives (seed-cakes), and the rewards you take
  * from those you beat (Rings of Power, or extra commons). With `heroId`, a new campaign begins for that hero.
+ * `walkFrom`: the stop just left, after a win, so the hero walks up the road from it (see roadMap).
  */
-export function campaignScreen(app, { heroId = null } = {}) {
+export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
   let campaign = heroId ? saveCampaign(app, createCampaign({ heroId })) : loadCampaign(app);
   if (!campaign) {
     queueMicrotask(() => app.go('heroes'));
@@ -72,19 +81,7 @@ export function campaignScreen(app, { heroId = null } = {}) {
   const hero = paigowHero(campaign.heroId);
   const opponentId = currentOpponent(campaign);
   const opponent = paigowOpponent(opponentId);
-
-  const path = h('ol.cp-path', campaign.opponents.map((id, i) => {
-    const person = paigowOpponent(id);
-    const state = i < campaign.stage ? 'beaten' : i === campaign.stage ? 'next' : 'later';
-    const losses = campaign.history.filter((m) => m.opponentId === id && m.outcome === 'lost').length;
-    return h(`li.cp-stop.${state}`,
-      h('span.cp-num', String(i + 1)),
-      crest(state === 'later' ? { name: 'Unknown', color: 'black' } : personInfo(person), { size: 'sm' }),
-      h('div.cp-who',
-        h('div.cp-name', state === 'later' ? 'Unknown' : person.name),
-        h('div.cp-state', state === 'beaten' ? 'Beaten' : state === 'next' ? (campaign.match ? 'Match in progress' : 'Next') : '')),
-      losses ? h('span.cp-losses', `${losses} ${losses === 1 ? 'loss' : 'losses'}`) : null);
-  }));
+  const spot = placeOf(opponentId);
 
   const rings = [hero.emblem, ...campaign.rings];
   const play = () => {
@@ -92,26 +89,55 @@ export function campaignScreen(app, { heroId = null } = {}) {
     app.go('paigow', { match: campaign.match });
   };
   const abandon = async () => {
-    if (await app.overlays.confirm({ title: 'Abandon the campaign?', text: 'Your lives and rings will be lost.', yes: 'Abandon', danger: true })) {
+    if (await app.overlays.confirm({ title: 'Turn back for home?', text: 'The campaign ends here. Your seed-cakes and rings will be lost.', yes: 'Turn back', danger: true })) {
       saveCampaign(app, null);
       app.go('title');
     }
   };
+  /** A stop tapped: its place, and who is met there (for those not yet reached, only the place). */
+  const showStop = (i) => {
+    const id = campaign.opponents[i];
+    const person = paigowOpponent(id);
+    const there = placeOf(id);
+    const reached = i <= campaign.stage;
+    app.overlays.sheet({
+      title: there.name,
+      body: h('div.stop-sheet',
+        there.art ? h('div.stop-art', { role: 'img', 'aria-label': there.name, style: { backgroundImage: `url("${there.art}")`, backgroundPosition: `${there.x}% ${there.y}%` } }) : null,
+        h('p.stop-line', there.line),
+        reached
+          ? h('div.power-side', crest(personInfo(person), { size: 'sm' }),
+            h('div.power-list', h('div.hero-name', person.name), h('div.stop-state', i < campaign.stage ? 'Beaten' : 'Waiting for you'), ringBlock(person.emblem)))
+          : h('p.pg-help', 'Who waits here? You will know when the road brings you to it.'),
+        there.artist ? h('p.stop-credit', `Art: ${there.card}, by ${there.artist}`) : null),
+      options: [],
+      cancel: 'Close',
+    });
+  };
+  /** Your rings, in full: what each does, and what bearing them costs. */
+  const showRings = () => app.overlays.sheet({
+    title: 'Your Rings of Power',
+    body: h('div.cp-rings', rings.map((id) => ringBlock(id)),
+      h('p.pg-help', lifeLine(campaign.rings)),
+      campaign.rings.length ? h('p.pg-help', 'Every ring you take darkens the road, and draws the Eye.') : null,
+      campaign.extraCommons ? h('p.pg-help', commonsLine(campaign.extraCommons)) : null),
+    options: [],
+    cancel: 'Close',
+  });
 
+  const map = roadMap(campaign, { hero, onStop: showStop, walkFrom });
   const el = h('div',
-    header({ title: 'Campaign', onBack: () => app.go('title'), right: hearts(campaign.lives) }),
-    h('div.cp-body',
-      h('section.cp-section', h('h4', 'The road'), path),
-      h('section.cp-section',
-        h('h4', `Your Rings of Power · ${campaign.rings.length}/${CAMPAIGN_RULES.maxRings} taken`),
-        h('div.cp-rings', rings.map((id) => ringBlock(id))),
-        h('p.pg-help', lifeLine(campaign.rings)),
-        campaign.extraCommons ? h('p.pg-help', commonsLine(campaign.extraCommons)) : null),
-      h('p.pg-help', `Lose a match and you lose a life. ${campaign.lives === 1 ? 'This is your last.' : `You have ${campaign.lives}.`}`)),
+    header({ title: 'The Road', onBack: () => app.go('title'), right: cakes(campaign.lives) }),
+    map.el,
+    h('button.cp-ringsbar', { type: 'button', onclick: showRings },
+      h('span.cp-ringsbar-icons', rings.map((id) => powerIcon(id, 'power-sym') ?? h('span.ring-mark'))),
+      h('span.cp-ringsbar-text',
+        h('b', `Rings of Power · ${campaign.rings.length}/${CAMPAIGN_RULES.maxRings} taken`),
+        h('span', `${cakesLeft(campaign.lives)}. A lost match costs one.`))),
     h('div.cta',
-      h('button.btn.primary.big', { onclick: play }, campaign.match ? `Continue vs ${opponent.name}` : `Face ${opponent.name}`),
-      h('button.btn.ghost', { onclick: abandon }, 'Abandon campaign')));
-  return { el };
+      h('button.btn.primary.big', { onclick: play }, campaign.match ? `Continue at ${spot.name}` : `Face ${opponent.name}`),
+      h('button.btn.ghost', { onclick: abandon }, 'Turn back for home')));
+  return { el, enter: map.enter, ambience: spot.ambience };
 }
 
 /**
@@ -122,30 +148,31 @@ function offerView(app, campaign) {
   const opponent = paigowOpponent(campaign.offer);
   const able = canTakeRing(campaign);
   const after = [...campaign.rings, opponent.emblem];
+  const onward = placeOf(currentOpponent(campaign));
   const decide = (ring) => {
-    app.sound('select');
+    app.sound(ring ? 'reward' : 'select');
     saveCampaign(app, ring ? takeRing(campaign) : takeCommon(campaign));
-    app.go('campaign');
+    app.go('campaign', { walkFrom: campaign.stage - 1 });
   };
   const extra = (campaign.extraCommons ?? 0) + 1;
   const el = h('div',
-    header({ title: '', right: hearts(campaign.lives) }),
+    header({ title: '', right: cakes(campaign.lives) }),
     h('div.cp-body.cp-offer',
       h('div.result-title.victory', 'Victory'),
       crest(personInfo(opponent), { size: 'lg' }),
-      h('p.cp-offer-lead', `${opponent.name} is beaten. Choose your reward: their Ring of Power, or a common more in every booster.`),
+      h('p.cp-offer-lead', `${opponent.name} is beaten, and the road goes on${onward ? ` to ${onward.name}` : ''}. One thing may come with you: their Ring of Power, or a common more in every booster.`),
       ringBlock(opponent.emblem),
       h('p.pg-help', able
-        ? `Take the ring, and you start every round with 1 less life. ${lifeLine(after)}`
+        ? `Take the ring, if you dare: it weighs a life each round, and the road grows darker. ${lifeLine(after)}`
         : `You already bear ${CAMPAIGN_RULES.maxRings} rings. You can bear no more.`),
       h('p.pg-help', `Or add a common: from now on ${commonsLine(extra, 'your')}`)),
     h('div.cta',
       able ? h('button.btn.primary.big', { onclick: () => decide(true) }, 'Take the ring') : null,
       h(`button.btn${able ? '' : '.primary.big'}`, { onclick: () => decide(false) }, 'Add a common to my boosters')));
-  return { el };
+  return { el, ambience: onward?.ambience };
 }
 
-/** The campaign won or lost. */
+/** The campaign won (at the Grey Havens) or lost (at the place where the last seed-cake went). */
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
   const hero = paigowHero(campaign.heroId);
@@ -158,18 +185,25 @@ function overView(app, campaign) {
     app.go('title');
   };
   const wins = campaign.history.filter((m) => m.outcome === 'won').length;
-  const el = h('div',
+  const fell = placeOf(campaign.opponents[Math.min(campaign.stage, campaign.opponents.length - 1)]);
+  const spot = won ? withArt(JOURNEYS_END) : fell;
+  const el = h('div.cp-over',
     header({ title: '' }),
     h('div.cp-body.cp-offer',
+      h('div.cp-over-place', spot.name),
       h(`div.result-title.${won ? 'victory' : 'defeat'}`, won ? 'Victory' : 'Defeat'),
       crest(personInfo(hero), { size: 'lg' }),
       h('p.cp-offer-lead', won
-        ? `${hero.name} has beaten every opponent on the road, with ${campaign.lives} ${campaign.lives === 1 ? 'life' : 'lives'} to spare.`
-        : `${hero.name} is out of lives, after beating ${wins} of ${campaign.opponents.length} opponents.`),
+        ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${cakesLeft(campaign.lives).replace(' left', '')} to spare.`
+        : `The last seed-cake is gone at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),
       campaign.rings.length ? h('div.cp-rings', campaign.rings.map((id) => ringBlock(id))) : null,
       h('p.pg-help', `${campaign.history.length} ${campaign.history.length === 1 ? 'match' : 'matches'} played.`)),
     h('div.cta',
-      h('button.btn.primary.big', { onclick: again }, 'New campaign'),
+      h('button.btn.primary.big', { onclick: again }, 'Set out again'),
       h('button.btn.ghost', { onclick: home }, 'Back to the title')));
-  return { el };
+  if (spot?.art) {
+    el.style.setProperty('--place-art', `url("${spot.art}")`);
+    el.style.setProperty('--place-at', `${spot.x}% ${spot.y}%`);
+  }
+  return { el, enter: () => { if (won) app.theme?.(); }, ambience: spot.ambience };
 }

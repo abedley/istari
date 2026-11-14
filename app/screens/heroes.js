@@ -65,6 +65,6 @@ export function heroesScreen(app) {
   const el = h('div',
     header({ title: 'Choose your hero', onBack: () => app.go('title') }),
     h('div.heroes', cards.map(([, el]) => el)),
-    h('div.cta', h('button.btn.primary.big', { onclick: begin }, 'Begin the campaign')));
-  return { el };
+    h('div.cta', h('button.btn.primary.big', { onclick: begin }, 'Set out')));
+  return { el, ambience: 'shire' };
 }

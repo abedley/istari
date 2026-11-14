@@ -7,6 +7,7 @@ import {
   roundSetup, recordRound, outcome, score, ROUND_RESULT, MATCH_OUTCOME,
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent } from '../../src/paigow/personas.js';
+import { placeOf } from '../../src/paigow/places.js';
 
 /** A round of a Pai Gow match (src/paigow/paigow.js): `match` is the match so far, with the decks set. */
 export function battleScreen(app, { match = null } = {}) {
@@ -27,13 +28,14 @@ export function battleScreen(app, { match = null } = {}) {
   };
   const onEnd = (end) => {
     const next = recordRound(match, resultOf(end));
-    app.go('paigow', { match: next, view: outcome(next) ? 'final' : 'scoreboard' });
+    app.go('paigow', { match: next, view: outcome(next) ? 'final' : 'scoreboard', played: setup.encounter.round });
   };
   const battle = new Battle(app, {
     setup,
     meInfo: { ...personInfo(heroOf(match)), powers: [heroOf(match).emblem, ...(match.rings ?? [])].map(ringOf) },
     oppInfo: { ...personInfo(opponent), power: powerOf(opponent) },
     subtitle: `Round ${setup.encounter.round + 1} · ${won}–${lost}`,
+    place: placeOf(match.opponentId),
     onEnd,
     fastForward: true,
     resultText,
@@ -41,6 +43,7 @@ export function battleScreen(app, { match = null } = {}) {
   window.istari.battle = battle;
   return {
     el: battle.el,
+    ambience: placeOf(match.opponentId)?.ambience,
     enter: () => battle.start(),
     destroy: () => battle.destroy(),
   };

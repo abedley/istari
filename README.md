@@ -133,10 +133,33 @@ and leave the spare ones out of your three decks of five (Auto-fill places the s
 is saved in `localStorage` (`istari.campaign`) after every step, its current match with it after each
 round, so a reload picks it up where it was (a round in progress starts over).
 
+**Places** (`src/paigow/places.js`): each opponent is met at a place on the road from Bag End to Barad-dûr
+(`PLACES`, by opponent id): a name, a line that sets the scene, a picture, and a kind of ambience. The picture is
+always a card's art (`cardId`, with the point to keep in view), so there is no art of the game's own: The Party
+Field is *The Shire*, The Bridge of Khazad-dûm *Mines of Moria*, The Hornburg *Rally at the Hornburg*, and so on;
+a won campaign ends at *The Grey Havens* (`JOURNEYS_END`). The campaign screen draws the road as a map
+(`app/screens/roadMap.js`): a parchment with a winding road and a stop for each opponent, the place shown but the
+opponent kept back ("Who waits here?") until you reach it, your hero standing at the next stop and walking on
+after a win; tap a stop for its place, opponent and ring. Each Ring of Power you take darkens the parchment, cools
+its gold and opens the Eye over the Dark Tower wider (`.burden-0` to `.burden-4`). A round is played on its place's
+picture, dimmed behind the board (darkest behind the two players' bars, where the dimmest text is: at least 6:1
+for the card counts on every place), and the *vs* screen names the place. Lives are seed-cakes for the road
+(crumbs where one was eaten).
+
+**The three roads:** the deck builder's decks are the First, Second and Third road (rounds 1 to 3). A new booster
+arrives as a parcel tied with string, tagged for your hero: a tap opens it and the cards land in the tray (once a
+match, remembered as `istari.opened`). *Start match* parts the three decks under "The Fellowship divides". Back
+from a round, the scoreboard turns the opponent's cards for that round over one by one and then stamps the result;
+when the match ends, the cards of a round that wasn't played are turned over too. The present, the parting and
+the turning are skipped when the system asks for reduced motion.
+
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each
-moment: `start` (the match begins, once both hands are kept), `win` and `lose` (the match ends, conceding included), and
-the big swings, `comeback` (it was losing and now it's winning) and `collapse` (the other way).
+moment: `start` (the match begins, once both hands are kept), `win` and `lose` (the match ends, conceding included),
+the big swings, `comeback` (it was losing and now it's winning) and `collapse` (the other way), and what happens on
+the board (`MomentWatch` in `src/ai/banter.js`): `kill` (a creature of yours dies), `loss` (one of its own that
+mattered dies: a legend, or power plus toughness of 6 or more) and `ring` (you use a Ring of Power you took on the
+road, not your hero's own). Tokens never count, and it says at most one line in two turns.
 Swings come from `src/ai/banter.js`: once a turn the app scores the board from the CPU's
 side with `evaluate` (seeing the player's hand only as a count), averages the last two scores so
 it doesn't bounce with whose turn it is, and calls it winning at +15 or more and losing at -15 or
@@ -278,9 +301,15 @@ two, or the card again to send it back to the booster. *Undo* takes back one cha
 first, each to the deck with room that is weakest so far, so the three come out about even. The start button
 says how many cards are still to place.
 
-**Settings:** sound (a switch) and volume, vibration (where the phone has it), animation speed, auto-pass
+**Settings:** sound and music-and-ambience (a switch each) and volume, vibration (where the phone has it), animation speed, auto-pass
 priority (off is full control), *How Pai Gow plays*, *Show tips again* and *Credits* (the cards, each portrait's
 card and artist, the fonts). Sheets are dialogs to assistive technology, close on Escape, and hand the focus back.
+
+**Sound** is all synthesized (Web Audio, no files): the effects; a quiet ambient bed for each kind of place
+(`shire`: a breeze and birdsong; `forest`: wind in leaves, a creaking bough; `hall`: a held fifth; `shadow`: a low
+pulse and a hiss), which each screen asks for and which cross-fades between screens; and a short plucked theme, on
+the title (at the first tap, when sound can start) and when a campaign is won. *Music and ambience* has its own
+switch in the settings; sound stops while the page is hidden.
 
 **Seeing and touching:** interface labels are 10px or more (the miniature card faces in hand, on the stack and
 on the scoreboard are thumbnails: tap or hold for the card at full size). Small controls have a touch area
@@ -424,7 +453,8 @@ color) are drawn with the open-source [Mana](https://mana.andrewgioia.com) and
 - `app/cardView.js` and `app/art.js`: how cards look, and portraits
 - `app/fit.js`: text that shrinks to fit its box
 - `app/overlays.js`: sheets, inspect, deck viewer and settings
-- `app/audio.js`: synthesized sound
+- `app/audio.js`: synthesized sound (effects, an ambient bed per kind of place, the theme)
+- `app/coach.js`: coach marks and *How Pai Gow plays*; `app/screens/roadMap.js`: the campaign's map
 
 `play.js` and `autopass.js` are plain logic and are tested in Node (`test/app.test.js`).
 `tools/make-icons.js` renders the home-screen icons from `app/icons/icon.svg`.

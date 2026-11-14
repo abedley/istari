@@ -1,4 +1,4 @@
-import { h, onPress } from '../dom.js';
+import { h, onPress, wait, reducedMotion } from '../dom.js';
 import { crest } from '../art.js';
 import { fullCard, cardBack, manaPips } from '../cardView.js';
 import { header, personInfo } from './common.js';
@@ -9,8 +9,9 @@ import {
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, DEFAULT_HERO } from '../../src/paigow/personas.js';
 import { powerBlock, ringBlock } from './heroes.js';
-import { loadCampaign, saveCampaignMatch, finishCampaignMatch } from './campaign.js';
+import { loadCampaign, saveCampaignMatch, finishCampaignMatch, cakesLeft } from './campaign.js';
 import { coach } from '../coach.js';
+import { placeOf } from '../../src/paigow/places.js';
 
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
@@ -19,16 +20,18 @@ const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [
  * spare ones out) into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Every match is a campaign's
  * (see the campaign screen): it's saved after each round, and its outcome recorded in the campaign. Without a
- * `match`, the campaign's current one is shown, and with none going on, the campaign screen.
+ * `match`, the campaign's current one is shown, and with none going on, the campaign screen. `played`: the round
+ * just played (0-based), whose cards the scoreboard turns over.
  */
-export function paigowScreen(app, { match: given = null, view = null } = {}) {
+export function paigowScreen(app, { match: given = null, view = null, played = null } = {}) {
   const match = given ?? loadCampaign(app)?.match ?? null;
   if (!match) {
     queueMicrotask(() => app.go('campaign'));
     return { el: h('div') };
   }
   const shown = view ?? (match.decks ? (outcome(match) ? 'final' : 'scoreboard') : 'build');
-  return shown === 'build' ? buildView(app, match) : scoreView(app, match, shown === 'final');
+  const screen = shown === 'build' ? buildView(app, match) : scoreView(app, match, shown === 'final', played);
+  return { ...screen, ambience: placeOf(match.opponentId)?.ambience };
 }
 
 /**
@@ -147,6 +150,49 @@ function trayZoom(app, tray) {
   return { zoomOut, zoomIn, update };
 }
 
+/** The three decks' names: the Fellowship divides, and each company takes a road of its own. */
+const ROADS = ['First road', 'Second road', 'Third road'];
+
+/** The boosters already unwrapped (by match seed), so the present is opened once a match. */
+const OPENED_KEY = 'istari.opened';
+
+/**
+ * The booster as a present: a parcel tied with string, with a tag. A tap opens it, and the cards arrive in the tray.
+ * Shown once for a match (its seed is remembered), and not at all when the system asks for less motion.
+ * Resolves once it's open (at once when there's nothing to show).
+ */
+function present(app, match, root) {
+  if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return Promise.resolve();
+  app.storage.setItem(OPENED_KEY, String(match.seed));
+  const hero = heroOf(match);
+  const spot = placeOf(match.opponentId);
+  return new Promise((resolve) => {
+    const parcel = h('div.present-parcel', h('span.present-string.across'), h('span.present-string.down'), h('span.present-knot'));
+    const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' },
+      h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards for the road${spot ? ` to ${spot.name}` : ''}`)),
+      parcel,
+      h('div.present-hint', 'Tap to open'));
+    root.append(layer);
+    layer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
+    parcel.animate([{ transform: 'translateY(30px) scale(.8) rotate(-4deg)' }, { transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+    layer.addEventListener('click', async () => {
+      app.sound('reward');
+      layer.disabled = true;
+      await Promise.all([
+        parcel.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(1.5) rotate(6deg)', opacity: 0 }], { duration: 380, easing: 'ease-in', fill: 'forwards' }).finished,
+        layer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' }).finished,
+      ]).catch(() => {});
+      layer.remove();
+      // The cards arrive in the tray, one after another.
+      [...root.querySelectorAll('.pg-tray .pg-card')].forEach((card, i) => {
+        card.animate([{ opacity: 0, transform: 'translateY(-40px) scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'none' }],
+          { duration: 420, delay: i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
+      });
+      resolve();
+    }, { once: true });
+  });
+}
+
 function buildView(app, match) {
   const { decks: count, deckSize } = PAIGOW_RULES;
   /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
@@ -230,11 +276,29 @@ function buildView(app, match) {
     app.sound('select');
     change(() => { placed = spreadDecks(match.cards, placed); });
   };
-  const play = () => {
+  const play = async () => {
     const decks = deckIds.map((i) => deckOf(i).map((n) => match.cards[n]));
     const ready = setDecks(match, decks);
     saveCampaignMatch(app, ready);
+    start.disabled = true;
+    await part();
     app.go('battle', { match: ready });
+  };
+  /** The Fellowship divides: the three decks go their ways, under a banner that says so. */
+  const part = async () => {
+    if (reducedMotion()) return;
+    const speed = app.settings.speed;
+    const banner = h('div.pg-parting', h('span', 'The Fellowship divides'));
+    el.append(banner);
+    app.sound('turn');
+    const ways = [{ x: -70, r: -9 }, { x: 0, r: 0 }, { x: 70, r: 9 }];
+    [...board.children].forEach((col, i) => {
+      const way = ways[i] ?? ways[1];
+      col.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${way.x}px, -46px) rotate(${way.r}deg)`, opacity: 0 }],
+        { duration: 700 * speed + 200, delay: 250 * speed, easing: 'cubic-bezier(.5, 0, .8, .4)', fill: 'forwards' });
+    });
+    banner.animate([{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' });
+    await wait(950 * speed + 250);
   };
 
   const render = () => {
@@ -245,7 +309,7 @@ function buildView(app, match) {
         if (event.target.closest('.pg-chip:not(.empty)')) return;
         tapDeck(i);
       } },
-      h('div.pg-col-label', `Round ${i + 1} · ${cards.length}/${deckSize}`),
+      h('div.pg-col-label', h('b', ROADS[i] ?? `Road ${i + 1}`), h('span', `Round ${i + 1} · ${cards.length}/${deckSize}`)),
       ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked })),
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
@@ -261,7 +325,7 @@ function buildView(app, match) {
       : `Your booster · ${left.length} left${left.length > toPlace ? ` · ${toPlace} to place` : ''}`;
     tray.replaceChildren(...(left.length
       ? left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true }))
-      : [h('p.pg-tray-empty', `Deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
+      : [h('p.pg-tray-empty', `The Fellowship divides. The first road is round 1, the second round 2, the third round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
     start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
     start.disabled = !full;
     autoFill.disabled = full;
@@ -271,20 +335,24 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: 'Three decks', onBack: () => backTo(app), right: opponentBadge(app, match) }),
+    header({ title: 'Three roads', onBack: () => backTo(app), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, hint, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
     h('div.cta.pg-build-cta', h('div.row', undo, autoFill, start)));
   return {
     el,
-    enter: () => coach(app, 'builder', [
-      { target: '.pg-tray .pg-card', text: 'This is your booster. Tap a card to put it in the highlighted deck. Hold a card to read it.' },
-      { target: '.pg-board', text: 'Three decks of five: deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent splits theirs the same way, and you don\'t see how. Tap a deck to fill that one.' },
-      { target: '.pg-head-opp', text: 'Who you\'re facing. Tap to read both sides\' Rings of Power before you split your cards.' },
-    ], { root: el, stillValid: () => el.isConnected }),
+    enter: async () => {
+      await present(app, match, el);
+      if (!el.isConnected) return;
+      coach(app, 'builder', [
+        { target: '.pg-tray .pg-card', text: 'This is your booster. Tap a card to put it in the highlighted deck. Hold a card to read it.' },
+        { target: '.pg-board', text: 'Three decks of five, one for each road: the first plays round 1, the second round 2, the third round 3. Your opponent splits theirs the same way, and you don\'t see how. Tap a deck to fill that one.' },
+        { target: '.pg-head-opp', text: 'Who you\'re facing. Tap to read both sides\' Rings of Power before you split your cards.' },
+      ], { root: el, stillValid: () => el.isConnected });
+    },
   };
 }
 
-function scoreView(app, match, final) {
+function scoreView(app, match, final, justPlayed = null) {
   const { won, lost, drawn } = score(match);
   const round = nextRound(match);
   const result = outcome(match);
@@ -293,17 +361,28 @@ function scoreView(app, match, final) {
   const life = playerLife(match);
   // Saved as it goes, and its outcome counted once it's over.
   const campaign = final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
+  // Coming from a round: its cards are turned over one by one, then (at the match's end) those of any round not played.
+  const turning = justPlayed !== null && !reducedMotion();
+  const turns = (i) => turning && (i === justPlayed || (final && !match.rounds[i]));
+  /** The rows to turn over, in order: `{ slots: [{ el, cardId }], status, label }`. */
+  const toTurn = [];
 
   const roundRows = h('div.pg-rounds', match.decks.map((deck, i) => {
     const played = match.rounds[i];
     const revealed = played || final;
-    const status = played ? RESULT_LABEL[played.result] : i === round ? 'Next' : '—';
+    const label = played ? RESULT_LABEL[played.result] : i === round ? 'Next' : final ? 'Not played' : '—';
+    const status = h('span.pg-status', turns(i) && played ? '' : label);
+    const theirs = match.cpuDecks[i].map((id) => {
+      if (!revealed || turns(i)) return { el: h('div.pg-card.back', cardBack()), cardId: id };
+      return { el: miniCard(app, id), cardId: id };
+    });
+    if (turns(i)) toTurn.push({ slots: theirs, status, label, played: Boolean(played) });
     return h('div.pg-round', { class: played ? `r-${played.result}` : i === round ? 'r-next' : 'r-later' },
-      h('div.pg-round-head', h('span', `Round ${i + 1}`), h('span.pg-status', status)),
+      h('div.pg-round-head', h('span', `${ROADS[i] ?? `Road ${i + 1}`} · Round ${i + 1}`), status),
       h('div.pg-match',
         h('div.pg-side', deck.map((id) => miniCard(app, id))),
         h('span.pg-vs', 'vs'),
-        h('div.pg-side', match.cpuDecks[i].map((id) => (revealed ? miniCard(app, id) : h('div.pg-card.back', cardBack()))))));
+        h('div.pg-side', theirs.map((slot) => slot.el))));
   }));
 
   const title = final
@@ -327,10 +406,33 @@ function scoreView(app, match, final) {
     h('div.cta', final
       ? h('button.btn.primary.big', { onclick: () => app.go('campaign') }, 'Continue')
       : h('button.btn.primary.big', { onclick: () => app.go('battle', { match }) }, `Play round ${round + 1}`)));
+
+  /** Turns a card over: the back closes edge-on, the face opens. */
+  const turnOver = async (slot) => {
+    const face = miniCard(app, slot.cardId);
+    await slot.el.animate([{ transform: 'none' }, { transform: 'rotateY(90deg)' }], { duration: 110, easing: 'ease-in' }).finished.catch(() => {});
+    if (!slot.el.isConnected) return;
+    slot.el.replaceWith(face);
+    app.sound('draw');
+    face.animate([{ transform: 'rotateY(-90deg)' }, { transform: 'none' }], { duration: 130, easing: 'ease-out' });
+  };
   return {
     el,
-    enter() {
+    async enter() {
       el.querySelector('.result-title')?.animate([{ transform: 'scale(1.6)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
+      for (const row of toTurn) {
+        await wait(260);
+        for (const slot of row.slots) {
+          if (!el.isConnected) return;
+          await turnOver(slot);
+        }
+        // The result, stamped on once the cards are up.
+        if (row.played) {
+          row.status.textContent = row.label;
+          row.status.animate([{ transform: 'scale(2.2)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 320, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+          app.sound('select');
+        }
+      }
     },
   };
 }
@@ -338,8 +440,8 @@ function scoreView(app, match, final) {
 /** What a campaign match's outcome meant for the campaign. */
 function campaignNote(result, campaign) {
   if (result === MATCH_OUTCOME.LOST) {
-    return campaign.lives > 0 ? `You lose a life: ${campaign.lives} left. Try again.` : 'You have no lives left.';
+    return campaign.lives > 0 ? `That costs a seed-cake: ${cakesLeft(campaign.lives)}. Try again.` : 'That was your last seed-cake.';
   }
-  if (result === MATCH_OUTCOME.TIE) return 'A tie costs no life, but you must face them again.';
-  return 'On to the next.';
+  if (result === MATCH_OUTCOME.TIE) return 'A tie costs no seed-cake, but you must face them again.';
+  return 'The road goes on.';
 }

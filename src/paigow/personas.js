@@ -39,6 +39,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['I like less than half of you half as well as you deserve. Well played.', 'Well! I shall have to make a speech about that.'],
       comeback: ['The party is not over yet!', 'Fireworks! I knew I had some left.'],
       collapse: ['Oh dear. Too much cake.', 'Somebody has eaten my good cards.'],
+      kill: ['One fewer guest at your table, I\'m afraid.', 'Dear me. He did not even stay for the speech.'],
+      loss: ['Now that was one of my favourite guests!', 'Oh, I had saved him a slice of cake.'],
+      ring: ['A borrowed ring at my party? How very familiar.', 'Mind that ring. They are trickier presents than they look.'],
     },
   },
   burglarBilbo: {
@@ -50,6 +53,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Caught red-handed. It does happen.', 'You would make a fine burglar yourself.'],
       comeback: ['Now you see me...', 'A lucky number, that one.'],
       collapse: ['Oh, bother. I was spotted.', 'Thorin would never let me hear the end of this.'],
+      kill: ['Snip! One less to guard your pockets.', 'He never saw me coming. They seldom do.'],
+      loss: ['Bother! I was rather fond of that one.', 'Well, that is one way to lighten my pack.'],
+      ring: ['You did not come by that ring honestly. I approve.', 'Pocketed a ring, have you? We are two of a kind.'],
     },
   },
   gandalf: {
@@ -63,6 +69,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Ha! You surprised me. That happens less often than you might think.', 'Splendid. I shall think about that one on the road.'],
       comeback: ['Do not count the wizard out just yet.', 'Ah, there is the light I was looking for.'],
       collapse: ['Hm. I seem to have walked into that.', 'No, no. That one was my own doing.'],
+      kill: ['I did warn him not to stand there.', 'That one should have fled while he could.'],
+      loss: ['Hm! You strike harder than you look.', 'A good companion, lost. I shall remember him.'],
+      ring: ['That ring was not made for your hand. Use it sparingly.', 'Borrowed power is still a burden. Take care.'],
     },
   },
   oldManWillow: {
@@ -76,6 +85,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Go, then. Go, before the branches close.', 'Hmm. You found the path out. Few do.'],
       comeback: ['What falls feeds the roots. And the roots grow.', 'Every fallen thing makes the forest stronger.'],
       collapse: ['Creak... crack... no, no, that is not how it goes.', 'You have woken the old tree. Unwise.'],
+      kill: ['Into the crack he goes. Shut tight.', 'The roots have him now. Hush.'],
+      loss: ['You have broken a bough. The forest will not forget.', 'Snap. That one was a hundred years in the growing.'],
+      ring: ['A bright little ring. The river would like that.', 'Rings, rings. Lay it down among the leaves and sleep.'],
     },
   },
   gildor: {
@@ -88,6 +100,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Well played. The Elves will remember it in song.', 'You have more courage than you know, and more skill.'],
       comeback: ['Here come my companions, out of the trees.', 'The Elves are never so few as they seem.'],
       collapse: ['The shadow lengthens. We must be going.', 'Even the Firstborn may be caught on the road.'],
+      kill: ['He goes to the Halls of Waiting. I am sorry for it.', 'A swift end, and a clean one. We do not gloat.'],
+      loss: ['He will be sung of under the stars tonight.', 'A grievous loss. The woods are quieter for it.'],
+      ring: ['You bear a ring that was another\'s. It will not rest easy.', 'That ring remembers its last bearer. Listen to it.'],
     },
   },
   riderInBlack: {
@@ -101,6 +116,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Ssss... this is not finished.', 'Run, then. We will follow.'],
       comeback: ['I can feel it. It calls to me.', 'Closer now. Much closer.'],
       collapse: ['The light... it burns.', 'Fire, and Elves. We withdraw. For now.'],
+      kill: ['One less between us and the Ring.', 'It screams. Good.'],
+      loss: ['A horse lost, a cloak emptied. We are still nine.', 'You will pay for that at the Ford.'],
+      ring: ['Yesss. Put it on. We see you better so.', 'Another ring. It all returns to the Master in the end.'],
     },
   },
   tomBombadil: {
@@ -112,6 +130,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Well, well! You beat old Tom. The river laughs at both of us.', 'Ho ho! A clever game. Tom will hum about it.'],
       comeback: ['Up again, up again, Tom is dancing!', 'The willow lets go, and Tom is merry!'],
       collapse: ['Oho, a puddle where Tom meant to step!', 'Never mind, never mind. The sun still shines.'],
+      kill: ['Down he goes, derry dol! Tom\'s too quick for him!', 'Lie you there, my hearty! No more fighting for you!'],
+      loss: ['Hey now! That was one of Tom\'s own friends!', 'Ho! A sharp knock, that. Tom felt it in his boots.'],
+      ring: ['A ring, is it? It has no hold on old Tom!', 'Pretty trinket! Tom could make it vanish, if he liked.'],
     },
   },
   sauron: {
@@ -123,6 +144,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['A spark. Nothing more. I will find you again.', 'You have won nothing but my attention.'],
       comeback: ['The shadow returns. It always returns.', 'Did you think the Eye had closed?'],
       collapse: ['Insolence. You will regret it.', 'This changes nothing. Nothing!'],
+      kill: ['One more for the pits.', 'Crushed. As all things are, in time.'],
+      loss: ['A slave is spent. There are ten thousand more.', 'You will regret that when the gates open.'],
+      ring: ['My rings. All of them are mine.', 'Wear it. Each one brings you nearer to me.'],
     },
   },
   saruman: {
@@ -134,6 +158,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['A mere accident of the draw.', 'Hm. I shall have to revise my calculations.'],
       comeback: ['As I foresaw. Every turn of it.', 'The plan holds. It always held.'],
       collapse: ['That was not in the palantír.', 'You are cleverer than you look. Irritating.'],
+      kill: ['A pity. He might have served me, had he been wiser.', 'So fall those who will not hear reason.'],
+      loss: ['Crude. But I confess, effective.', 'You break a thing you do not understand.'],
+      ring: ['A lesser ring, in lesser hands. How quaint.', 'You toy with ring-lore. I wrote the books on it.'],
     },
   },
   theoden: {
@@ -145,6 +172,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Well struck. Rohan bows to a worthy foe.', 'Fall back and regroup. We shall meet again.'],
       comeback: ['To me, riders! The day is not lost!', 'Now the tide turns. Charge!'],
       collapse: ['Hold the line! Hold it!', 'The enemy is stronger than the scouts said.'],
+      kill: ['Down he goes! Ride on, ride on!', 'A red blade, and a foe unhorsed!'],
+      loss: ['A brave rider has fallen. Bear him from the field.', 'Alas! He rode with me at many a charge.'],
+      ring: ['Rings and wizardry! Give me a good spear instead.', 'That is no weapon for an honest field.'],
     },
   },
   denethor: {
@@ -156,6 +186,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['So the city falls. I always knew it would.', 'Go, then. Take your victory and leave me.'],
       comeback: ['Perhaps there is strength in the old blood yet.', 'You see? The Steward does not break.'],
       collapse: ['All is lost. All of it.', 'I was betrayed by my own cards.'],
+      kill: ['So it goes with all your hopes, one by one.', 'Another fool\'s hope spent.'],
+      loss: ['My best, sent out and thrown away. As ever.', 'Burn him with honour. It is all that is left to us.'],
+      ring: ['You carry a ring and think it a gift. I have seen where that ends.', 'Do you think the Stewards do not know a ring when they see one?'],
     },
   },
   elrond: {
@@ -167,6 +200,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['Well done. The young surprise me still.', 'A worthy victory. Remember how you won it.'],
       comeback: ['The river rises in my favor.', 'Patience. The tide always returns.'],
       collapse: ['I did not foresee that.', 'Even the long-lived can be caught unawares.'],
+      kill: ['I take no joy in it. Yet it had to be done.', 'He fought well. It was not enough.'],
+      loss: ['Long has he stood beside me. Too long to lose him so.', 'A hard blow. I have known harder, and endured.'],
+      ring: ['I was there when such rings were made. Be wary of it.', 'You bear another\'s ring. It will ask its price.'],
     },
   },
   galadriel: {
@@ -178,6 +214,9 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       lose: ['You have passed the test. Go in peace.', 'I see now why the Ring was given to small hands.'],
       comeback: ['The light returns to Lothlórien.', 'You thought the wood had gone dark. It never does.'],
       collapse: ['The mirror showed many things. Not this.', 'Even the Lady of the Wood can stumble.'],
+      kill: ['He passes, as all fair things must.', 'Do not weep for him. Not yet.'],
+      loss: ['A light has gone out in the Golden Wood.', 'That grief I foresaw, and could not turn aside.'],
+      ring: ['You bear a ring freely given? No. Taken. I see it.', 'Even the least of rings will test you. I know.'],
     },
   },
 });

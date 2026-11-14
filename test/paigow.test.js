@@ -355,7 +355,7 @@ test('Pai Gow has its own opponents, each with a portrait, banter and the Strate
     // A portrait from another set's card (the Bilbos) names its set; the rest are LTR cards in the game.
     if (!opponent.portrait.set) assert.ok(Object.values(CARDS).some((c) => c.name === opponent.portrait.card), `${id}'s portrait card`);
     assert.deepEqual(banterProblems(id, opponent.banter), []);
-    assert.deepEqual(Object.keys(opponent.banter).sort(), ['collapse', 'comeback', 'lose', 'start', 'win']);
+    assert.deepEqual(Object.keys(opponent.banter).sort(), ['collapse', 'comeback', 'kill', 'lose', 'loss', 'ring', 'start', 'win']);
     assert.equal(opponent.ai.kind, 'strategist');
   }
   // Every one of them turns up.
