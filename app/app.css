@@ -1069,12 +1069,9 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 
 /* ---------------------------------------------------------------- state badge
    What a card can do or is doing, as a shape on its top edge as well as the color of its glow:
-   a spark (playable), a sword (can attack, attacking), a shield (can block, blocking). */
+   a sword (can attack, attacking), a shield (can block, blocking). Playable cards in hand show only their glow. */
 .state-badge { position: absolute; top: -10px; left: 50%; z-index: 5; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; display: none; place-items: center; color: #1a1205; box-shadow: 0 0 0 1.5px #0c0b0f, 0 2px 4px rgba(0, 0, 0, .6); pointer-events: none; }
 .state-badge .icon { display: none; width: 12px; height: 12px; }
-.hand .card .state-badge { left: 14px; }
-.hand .card.playable .state-badge { display: grid; background: #7dffa7; }
-.hand .card.playable .sb-play { display: block; }
 .card.z-creatures.can-block .state-badge, .card.z-creatures.blocking .state-badge { display: grid; background: #8cc3ff; }
 .card.z-creatures.can-block .sb-block, .card.z-creatures.blocking .sb-block { display: block; }
 .card.z-creatures.can-attack .state-badge { display: grid; background: #ffb347; }

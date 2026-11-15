@@ -39,7 +39,7 @@ const DRAW_WARNINGS = {
  * What a card can do or is doing, as a symbol on its top edge, so it doesn't rest on the color of its glow alone:
  * a spark (playable), a sword (can attack, attacking) or a shield (can block, blocking). CSS shows the one that applies.
  */
-const stateBadge = () => h('div.state-badge', { 'aria-hidden': 'true' }, icon('sparkle', 'sb-play'), icon('sword', 'sb-attack'), icon('shield', 'sb-block'));
+const stateBadge = () => h('div.state-badge', { 'aria-hidden': 'true' }, icon('sword', 'sb-attack'), icon('shield', 'sb-block'));
 
 export class BoardView {
   #app;
