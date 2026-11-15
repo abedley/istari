@@ -146,7 +146,7 @@ picture, dimmed behind the board (darkest behind the two players' bars, where th
 for the card counts on every place), and the *vs* screen names the place. Lives are seed-cakes for the road
 (crumbs where one was eaten).
 
-**The three roads:** the deck builder's decks are the First, Second and Third road (rounds 1 to 3). A new booster
+**Building the decks:** the deck builder's decks are Deck 1, 2 and 3 (rounds 1 to 3). A new booster
 arrives as a parcel tied with string, tagged for your hero: a tap opens it and the cards land in the tray (once a
 match, remembered as `istari.opened`). *Start match* parts the three decks under "The Fellowship divides". Back
 from a round, the scoreboard turns the opponent's cards for that round over one by one and then stamps the result;

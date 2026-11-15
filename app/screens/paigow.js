@@ -157,8 +157,8 @@ function trayZoom(app, tray) {
   return { zoomOut, zoomIn, update };
 }
 
-/** The three decks' names: the Fellowship divides, and each company takes a road of its own. */
-const ROADS = ['First road', 'Second road', 'Third road'];
+/** A deck's name: deck 1 plays round 1, deck 2 round 2, deck 3 round 3. */
+const deckName = (i) => `Deck ${i + 1}`;
 
 /** The boosters already unwrapped (by match seed), so the present is opened once a match. */
 const OPENED_KEY = 'istari.opened';
@@ -173,12 +173,11 @@ const OPENED_KEY = 'istari.opened';
 function present(app, match, root) {
   if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return null;
   const hero = lookOf(app, match);
-  const spot = placeOf(match.opponentId);
   const face = (side) => h(`div.present-face.${side}`, h('span.present-string.across'), h('span.present-string.down'));
   const lid = h('div.present-face.top', h('span.present-string.across'), h('span.present-string.down'), h('span.present-knot'));
   const box = h('div.present-box', face('front'), face('back'), face('left'), face('right'), face('bottom'), lid);
   const stage = h('div.present-stage', box);
-  const tag = h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards for the road${spot ? ` to ${spot.name}` : ''}`));
+  const tag = h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards to build your decks`));
   const hint = h('div.present-hint', 'Tap to open');
   const sky = h('canvas.present-sky', { 'aria-hidden': 'true' });
   const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' }, tag, stage, hint, sky);
@@ -440,7 +439,7 @@ function buildView(app, match) {
         if (event.target.closest('.pg-chip:not(.empty)')) return;
         tapDeck(i);
       } },
-      h('div.pg-col-label', { 'aria-label': `${ROADS[i] ?? `Road ${i + 1}`}, round ${i + 1}, ${cards.length} of ${deckSize}` }, h('b', ROADS[i] ?? `Road ${i + 1}`), h('span', `${cards.length}/${deckSize}`)),
+      h('div.pg-col-label', { 'aria-label': `${deckName(i)}, round ${i + 1}, ${cards.length} of ${deckSize}` }, h('b', deckName(i)), h('span', `${cards.length}/${deckSize}`)),
       ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked })),
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
@@ -452,7 +451,7 @@ function buildView(app, match) {
       : `Your booster · ${left.length} left${left.length > toPlace ? ` · ${toPlace} to place` : ''}`;
     tray.replaceChildren(...(left.length
       ? left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true }))
-      : [h('p.pg-tray-empty', `The Fellowship divides. The first road is round 1, the second round 2, the third round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
+      : [h('p.pg-tray-empty', `Your decks are ready. Deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
     start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
     start.disabled = !full;
     autoFill.disabled = full;
@@ -461,7 +460,7 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: 'Three roads', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
+    header({ title: 'Build your decks', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
     h('div.cta.pg-build-cta', h('div.row', autoFill, start)));
   // The booster, still wrapped, covers the screen from the start.
@@ -473,7 +472,7 @@ function buildView(app, match) {
       if (!el.isConnected) return;
       coach(app, 'builder', [
         { target: '.pg-tray .pg-card', text: 'This is your booster. Tap a card to put it in the highlighted deck. Hold a card to read it.' },
-        { target: '.pg-board', text: 'Three decks of five, one for each road: the first plays round 1, the second round 2, the third round 3. Your opponent splits theirs the same way, and you don\'t see how. Tap a deck to fill that one.' },
+        { target: '.pg-board', text: 'Three decks of five, one for each round: deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent splits theirs the same way, and you don\'t see how. Tap a deck to fill that one.' },
         { target: '.pg-head-opp', text: 'Who you\'re facing. Tap to read both sides\' Rings of Power before you split your cards.' },
       ], { root: el, stillValid: () => el.isConnected });
     },
@@ -513,7 +512,7 @@ function scoreView(app, match, final, justPlayed = null) {
     });
     if (turns(i)) toTurn.push({ slots: theirs, status, label, played: Boolean(played) });
     return h('div.pg-round', { class: played ? `r-${played.result}` : i === round ? 'r-next' : 'r-later' },
-      h('div.pg-round-head', h('span', `${ROADS[i] ?? `Road ${i + 1}`} · Round ${i + 1}`), status),
+      h('div.pg-round-head', h('span', `${deckName(i)} · Round ${i + 1}`), status),
       h('div.pg-match',
         h('div.pg-side', deck.map((id) => miniCard(app, id))),
         h('span.pg-vs', 'vs'),
@@ -578,14 +577,14 @@ function scoreView(app, match, final, justPlayed = null) {
 }
 
 /**
- * The tale of a finished match: the road that decided it, the hardest blow, what was dealt and taken, and what it
+ * The tale of a finished match: the round that decided it, the hardest blow, what was dealt and taken, and what it
  * added to the Red Book (new cards, a first win, anything unlocked).
  */
 function recapBlock(match, { stats, newCards, firstWin, unlocks }, opponent) {
   const decided = decidingRound(match);
   const fought = stats.dealt + stats.taken + stats.felled + stats.lost > 0;
   const lines = [
-    decided !== null ? `Decided on the ${(ROADS[decided] ?? `road ${decided + 1}`).toLowerCase()}.` : null,
+    decided !== null ? `Decided in round ${decided + 1}.` : null,
     stats.blow ? `Hardest blow: ${stats.blow.name}, for ${stats.blow.amount}.` : null,
     fought ? `Damage dealt ${stats.dealt}, taken ${stats.taken}.` : null,
     fought ? `Creatures felled ${stats.felled}, lost ${stats.lost}.` : null,
