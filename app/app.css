@@ -1200,17 +1200,48 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .cp-over-place { font: 800 14px var(--title); letter-spacing: .3em; text-transform: uppercase; color: #f2e3b8; text-shadow: 0 1px 4px rgba(0, 0, 0, .9); }
 
 /* ---------------------------------------------------------------- the booster as a present, and the parting of the decks */
-.present { position: absolute; inset: 0; z-index: 50; appearance: none; border: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; background: radial-gradient(circle at 50% 45%, rgba(46, 56, 32, .96), rgba(8, 9, 6, .97) 75%); color: var(--ink); cursor: pointer; }
-.present-tag { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 18px; border-radius: 6px; background: linear-gradient(180deg, #fbf7ea, #ece3cb); color: #241c10; box-shadow: 0 4px 12px rgba(0, 0, 0, .5); transform: rotate(-3deg); }
+.present { position: absolute; inset: 0; z-index: 50; appearance: none; border: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; background: radial-gradient(circle at 50% 45%, #2e3820, #080906 75%); color: var(--ink); cursor: pointer; overflow: hidden; }
+.present::before { content: ''; position: absolute; inset: 0; background: #fff6d6; opacity: 0; pointer-events: none; }
+.present.flash::before { animation: present-flash .5s ease-out; }
+@keyframes present-flash { 0% { opacity: 0; } 15% { opacity: .85; } 100% { opacity: 0; } }
+/* Once open, the night clears to the decks; the canvas of sparks stays on top until the last one has fallen. */
+.present.clearing { background: transparent; }
+.present.clearing::after { content: ''; position: absolute; inset: 0; z-index: -1; background: radial-gradient(circle at 50% 45%, #2e3820, #080906 75%); animation: present-clear .55s ease-out forwards; }
+@keyframes present-clear { to { opacity: 0; } }
+.present-sky { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.present-tag { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 18px; border-radius: 6px; background: linear-gradient(180deg, #fbf7ea, #ece3cb); color: #241c10; box-shadow: 0 4px 12px rgba(0, 0, 0, .5); transform: rotate(-3deg); }
 .present-tag b { font: 700 22px var(--display); }
 .present-tag span { font: italic 15px var(--rules); }
-/* A parcel in brown paper, tied with string. */
-.present-parcel { position: relative; width: 170px; height: 220px; border-radius: 8px; background: var(--grain), linear-gradient(160deg, #b89466, #7d5c36 70%, #5e4226); background-size: 96px 96px, auto; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .15), inset 0 -18px 30px rgba(0, 0, 0, .25), 0 14px 30px rgba(0, 0, 0, .65); }
+/* A parcel in brown paper, tied with string: a box in 3D, turning slowly as it floats. */
+.present-stage { --w: 160px; --h: 200px; --d: 70px; --half-depth: calc(var(--d) / 2); position: relative; width: var(--w); height: var(--h); perspective: 700px; }
+.present-stage::after { content: ''; position: absolute; left: 10%; right: 10%; bottom: -46px; height: 18px; border-radius: 50%; background: radial-gradient(rgba(0, 0, 0, .55), transparent 70%); animation: present-shadow 4s ease-in-out infinite; }
+.present-box { position: absolute; inset: 0; transform-style: preserve-3d; animation: present-turn 6s ease-in-out infinite; }
+@keyframes present-turn {
+  0%, 100% { transform: translateY(0) rotateX(-14deg) rotateY(-28deg); }
+  50% { transform: translateY(-12px) rotateX(-8deg) rotateY(28deg); }
+}
+@keyframes present-shadow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.85); opacity: .7; } }
+.present-face { position: absolute; left: 50%; top: 50%; backface-visibility: hidden; border-radius: 3px; background: var(--grain), linear-gradient(160deg, #c09c6c, #84623a 70%, #634628); background-size: 96px 96px, auto; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 -16px 26px rgba(0, 0, 0, .22); }
+.present-face.front, .present-face.back { width: var(--w); height: var(--h); margin: calc(var(--h) / -2) 0 0 calc(var(--w) / -2); }
+.present-face.left, .present-face.right { width: var(--d); height: var(--h); margin: calc(var(--h) / -2) 0 0 calc(var(--d) / -2); }
+.present-face.top, .present-face.bottom { width: var(--w); height: var(--d); margin: calc(var(--d) / -2) 0 0 calc(var(--w) / -2); }
+.present-face.front { transform: translateZ(var(--half-depth)); }
+.present-face.back { transform: rotateY(180deg) translateZ(var(--half-depth)); }
+.present-face.left { transform: rotateY(-90deg) translateZ(calc(var(--w) / 2)); filter: brightness(.72); }
+.present-face.right { transform: rotateY(90deg) translateZ(calc(var(--w) / 2)); filter: brightness(.72); }
+.present-face.top { transform: rotateX(90deg) translateZ(calc(var(--h) / 2)); filter: brightness(1.18); }
+.present-face.bottom { transform: rotateX(-90deg) translateZ(calc(var(--h) / 2)); filter: brightness(.5); }
 .present-string { position: absolute; background: #e9dfc4; box-shadow: 0 1px 2px rgba(0, 0, 0, .5); }
-.present-string.across { left: 0; right: 0; top: 50%; height: 3px; margin-top: -1.5px; }
-.present-string.down { top: 0; bottom: 0; left: 50%; width: 3px; margin-left: -1.5px; }
-.present-knot { position: absolute; left: 50%; top: 50%; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; border: 3px solid #e9dfc4; box-shadow: 0 1px 3px rgba(0, 0, 0, .6), 14px -10px 0 -7px #e9dfc4, -14px -10px 0 -7px #e9dfc4; }
-.present-hint { font: 700 13px var(--title); letter-spacing: .26em; text-transform: uppercase; color: #f7e0a0; animation: glow 1.6s ease-in-out infinite; }
+.present-string.across { left: 0; right: 0; top: 50%; height: 4px; margin-top: -2px; }
+.present-string.down { top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; }
+.present-face.left .present-string.down, .present-face.right .present-string.down { display: none; }
+.present-face.top .present-string.across { display: none; }
+.present-knot { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 4px solid #e9dfc4; box-shadow: 0 1px 3px rgba(0, 0, 0, .6), 16px -12px 0 -8px #e9dfc4, -16px -12px 0 -8px #e9dfc4; }
+/* Opening: light leaks from the seams and the paper glows, brighter and brighter. */
+.present-box.stirring { animation-play-state: paused; }
+.present-box.stirring .present-face { animation: present-stir .65s ease-in forwards; }
+@keyframes present-stir { to { box-shadow: inset 0 0 0 2px #ffe9a8, inset 0 0 40px rgba(255, 220, 130, .9), 0 0 40px 10px rgba(255, 210, 110, .8); } }
+.present-hint { position: relative; z-index: 1; font: 700 13px var(--title); letter-spacing: .26em; text-transform: uppercase; color: #f7e0a0; animation: glow 1.6s ease-in-out infinite; }
 .pg-parting { position: absolute; left: 0; right: 0; top: 34%; z-index: 40; height: 76px; display: grid; place-items: center; background: linear-gradient(90deg, transparent, rgba(18, 15, 9, .94) 14%, rgba(18, 15, 9, .94) 86%, transparent); box-shadow: inset 0 1px 0 rgba(233, 196, 106, .7), inset 0 -1px 0 rgba(233, 196, 106, .7); pointer-events: none; }
 .pg-parting span { font: 800 21px var(--title); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); text-shadow: 0 2px 0 rgba(0, 0, 0, .6), 0 0 18px rgba(233, 196, 106, .6); }
 .pg-match .pg-side { perspective: 600px; }

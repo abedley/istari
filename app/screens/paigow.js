@@ -164,40 +164,164 @@ const ROADS = ['First road', 'Second road', 'Third road'];
 const OPENED_KEY = 'istari.opened';
 
 /**
- * The booster as a present: a parcel tied with string, with a tag. A tap opens it, and the cards arrive in the tray.
+ * The booster as a present: a parcel in brown paper tied with string, turning slowly in the air. A tap and it rumbles,
+ * its lid flies off and it bursts like one of Gandalf's fireworks; then the cards arrive in the tray.
  * Shown once for a match (its seed is remembered), and not at all when the system asks for less motion.
- * Resolves once it's open (at once when there's nothing to show).
+ * Built with the screen, over it, so the screen comes in already covered: nothing behind it shows until it's opened.
+ * Returns `{ layer, opened }` (`opened` resolves once it's open and the last spark has fallen), or null when there's nothing to show.
  */
 function present(app, match, root) {
-  if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return Promise.resolve();
-  app.storage.setItem(OPENED_KEY, String(match.seed));
+  if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return null;
   const hero = lookOf(app, match);
   const spot = placeOf(match.opponentId);
-  return new Promise((resolve) => {
-    const parcel = h('div.present-parcel', h('span.present-string.across'), h('span.present-string.down'), h('span.present-knot'));
-    const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' },
-      h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards for the road${spot ? ` to ${spot.name}` : ''}`)),
-      parcel,
-      h('div.present-hint', 'Tap to open'));
-    root.append(layer);
-    layer.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
-    parcel.animate([{ transform: 'translateY(30px) scale(.8) rotate(-4deg)' }, { transform: 'none' }], { duration: 500, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+  const face = (side) => h(`div.present-face.${side}`, h('span.present-string.across'), h('span.present-string.down'));
+  const lid = h('div.present-face.top', h('span.present-string.across'), h('span.present-string.down'), h('span.present-knot'));
+  const box = h('div.present-box', face('front'), face('back'), face('left'), face('right'), face('bottom'), lid);
+  const stage = h('div.present-stage', box);
+  const tag = h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards for the road${spot ? ` to ${spot.name}` : ''}`));
+  const hint = h('div.present-hint', 'Tap to open');
+  const sky = h('canvas.present-sky', { 'aria-hidden': 'true' });
+  const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' }, tag, stage, hint, sky);
+  root.append(layer);
+  stage.animate([{ transform: 'translateY(40px) scale(.75)' }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+
+  const opened = new Promise((resolve) => {
     layer.addEventListener('click', async () => {
-      app.sound('reward');
+      app.storage.setItem(OPENED_KEY, String(match.seed));
       layer.disabled = true;
-      await Promise.all([
-        parcel.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(1.5) rotate(6deg)', opacity: 0 }], { duration: 380, easing: 'ease-in', fill: 'forwards' }).finished,
-        layer.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, fill: 'forwards' }).finished,
-      ]).catch(() => {});
-      layer.remove();
-      // The cards arrive in the tray, one after another.
+      app.sound('select');
+      const fade = { opacity: 0, transform: 'translateY(-10px)' };
+      tag.animate([{}, fade], { duration: 250, fill: 'forwards' });
+      hint.animate([{}, fade], { duration: 200, fill: 'forwards' });
+      // It rumbles, brighter and brighter, as the magic inside gets out of hand.
+      box.classList.add('stirring');
+      await stage.animate([
+        { transform: 'none' }, { transform: 'translate(-3px, 1px) rotate(-2deg)' }, { transform: 'translate(3px, -2px) rotate(2deg) scale(1.03)' },
+        { transform: 'translate(-5px, 0) rotate(-4deg) scale(1.05)' }, { transform: 'translate(5px, -3px) rotate(4deg) scale(1.08)' },
+        { transform: 'translate(-6px, 2px) rotate(-5deg) scale(1.1)' }, { transform: 'translateY(6px) scale(1.14, .92)' },
+      ], { duration: 650, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
+      app.sound('reward');
+      // Bang: the lid flies off, the box is gone in a flash, and the sky fills with sparks.
+      const rect = layer.getBoundingClientRect();
+      const at = box.getBoundingClientRect();
+      const fireworks = fireworksIn(sky, rect);
+      fireworks.burst(at.left + at.width / 2 - rect.left, at.top + at.height / 2 - rect.top, { count: 140, power: 1.25 });
+      lid.animate([{}, { transform: 'rotateX(90deg) translateZ(calc(var(--h) / 2 + 260px)) rotateZ(160deg)', opacity: 0 }],
+        { duration: 600, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' });
+      stage.animate([{ transform: 'translateY(6px) scale(1.14, .92)', opacity: 1, filter: 'brightness(1)' },
+        { transform: 'scale(1.45)', opacity: 0, filter: 'brightness(3)' }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+      layer.classList.add('flash');
+      // More rockets go up around it, one after another.
+      const shots = [[0.22, 0.24], [0.78, 0.2], [0.5, 0.12], [0.3, 0.42], [0.72, 0.4]];
+      shots.forEach(([x, y], i) => setTimeout(() => fireworks.rocket(rect.width * x, rect.height * y), 160 + i * 150));
+      await wait(700);
+      // The night clears to the decks, the last sparks still falling over them, and the cards arrive in the tray.
+      layer.style.pointerEvents = 'none';
+      layer.classList.add('clearing');
       [...root.querySelectorAll('.pg-tray .pg-card')].forEach((card, i) => {
         card.animate([{ opacity: 0, transform: 'translateY(-40px) scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'none' }],
-          { duration: 420, delay: i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
+          { duration: 420, delay: 150 + i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
       });
+      await fireworks.done;
+      layer.remove();
       resolve();
     }, { once: true });
   });
+  return { layer, opened };
+}
+
+/** Gandalf's colours: gold, green, red, blue, violet and white. */
+const SPARK_COLORS = ['#ffd36b', '#fff1c2', '#7dffa7', '#ff6b5a', '#7ab8ff', '#d79bff', '#ffffff'];
+
+/**
+ * Fireworks on a canvas laid over `rect`: `burst(x, y)` throws a ring of sparks out from a point (with crackling
+ * glitter as they fall), and `rocket(x, y)` sends one up from the bottom to burst there. `done` resolves once the sky is dark again.
+ */
+function fireworksIn(canvas, rect) {
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = rect.width * ratio;
+  canvas.height = rect.height * ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  const sparks = [];
+  const rockets = [];
+  let pending = 0;
+  let finish;
+  const done = new Promise((resolve) => { finish = resolve; });
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+
+  const burst = (x, y, { count = 80, power = 1 } = {}) => {
+    const colors = [pick(SPARK_COLORS), pick(SPARK_COLORS), '#fff1c2'];
+    const ring = Math.random() < 0.5;
+    for (let i = 0; i < count; i += 1) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.2;
+      const speed = (ring ? 0.85 + Math.random() * 0.15 : 0.25 + Math.random() * 0.75) * 7.5 * power;
+      sparks.push({
+        x, y, px: x, py: y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        life: 1, decay: 0.012 + Math.random() * 0.014, color: pick(colors), size: 1.4 + Math.random() * 1.6,
+        glitter: Math.random() < 0.35,
+      });
+    }
+  };
+  const rocket = (x, y) => {
+    pending += 1;
+    const from = { x: x + (Math.random() - 0.5) * 60, y: rect.height + 10 };
+    rockets.push({ x: from.x, y: from.y, tx: x, ty: y, t: 0, sx: from.x, sy: from.y });
+  };
+
+  let last = performance.now();
+  const frame = (now) => {
+    const step = Math.min((now - last) / 16.7, 3);
+    last = now;
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = rockets.length - 1; i >= 0; i -= 1) {
+      const r = rockets[i];
+      r.t = Math.min(1, r.t + 0.045 * step);
+      const ease = 1 - (1 - r.t) ** 2;
+      const px = r.x;
+      const py = r.y;
+      r.x = r.sx + (r.tx - r.sx) * ease;
+      r.y = r.sy + (r.ty - r.sy) * ease;
+      ctx.strokeStyle = 'rgba(255, 230, 170, .9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px, py + 14);
+      ctx.lineTo(r.x, r.y);
+      ctx.stroke();
+      if (r.t >= 1) {
+        rockets.splice(i, 1);
+        pending -= 1;
+        burst(r.x, r.y, { count: 60 + Math.floor(Math.random() * 40) });
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i -= 1) {
+      const s = sparks[i];
+      s.px = s.x;
+      s.py = s.y;
+      s.vx *= 0.955 ** step;
+      s.vy = s.vy * 0.955 ** step + 0.07 * step;
+      s.x += s.vx * step;
+      s.y += s.vy * step;
+      s.life -= s.decay * step;
+      if (s.life <= 0) { sparks.splice(i, 1); continue; }
+      // Glittering sparks twinkle as they fade.
+      const alpha = s.glitter && s.life < 0.6 ? (Math.random() < 0.5 ? s.life : 0.1) : s.life;
+      ctx.globalAlpha = Math.max(0, alpha);
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = s.size;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(s.px - s.vx * 1.5, s.py - s.vy * 1.5);
+      ctx.lineTo(s.x, s.y);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if (sparks.length || rockets.length || pending) requestAnimationFrame(frame);
+    else finish();
+  };
+  requestAnimationFrame(frame);
+  return { burst, rocket, done };
 }
 
 function buildView(app, match) {
@@ -340,10 +464,12 @@ function buildView(app, match) {
     header({ title: 'Three roads', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
     h('div.cta.pg-build-cta', h('div.row', autoFill, start)));
+  // The booster, still wrapped, covers the screen from the start.
+  const parcel = present(app, match, el);
   return {
     el,
     enter: async () => {
-      await present(app, match, el);
+      if (parcel) await parcel.opened;
       if (!el.isConnected) return;
       coach(app, 'builder', [
         { target: '.pg-tray .pg-card', text: 'This is your booster. Tap a card to put it in the highlighted deck. Hold a card to read it.' },
