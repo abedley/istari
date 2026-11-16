@@ -50,13 +50,13 @@ export function finishCampaignMatch(app, match, outcome) {
 }
 
 /**
- * Your lives, as seed-cakes for the road: whole ones left, crumbs where one was eaten. A lost match costs one.
+ * Your lives, drawn as seed-cakes for the road: whole ones left, crumbs where one was eaten. A lost match costs one.
  */
-export const cakes = (lives) => h('div.cp-lives', { role: 'img', 'aria-label': cakesLeft(lives) },
+export const cakes = (lives) => h('div.cp-lives', { role: 'img', 'aria-label': livesLeft(lives) },
   Array.from({ length: CAMPAIGN_RULES.lives }, (_, i) => h(`span.cp-cake${i < lives ? '.full' : ''}`, icon(i < lives ? 'seedCake' : 'crumbs'))));
 
-/** "3 seed-cakes left", "1 seed-cake left". */
-export const cakesLeft = (lives) => `${lives} seed-${lives === 1 ? 'cake' : 'cakes'} left`;
+/** "3 lives left", "1 life left". */
+export const livesLeft = (lives) => `${lives} ${lives === 1 ? 'life' : 'lives'} left`;
 
 /** What a set of rings costs in starting life, in words. */
 const lifeLine = (rings) => {
@@ -68,7 +68,7 @@ const lifeLine = (rings) => {
 const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.commons + extra} commons, ${BOOSTER.commons + BOOSTER.uncommons + BOOSTER.rares + BOOSTER.wildcards + extra} cards in all: make three decks of five and leave the rest out.`;
 
 /**
- * The campaign (src/paigow/campaign.js): a road of opponents (drawn as a map, roadMap.js), three lives (seed-cakes), and the rewards you take
+ * The campaign (src/paigow/campaign.js): a road of opponents (drawn as a map, roadMap.js), three lives, and the rewards you take
  * from those you beat (Rings of Power, or extra commons). With `heroId`, a new campaign begins for that hero.
  * `walkFrom`: the stop just left, after a win, so the hero walks up the road from it (see roadMap).
  */
@@ -93,7 +93,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
     app.go('paigow', { match: campaign.match });
   };
   const abandon = async () => {
-    if (await app.overlays.confirm({ title: 'Turn back for home?', text: 'The campaign ends here. Your seed-cakes and rings will be lost.', yes: 'Turn back', danger: true })) {
+    if (await app.overlays.confirm({ title: 'Turn back for home?', text: 'The campaign ends here. Your lives and rings will be lost.', yes: 'Turn back', danger: true })) {
       saveCampaign(app, null);
       app.go('title');
     }
@@ -136,8 +136,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
     h('button.cp-ringsbar', { type: 'button', onclick: showRings },
       h('span.cp-ringsbar-icons', rings.map((id) => powerIcon(id, 'power-sym') ?? h('span.ring-mark'))),
       h('span.cp-ringsbar-text',
-        h('b', `Rings of Power · ${campaign.rings.length}/${CAMPAIGN_RULES.maxRings} taken`),
-        h('span', `${cakesLeft(campaign.lives)}. A lost match costs one.`))),
+        h('b', `Rings of Power · ${campaign.rings.length}/${CAMPAIGN_RULES.maxRings} taken`))),
     h('div.cta',
       h('button.btn.primary.big', { onclick: play }, campaign.match ? `Continue at ${spot.name}` : `Face ${opponent.name}`),
       h('button.btn.ghost', { onclick: abandon }, 'Turn back for home')));
@@ -177,7 +176,7 @@ function offerView(app, campaign) {
   return { el, ambience: onward?.ambience };
 }
 
-/** The campaign won (at the Grey Havens) or lost (at the place where the last seed-cake went). */
+/** The campaign won (at the Grey Havens) or lost (at the place where the last life was lost). */
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
   const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
@@ -204,8 +203,8 @@ function overView(app, campaign) {
       h(`div.result-title.${won ? 'victory' : 'defeat'}`, won ? 'Victory' : 'Defeat'),
       crest(personInfo(hero), { size: 'lg' }),
       h('p.cp-offer-lead', won
-        ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${cakesLeft(campaign.lives).replace(' left', '')} to spare.`
-        : `The last seed-cake is gone at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),
+        ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
+        : `The last life is lost at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),
       news.map((name) => h('p.recap-unlock', `Unlocked: ${name}. Choose it when you next set out.`)),
       campaign.rings.length ? h('div.cp-rings', campaign.rings.map((id) => ringBlock(id))) : null,
       h('p.pg-help', `${campaign.history.length} ${campaign.history.length === 1 ? 'match' : 'matches'} played.`)),

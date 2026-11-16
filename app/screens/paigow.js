@@ -9,7 +9,7 @@ import {
 } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, currentHeroId, DEFAULT_HERO } from '../../src/paigow/personas.js';
 import { powerBlock, ringBlock } from './heroes.js';
-import { loadCampaign, saveCampaignMatch, finishCampaignMatch, cakesLeft } from './campaign.js';
+import { loadCampaign, saveCampaignMatch, finishCampaignMatch, livesLeft } from './campaign.js';
 import { coach } from '../coach.js';
 import { placeOf } from '../../src/paigow/places.js';
 import { recordBooster, recordMatchEnd, recordCampaignProgress, recap } from '../../src/paigow/book.js';
@@ -633,8 +633,8 @@ async function share(app, text, button) {
 /** What a campaign match's outcome meant for the campaign. */
 function campaignNote(result, campaign) {
   if (result === MATCH_OUTCOME.LOST) {
-    return campaign.lives > 0 ? `That costs a seed-cake: ${cakesLeft(campaign.lives)}. Try again.` : 'That was your last seed-cake.';
+    return campaign.lives > 0 ? `That costs a life: ${livesLeft(campaign.lives)}. Try again.` : 'That was your last life.';
   }
-  if (result === MATCH_OUTCOME.TIE) return 'A tie costs no seed-cake, but you must face them again.';
+  if (result === MATCH_OUTCOME.TIE) return 'A tie costs no life, but you must face them again.';
   return 'The road goes on.';
 }

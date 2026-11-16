@@ -143,7 +143,7 @@ opponent kept back ("Who waits here?") until you reach it, your hero standing at
 after a win; tap a stop for its place, opponent and ring. Each Ring of Power you take darkens the parchment, cools
 its gold and opens the Eye over the Dark Tower wider (`.burden-0` to `.burden-4`). A round is played on its place's
 picture, dimmed behind the board (darkest behind the two players' bars, where the dimmest text is: at least 6:1
-for the card counts on every place), and the *vs* screen names the place. Lives are seed-cakes for the road
+for the card counts on every place), and the *vs* screen names the place. Lives are drawn as seed-cakes for the road
 (crumbs where one was eaten).
 
 **Building the decks:** the deck builder's decks are Deck 1, 2 and 3 (rounds 1 to 3). A new booster

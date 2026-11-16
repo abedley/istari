@@ -99,7 +99,7 @@ export function showHowToPlay(app) {
       'If a full turn cycle passes and nothing lasting has changed, the round is a draw. The board warns you the turn before.',
     ]),
     section('The campaign', [
-      `You face each opponent in turn, at a place on the road from Bag End to Barad-dûr. You set out with ${CAMPAIGN_RULES.lives} seed-cakes: losing a match costs one, and you face them again with new boosters. When the last is gone, the campaign is over.`,
+      `You face each opponent in turn, at a place on the road from Bag End to Barad-dûr. You set out with ${CAMPAIGN_RULES.lives} lives: losing a match costs one, and you face them again with new boosters. When the last is gone, the campaign is over.`,
       `Beat an opponent and you may take their Ring of Power (up to ${CAMPAIGN_RULES.maxRings}), for 1 less starting life each round, or add a common to every booster you open.`,
     ]),
     section('Beside the campaign', [

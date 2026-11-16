@@ -100,7 +100,8 @@ button { font: inherit; color: inherit; touch-action: manipulation; }
 .btn.small { padding: 6px 12px; font-size: 13px; border-radius: 9px; }
 .icon-btn { appearance: none; border: 0; background: rgba(255, 255, 255, .06); color: var(--ink); width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 20px; cursor: pointer; }
 .row { display: flex; gap: 10px; justify-content: center; }
-.cta { display: flex; flex-direction: column; gap: 10px; padding: 14px 20px calc(18px + var(--safe-bottom)); margin-top: auto; }
+/* At the bottom: the home indicator's safe area is margin enough, without more under it. */
+.cta { display: flex; flex-direction: column; gap: 10px; padding: 14px 20px max(14px, var(--safe-bottom)); margin-top: auto; }
 .cta .row .btn { flex: 1; }
 
 header.top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
@@ -1027,7 +1028,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .power-side .hero-name { font-size: 17px; }
 
 /* ---------------------------------------------------------------- campaign */
-/* Lives: seed-cakes for the road, and crumbs where one was eaten. */
+/* Lives: drawn as seed-cakes for the road, and crumbs where one was eaten. */
 .cp-lives { display: flex; gap: 4px; font-size: 22px; line-height: 1; padding-right: 4px; }
 .cp-cake { display: grid; color: rgba(255, 255, 255, .28); }
 .cp-cake.full { color: #e2b96a; filter: drop-shadow(0 0 5px rgba(226, 185, 106, .5)); }
@@ -1050,6 +1051,8 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .cp-offer { align-items: center; justify-content: center; text-align: center; }
 .cp-offer .power { text-align: left; width: 100%; max-width: 420px; }
 .cp-offer-lead { margin: 0; font: italic 17px/1.35 var(--rules); color: var(--ink); max-width: 340px; }
+.screen-campaign .cta { gap: 4px; padding-top: 12px; }
+.screen-campaign .cta .btn.ghost { padding-top: 8px; padding-bottom: 8px; }
 .screen-campaign .result-title { justify-content: center; font-size: 40px; }
 /* A Ring of Power: a small gold ring before its name. */
 .power-sym { width: 1em; height: 1em; margin-right: .4em; vertical-align: -.14em; color: var(--gold); filter: drop-shadow(0 0 3px rgba(233, 196, 106, .5)); }
@@ -1187,7 +1190,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .rm-hero { position: absolute; z-index: 3; width: 38px; height: 38px; margin: 0 0 -58px -62px; pointer-events: none; }
 .rm-hero .crest { box-shadow: 0 0 0 2px #2a1c06, 0 0 0 3.5px #fff6d8, 0 4px 10px rgba(0, 0, 0, .6); }
 /* Your rings, in a line under the map: tap for what they do. */
-.cp-ringsbar { appearance: none; display: flex; align-items: center; gap: 12px; margin: 10px 10px 0; padding: 8px 12px; min-height: 48px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .28); color: inherit; text-align: left; cursor: pointer; }
+.cp-ringsbar { appearance: none; display: flex; align-items: center; gap: 12px; margin: 10px 10px 0; padding: 8px 12px; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .28); color: inherit; text-align: left; cursor: pointer; }
 .cp-ringsbar-icons { display: flex; gap: 2px; font-size: 20px; color: var(--gold); }
 .cp-ringsbar-icons .power-sym { margin-right: 4px; }
 .cp-ringsbar-text { display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; color: var(--muted); }
