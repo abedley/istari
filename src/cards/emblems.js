@@ -121,8 +121,8 @@ export const EMBLEMS = deepFreeze({
     shufflesIn: ['elvenFarsight', 'elvenFarsight', 'elvenChorus', ...Array(7).fill('forest')],
     activationsPerTurn: 1,
     abilities: [{
-      id: 'power', name: 'Quick Reflexes', text: 'Mill six cards: Add a Legolas\u2019s Quick Reflexes to your hand.',
-      cost: { mill: 6 }, effects: [{ type: EFFECT.PUT_CARDS_IN_HAND, cardIds: ['legolassQuickReflexes'] }],
+      id: 'power', name: 'Quick Reflexes', text: 'Mill six cards: Add a Legolas\u2019s Quick Reflexes to your hand. Activate only as a sorcery.',
+      cost: { mill: 6 }, effects: [{ type: EFFECT.PUT_CARDS_IN_HAND, cardIds: ['legolassQuickReflexes'] }], timing: SORCERY,
     }],
   },
   pippin: power('pippin', 'The Ring of the Tooks', 'Second Breakfast', {

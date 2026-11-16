@@ -534,13 +534,15 @@ function passUntil(game, done) {
 
 const p1Main = (s) => s.activePlayerId === 'p1' && s.phase === 'precombatMain' && s.priorityPlayerId === 'p1' && !s.stack.length && !s.pendingDecision;
 
-test("Legolas's power: his library starts with his kit; mill six cards to add a Legolas's Quick Reflexes to his hand", () => {
+test("Legolas's power: his library starts with his kit; as a sorcery, mill six cards to add a Legolas's Quick Reflexes to his hand", () => {
   const game = new Game({
     players, decks: { p1: ['bear', 'bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 2,
     deckingLoss: false, infiniteMana: true, emblems: { p1: ['legolas'], p2: [] }, startingPlayerId: 'p2', seed: 3,
   });
   game.start();
-  let s = game.getState();
+  let s = passUntil(game, (st) => st.activePlayerId === 'p2' && st.phase === 'precombatMain' && st.priorityPlayerId === 'p1');
+  // Sorcery speed: not on the opponent's turn.
+  assert.equal(activation(s, 'p1'), undefined);
   // The opening hand is still the deck's own; his library is two Elven Farsight, an Elven Chorus and seven Forests.
   assert.deepEqual(s.players[0].hand.map((c) => c.cardId), ['bear', 'bear']);
   assert.deepEqual(s.players[0].library.map((c) => c.cardId).sort(), ['elvenChorus', 'elvenFarsight', 'elvenFarsight', ...Array(7).fill('forest')]);
