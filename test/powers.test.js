@@ -123,9 +123,6 @@ test('each power does what it says', () => {
   assert.ok(s.battlefield.some((p) => p.controllerId === 'p1' && p.subtypes?.includes('Army') && p.power === 1));
   s = usePower(powerGame('saruman'));
   assert.ok(p2Bears(s).some((p) => p.power === 0));
-  s = usePower(powerGame('theoden'));
-  assert.equal(p1Bear(s).power, 3);
-  assert.ok(p1Bear(s).keywords.includes('haste'));
   s = usePower(powerGame('denethor', null, { p2: ['bear', 'bear', 'bear', 'bear', 'bear', 'bear', 'bear'] }));
   assert.equal(s.players[0].life, 19);
   assert.equal(s.players[1].graveyard.length, 1);
@@ -345,6 +342,47 @@ test("Old Man Willow's power: at its end step, if a creature you controlled died
   // The next end step of p1's, with nothing dying, makes none.
   passUntil((st) => st.turn === 6);
   assert.equal(treefolk().length, 1);
+});
+
+test("Théoden's power: whenever you attack, a 2/2 red Human Knight with trample and haste joins the attack, tapped", () => {
+  assert.equal(EMBLEMS.theoden.passive, true);
+  assert.equal(EMBLEMS.theoden.abilities.length, 0);
+  const game = new Game({
+    players, decks: { p1: ['bear'], p2: [] }, cards: { ...CARDS, bear: BEAR }, shuffleLibraries: false,
+    openingHandSize: 1, deckingLoss: false, infiniteMana: true, emblems: { p1: ['theoden'], p2: [] }, startingPlayerId: 'p1',
+  });
+  game.start();
+  const knights = () => game.getState().battlefield.filter((p) => p.controllerId === 'p1' && p.subtypes?.includes('Knight'));
+  const step = (choose) => {
+    const s = game.getState();
+    const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+    const acts = s.validActions.filter((a) => a.playerId === actor);
+    assert.equal(game.dispatch(choose(acts, s) ?? acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type.startsWith('CONFIRM')) ?? acts[0]).ok, true);
+  };
+  // Turn 1: p1 casts its Bear, and doesn't attack (it can't): no Knight.
+  for (let i = 0; i < 200 && game.getState().turn < 3; i++) step((acts) => acts.find((a) => a.type === ACTION.CAST_SPELL));
+  assert.equal(knights().length, 0);
+  // Turn 3: the Bear attacks; the trigger resolves before blockers.
+  for (let i = 0; i < 200 && game.getState().pendingDecision?.type !== 'declareAttackers'; i++) step(() => null);
+  const bear = game.getState().battlefield.find((p) => p.cardId === 'bear');
+  assert.equal(game.dispatch({ type: ACTION.TOGGLE_ATTACKER, playerId: 'p1', cardId: bear.id }).ok, true);
+  assert.equal(game.dispatch({ type: ACTION.CONFIRM_ATTACKERS, playerId: 'p1' }).ok, true);
+  for (let i = 0; i < 20 && !knights().length; i++) step(() => null);
+  const [knight] = knights();
+  assert.ok(knight, 'a Knight token');
+  assert.equal(knight.power, 2);
+  assert.equal(knight.toughness, 2);
+  assert.ok(knight.tapped);
+  assert.ok(knight.keywords.includes('trample') && knight.keywords.includes('haste'));
+  assert.ok(knight.colors.some((c) => /^(R|red)$/.test(c)));
+  const attacker = game.getState().combat.attackers.find((a) => a.cardId === knight.id);
+  assert.equal(attacker?.defendingPlayerId, 'p2', 'attacking that player');
+  // Both deal damage: 2 + 2.
+  for (let i = 0; i < 50 && game.getState().turn === 3 && game.getState().phase !== 'postcombatMain'; i++) step(() => null);
+  assert.equal(game.getState().players[1].life, 16);
+  // No attack, no Knight: p2's turn passes, and p1 holds back on turn 5.
+  for (let i = 0; i < 400 && game.getState().turn < 6; i++) step(() => null);
+  assert.equal(knights().length, 1);
 });
 
 test("Old Man Willow's power triggers at each end step, the opponent's too", () => {

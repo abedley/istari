@@ -269,16 +269,6 @@ test('it keeps its blocker home when the swing back would kill it', () => {
   assert.ok(!taken.some((a) => a.type === ACTION.TOGGLE_ATTACKER));
 });
 
-test('a creature Théoden\'s ring sends into battle does attack', () => {
-  const game = position({ p1: { board: ['giant', 'bear'], emblems: ['theoden'] }, p2: { board: ['ox'] } });
-  const giant = game.peekState().battlefield.find((p) => p.cardId === 'giant');
-  const power = game.peekState().validActions.find((a) => a.type === ACTION.ACTIVATE_ABILITY && a.targets?.[0] === giant.id);
-  game.dispatch(power);
-  passTo(game, (s) => s.pendingDecision?.type === 'declareAttackers');
-  const moves = candidates(game.peekState(), 'p1', game);
-  assert.ok(moves.length >= 1 && moves.every((m) => m.attackers.includes(giant.id)), 'every attack considered includes it');
-});
-
 test('a free power with no target is used as soon as it can be', () => {
   assert.equal(EMBLEMS.sauron.abilities[0].timing, 'sorcery');
   const game = position({ p1: { board: ['bear'], emblems: ['sauron'] }, p2: { board: ['ox'] } });

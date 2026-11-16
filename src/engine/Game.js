@@ -4700,6 +4700,14 @@ export class Game extends EventEmitter {
           && (!ability.includesSource || attackers.includes(permanent.id))
           && attacking.filter((c) => matchesFilter(c, ability.filter, this.#filterContext(permanent.controllerId, permanent.id))).length >= (ability.minCount ?? 1));
       }
+      // Emblems (114.4): Théoden's ring, "Whenever you attack".
+      for (const emblem of this.#zones.get(playerId).emblems) {
+        for (const ability of this.#emblemDefinitions[emblem.emblemId].triggeredAbilities ?? []) {
+          if (!triggersOn(ability, TRIGGER.ATTACKS_WITH)) continue;
+          if (attacking.filter((c) => matchesFilter(c, ability.filter, this.#filterContext(playerId))).length < (ability.minCount ?? 1)) continue;
+          this.#triggerAbility(ability, { sourceId: emblem.id, sourceName: emblem.name, controllerId: emblem.controllerId, subject: null });
+        }
+      }
     }
     // The Ring, level 2 (701.54c): "Whenever your Ring-bearer attacks, draw a card, then discard a card."
     const bearer = this.#ringBearer(playerId);

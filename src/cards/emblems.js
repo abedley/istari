@@ -194,12 +194,29 @@ export const EMBLEMS = deepFreeze({
     target: TARGET.CREATURE_OPPONENT_CONTROLS,
     effects: [{ type: EFFECT.PUMP, power: -2, toughness: 0 }],
   }),
-  theoden: power('theoden', 'The Ring of Eorl', 'Ride Now!', {
-    text: '0: Target creature you control gets +1/+0 and gains haste until end of turn. Activate only as a sorcery.',
-    target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, power: 1, toughness: 0, keywords: [KEYWORD.HASTE] }],
-    timing: SORCERY,
-  }),
+  // A passive power that triggers on attacking (`ATTACKS_WITH` with no filter: "Whenever you attack"; see Game's
+  // #confirmAttackers).
+  theoden: {
+    id: 'theoden',
+    name: 'The Ring of Eorl',
+    ring: true,
+    passive: true,
+    power: 'Ride Now!',
+    text: 'Whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that\u2019s tapped and attacking that player.',
+    abilities: [],
+    triggeredAbilities: [{
+      id: 'rideNow',
+      trigger: TRIGGER.ATTACKS_WITH,
+      text: 'Whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that\u2019s tapped and attacking that player.',
+      effects: [{
+        type: EFFECT.CREATE_TOKEN, count: 1, tapped: true, attacking: true, token: {
+          colors: ['red'], subtypes: ['Human', 'Knight'], power: 2, toughness: 2, keywords: [KEYWORD.TRAMPLE, KEYWORD.HASTE],
+          // The Human Knight of the LTR Commander decks (TLTC 9).
+          artScryfallId: '491fc1c3-a46e-4cfd-a749-57f4c96f6aea',
+        },
+      }],
+    }],
+  },
   denethor: power('denethor', 'The Steward’s Ring', 'Despair', {
     text: 'Pay 1 life: Each opponent discards a card. Activate only as a sorcery.',
     cost: { life: 1 },

@@ -51,6 +51,18 @@ export const TOKEN_PRESENTATION = {
     "typeLine": "Token Creature — Halfling",
     "scryfallId": "bbd9ff58-4d38-4d34-9dfc-6f788830297e"
   },
+  "token:Human Knight Token:2/2:red:trample,haste": {
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/4/9/491fc1c3-a46e-4cfd-a749-57f4c96f6aea.jpg?1783916057",
+      "card": "https://cards.scryfall.io/normal/front/4/9/491fc1c3-a46e-4cfd-a749-57f4c96f6aea.jpg?1783916057"
+    },
+    "artist": "Inka Schulz",
+    "rarity": "common",
+    "set": "tltc",
+    "collectorNumber": "9",
+    "typeLine": "Token Creature — Human Knight",
+    "scryfallId": "491fc1c3-a46e-4cfd-a749-57f4c96f6aea"
+  },
   "token:Human Soldier Token:1/1:white:": {
     "image": {
       "art": "https://cards.scryfall.io/art_crop/front/a/6/a6181330-7521-4ec6-be6c-b35487c2d2d4.jpg?1783916047",
