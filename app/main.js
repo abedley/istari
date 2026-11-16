@@ -8,7 +8,6 @@ import { TOKEN_PRESENTATION } from '../src/cards/tokenArt.js';
 import { h, wait } from './dom.js';
 import { installIcons } from './icons.js';
 import { fit } from './fit.js';
-import { sizeApp } from './viewport.js';
 import {
   unlockAudio, setSoundEnabled, setMusicEnabled, setVolume, setAmbience, setAudioSuspended, whenAudioReady, playTheme, play,
 } from './audio.js';
@@ -113,9 +112,6 @@ function createApp(root) {
 }
 
 function boot() {
-  sizeApp();
-  window.addEventListener('resize', sizeApp);
-  window.addEventListener('orientationchange', () => setTimeout(sizeApp, 100));
   installIcons();
   const root = document.getElementById('app');
   const app = createApp(root);
