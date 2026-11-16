@@ -164,23 +164,27 @@ const deckName = (i) => `Deck ${i + 1}`;
 const OPENED_KEY = 'istari.opened';
 
 /**
- * The booster as a present: a parcel in brown paper tied with string, turning slowly in the air. A tap and it rumbles,
- * its lid flies off and it bursts like one of Gandalf's fireworks; then the cards arrive in the tray.
+ * The booster as a present: a foil booster pack, swaying slowly in the air as the light runs over it. A tap and it
+ * rumbles, its top strip tears off and it bursts like one of Gandalf's fireworks; then the cards arrive in the tray.
  * Shown once for a match (its seed is remembered), and not at all when the system asks for less motion.
  * Built with the screen, over it, so the screen comes in already covered: nothing behind it shows until it's opened.
  * Returns `{ layer, opened }` (`opened` resolves once it's open and the last spark has fallen), or null when there's nothing to show.
  */
 function present(app, match, root) {
   if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return null;
-  const hero = lookOf(app, match);
-  const face = (side) => h(`div.present-face.${side}`, h('span.present-string.across'), h('span.present-string.down'));
-  const lid = h('div.present-face.top', h('span.present-string.across'), h('span.present-string.down'), h('span.present-knot'));
-  const box = h('div.present-box', face('front'), face('back'), face('left'), face('right'), face('bottom'), lid);
+  // A foil booster pack, crimped top and bottom; the top strip is torn off to open it.
+  const crimp = (side) => h(`div.pack-crimp.${side}`);
+  const lid = crimp('top');
+  const box = h('div.pack', lid,
+    h('div.pack-body',
+      h('div.pack-art', h('span.pack-star', '✦')),
+      h('div.pack-title', 'Istari'),
+      h('div.pack-sub', 'Booster')),
+    crimp('bottom'));
   const stage = h('div.present-stage', box);
-  const tag = h('div.present-tag', h('b', `For ${hero.name}`), h('span', `${match.cards.length} cards to build your decks`));
   const hint = h('div.present-hint', 'Tap to open');
   const sky = h('canvas.present-sky', { 'aria-hidden': 'true' });
-  const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' }, tag, stage, hint, sky);
+  const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' }, stage, hint, sky);
   root.append(layer);
   stage.animate([{ transform: 'translateY(40px) scale(.75)' }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
 
@@ -190,7 +194,6 @@ function present(app, match, root) {
       layer.disabled = true;
       app.sound('select');
       const fade = { opacity: 0, transform: 'translateY(-10px)' };
-      tag.animate([{}, fade], { duration: 250, fill: 'forwards' });
       hint.animate([{}, fade], { duration: 200, fill: 'forwards' });
       // It rumbles, brighter and brighter, as the magic inside gets out of hand.
       box.classList.add('stirring');
@@ -200,12 +203,12 @@ function present(app, match, root) {
         { transform: 'translate(-6px, 2px) rotate(-5deg) scale(1.1)' }, { transform: 'translateY(6px) scale(1.14, .92)' },
       ], { duration: 650, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
       app.sound('reward');
-      // Bang: the lid flies off, the box is gone in a flash, and the sky fills with sparks.
+      // Bang: the top strip tears off, the pack is gone in a flash, and the sky fills with sparks.
       const rect = layer.getBoundingClientRect();
       const at = box.getBoundingClientRect();
       const fireworks = fireworksIn(sky, rect);
       fireworks.burst(at.left + at.width / 2 - rect.left, at.top + at.height / 2 - rect.top, { count: 140, power: 1.25 });
-      lid.animate([{}, { transform: 'rotateX(90deg) translateZ(calc(var(--h) / 2 + 260px)) rotateZ(160deg)', opacity: 0 }],
+      lid.animate([{}, { transform: 'translate(140px, -220px) rotate(38deg)', opacity: 0 }],
         { duration: 600, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' });
       stage.animate([{ transform: 'translateY(6px) scale(1.14, .92)', opacity: 1, filter: 'brightness(1)' },
         { transform: 'scale(1.45)', opacity: 0, filter: 'brightness(3)' }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
