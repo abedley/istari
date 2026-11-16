@@ -4487,6 +4487,10 @@ export class Game extends EventEmitter {
         return host ? [host] : [];
       }
       if (effect.affected === AFFECTED.SOURCE) return [source];
+      if (effect.affected === AFFECTED.YOUR_RING_BEARER) {
+        const bearer = this.#ringBearer(source.controllerId);
+        return bearer ? [bearer] : [];
+      }
       // Anthems and lords (613.1): every creature they apply to, as it is now.
       if (effect.affected === AFFECTED.EACH_CREATURE_YOU_CONTROL) return this.#battlefield.filter((p) => anthemApplies(effect, source, p));
       return [];

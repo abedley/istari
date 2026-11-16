@@ -53,11 +53,21 @@ export const EMBLEMS = deepFreeze({
   },
 
   // Pai Gow's heroes, one for the player to choose (PAIGOW_HEROES in src/paigow/personas.js).
-  frodo: power('frodo', 'The One Ring', 'The Burden', {
-    text: '0: The Ring tempts you. Activate only as a sorcery.',
-    effects: [{ type: EFFECT.RING_TEMPTS }],
-    timing: SORCERY,
-  }),
+  // A passive power (a static ability, from the command zone) and a second one to activate (its `name` is the
+  // power's name), once a turn.
+  frodo: {
+    id: 'frodo',
+    name: 'The One Ring',
+    ring: true,
+    passive: true,
+    power: 'Sting',
+    text: 'Ring-bearers you control have deathtouch.',
+    activationsPerTurn: 1,
+    abilities: [{
+      id: 'power', name: 'The Burden', text: '0: The Ring tempts you. Activate only as a sorcery.', cost: {}, effects: [{ type: EFFECT.RING_TEMPTS }], timing: SORCERY,
+    }],
+    staticAbilities: [{ affected: AFFECTED.YOUR_RING_BEARER, keywords: [KEYWORD.DEATHTOUCH] }],
+  },
   strider: power('strider', 'The Ring of Barahir', 'Ranger of the North', {
     text: "0: Target creature's power becomes 4 until your next turn. Activate only as a sorcery.",
     // Any creature: one of yours grows, one of theirs (bigger than 4) shrinks.

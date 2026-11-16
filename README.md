@@ -89,7 +89,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 
 | Who | Ring | Power | What it does |
 | --- | --- | --- | --- |
-| Frodo | The One Ring | The Burden | 0: The Ring tempts you. Sorcery speed. |
+| Frodo | The One Ring | Sting · The Burden | *Passive:* Ring-bearers you control have deathtouch. Plus 0: The Ring tempts you. Sorcery speed. |
 | Strider | The Ring of Barahir | Ranger of the North | 0: Target creature's power becomes 4 until your next turn (yours or theirs). Sorcery speed. |
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Radagast | The Ring of Rhosgobel | Friend of Beasts | (passive) You may cast creature spells as though they had flash. Birds and Beasts you control get +1/+1. |

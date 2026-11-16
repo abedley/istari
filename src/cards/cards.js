@@ -123,6 +123,8 @@ export const AFFECTED = Object.freeze({
   EACH_CREATURE_OPPONENTS_CONTROL: 'eachCreatureOpponentsControl',
   /** The ability's source, the permanent itself ("this creature"). */
   SOURCE: 'source',
+  /** As a static ability: your Ring-bearer, if you have one ("Ring-bearers you control have deathtouch", Frodo's ring). */
+  YOUR_RING_BEARER: 'yourRingBearer',
   /** The controller of the target (`targetIndex`, default 0) as it last was: "Its controller loses 2 life." */
   TARGET_CONTROLLER: 'targetController',
   /** What the trigger was about: "destroy that creature", "sacrifice it" (its `subject`). */

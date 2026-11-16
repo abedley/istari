@@ -172,6 +172,24 @@ test("Elrond's power is a sorcery that shuffles a new Glorfindel, Dauntless Resc
   assert.equal(activation(s, 'p1'), undefined);
 });
 
+test("Frodo's power: Ring-bearers you control have deathtouch, and the Ring still tempts you once a turn", () => {
+  assert.equal(EMBLEMS.frodo.passive, true);
+  assert.equal(EMBLEMS.frodo.abilities[0].name, 'The Burden');
+  const game = powerGame('frodo');
+  const p1Bears = (st) => st.battlefield.filter((p) => p.controllerId === 'p1');
+  const p2Bears = (st) => st.battlefield.filter((p) => p.controllerId === 'p2');
+  // No Ring-bearer yet: no deathtouch.
+  assert.ok(p1Bears(game.getState()).every((p) => !p.keywords.includes('deathtouch')));
+  const s = usePower(game);
+  assert.equal(s.players[0].ring.level, 1);
+  const bearers = p1Bears(s).filter((p) => p.keywords.includes('deathtouch'));
+  assert.equal(bearers.length, 1, 'just the Ring-bearer');
+  assert.equal(bearers[0].id, s.players[0].ring.bearerId);
+  // Only your own: the opponent's creatures are untouched, and the power is used for the turn.
+  assert.ok(p2Bears(s).every((p) => !p.keywords.includes('deathtouch')));
+  assert.equal(activation(s, 'p1'), undefined);
+});
+
 test('a power can be used once a turn', () => {
   const game = powerGame('galadriel');
   usePower(game);
