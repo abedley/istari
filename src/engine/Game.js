@@ -1717,8 +1717,9 @@ export class Game extends EventEmitter {
   }
 
   /**
-   * Cards added to a player's library as the game starts (Gildor's Chance-Met Elves, or the `shufflesIn` option),
-   * after the opening hands, so the hand is still the deck's own; then the library is shuffled.
+   * Cards added to a player's library: as the game starts (Gildor's Chance-Met Elves, or the `shufflesIn` option),
+   * after the opening hands, so the hand is still the deck's own; or by an effect (Elrond's Glorfindel). Then the
+   * library is shuffled.
    */
   #shuffleIn(playerId, cardIds, sourceId, what) {
     if (!cardIds.length) return;
@@ -3029,6 +3030,9 @@ export class Game extends EventEmitter {
         this.#shuffleLibrary(ownerId);
         break;
       }
+      case EFFECT.SHUFFLE_CARDS_INTO_LIBRARY:
+        this.#shuffleIn(controllerId, effect.cardIds ?? [], sourceId, 'an effect');
+        break;
       case EFFECT.BECOME_CREATURE:
         for (const permanent of permanents()) {
           this.#addTemporaryEffect({ sourceId, targetId: permanent.id, addTypes: [CARD_TYPE.ARTIFACT, CARD_TYPE.CREATURE] });

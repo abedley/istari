@@ -287,6 +287,10 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
         case EFFECT.REVEAL_HAND_DISCARD:
           score -= side(id) * 3;
           break;
+        case EFFECT.SHUFFLE_CARDS_INTO_LIBRARY:
+          // A card to draw some turn later: a little better deck.
+          if (isPlayer) score += side(id) * 0.5 * (effect.cardIds?.length ?? 0);
+          break;
         case EFFECT.SEARCH_LIBRARY:
           score += side(id) * 2 * (effect.count ?? 1);
           break;

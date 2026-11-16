@@ -14,6 +14,14 @@ import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
 import { createCpuController, AI_KIND } from '../src/ai/cpu.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
+/** A power that saves a creature from removal (Elrond's ring once did this): hexproof and indestructible at instant speed. */
+const WARD = {
+  id: 'ward', name: 'Ward', ring: true, power: 'Ward', activationsPerTurn: 1,
+  abilities: [{
+    id: 'power', name: 'Ward', text: '0: Target creature you control gains hexproof and indestructible until end of turn.', cost: {},
+    target: 'creatureYouControl', effects: [{ type: 'pump', power: 0, toughness: 0, keywords: ['hexproof', 'indestructible'] }],
+  }],
+};
 const creature = (id, power, toughness, keywords = []) => ({ id, name: id, manaCost: { generic: 1 }, types: ['Creature'], power, toughness, keywords });
 const CARDS = {
   bear: creature('bear', 2, 2),
@@ -56,7 +64,7 @@ function position({ p1 = {}, p2 = {} }) {
   const deck = (side) => [...(side.board ?? []), ...(side.hand ?? [])];
   const game = new Game({
     players, cards: CARDS, shuffleLibraries: false, startingPlayerId: 'p2', decks: { p1: deck(p1), p2: deck(p2) },
-    emblems: { p1: p1.emblems ?? [], p2: p2.emblems ?? [] }, startingLife: { p1: p1.life ?? 8, p2: p2.life ?? 8 },
+    emblems: { p1: p1.emblems ?? [], p2: p2.emblems ?? [] }, emblemDefinitions: { ward: WARD }, startingLife: { p1: p1.life ?? 8, p2: p2.life ?? 8 },
     openingHandSize: 7, deckingLoss: false, infiniteMana: true,
   });
   game.start();
@@ -196,9 +204,9 @@ test('it pumps for the last points of damage', () => {
   assert.ok(taken.some((a) => a.type === ACTION.CAST_SPELL));
 });
 
-test('it saves its creature from removal with Elrond\'s ring, where the basic AI lets it die', () => {
+test('it saves its creature from removal with a protective ring, where the basic AI lets it die', () => {
   const setup = () => {
-    const game = position({ p1: { board: ['giant'], emblems: ['elrond'] }, p2: { hand: ['murder'] } });
+    const game = position({ p1: { board: ['giant'], emblems: ['ward'] }, p2: { hand: ['murder'] } });
     passTo(game, mainOf('p2', 5));
     cast(game, 'p2', 'murder', 'giant');
     game.dispatch({ type: ACTION.PASS_PRIORITY, playerId: 'p2' });
@@ -217,8 +225,8 @@ test('it saves its creature from removal with Elrond\'s ring, where the basic AI
   assert.equal(basic.chooseAction(setup().peekState()).type, ACTION.PASS_PRIORITY);
 });
 
-test('it doesn\'t use Elrond\'s ring when nothing threatens its creature', () => {
-  const game = position({ p1: { board: ['giant'], emblems: ['elrond'] }, p2: { board: ['bear'] } });
+test('it doesn\'t use a protective ring when nothing threatens its creature', () => {
+  const game = position({ p1: { board: ['giant'], emblems: ['ward'] }, p2: { board: ['bear'] } });
   const taken = play(game, 'p1', (s) => s.turn > 5);
   assert.ok(!taken.some((a) => a.type === ACTION.ACTIVATE_ABILITY), 'no activation');
 });
@@ -280,7 +288,7 @@ test('a free power with no target is used as soon as it can be', () => {
 });
 
 test('a probe tells what an action changes', () => {
-  const game = position({ p1: { board: ['giant'], emblems: ['elrond'] }, p2: { hand: ['murder'] } });
+  const game = position({ p1: { board: ['giant'], emblems: ['ward'] }, p2: { hand: ['murder'] } });
   passTo(game, mainOf('p2', 5));
   cast(game, 'p2', 'murder', 'giant');
   game.dispatch({ type: ACTION.PASS_PRIORITY, playerId: 'p2' });

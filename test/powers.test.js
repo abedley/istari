@@ -19,7 +19,7 @@ const players = [{ id: 'p1' }, { id: 'p2' }];
 /** A Pai Gow-like game with these powers, in p1's first main phase once each side has cast up to two bears. */
 function powerGame(mine, theirs, { p1 = ['bear', 'bear'], p2 = ['bear', 'bear'] } = {}) {
   const game = new Game({
-    players, decks: { p1, p2 }, cards: { bear: BEAR }, shuffleLibraries: false, openingHandSize: 5,
+    players, decks: { p1, p2 }, cards: { bear: BEAR, glorfindelDauntlessRescuer: CARDS.glorfindelDauntlessRescuer }, shuffleLibraries: false, openingHandSize: 5,
     deckingLoss: false, infiniteMana: true, emblems: { p1: mine ? [mine] : [], p2: theirs ? [theirs] : [] }, startingPlayerId: 'p2',
   });
   game.start();
@@ -130,7 +130,7 @@ test('each power does what it says', () => {
   assert.equal(s.players[0].life, 19);
   assert.equal(s.players[1].graveyard.length, 1);
   s = usePower(powerGame('elrond'));
-  assert.ok(p1Bear(s).keywords.includes('hexproof') && p1Bear(s).keywords.includes('indestructible'));
+  assert.deepEqual(s.players[0].library.map((c) => c.cardId), ['glorfindelDauntlessRescuer']);
   s = usePower(powerGame('galadriel'));
   assert.equal(p1Bear(s).power, 3);
   s = usePower(powerGame('tomBombadil'));
@@ -140,6 +140,20 @@ test('each power does what it says', () => {
   s = usePower(powerGame('burglarBilbo'));
   assert.equal(p1Bear(s).power, 3);
   assert.ok(p1Bear(s).keywords.includes('menace'));
+});
+
+test("Elrond's power is a sorcery that shuffles a new Glorfindel, Dauntless Rescuer into the library each time", () => {
+  assert.equal(EMBLEMS.elrond.abilities[0].timing, 'sorcery');
+  assert.equal(EMBLEMS.elrond.abilities[0].target, undefined);
+  const game = powerGame('elrond', null, { p1: ['bear', 'bear', 'bear'] });
+  const before = game.getState().players[0].library.length;
+  let s = usePower(game);
+  const glorfindels = (st) => st.players[0].library.filter((c) => c.cardId === 'glorfindelDauntlessRescuer');
+  assert.equal(s.players[0].library.length, before + 1);
+  assert.equal(glorfindels(s).length, 1);
+  assert.equal(glorfindels(s)[0].ownerId ?? 'p1', 'p1');
+  // Once a turn: not again until p1's next turn.
+  assert.equal(activation(s, 'p1'), undefined);
 });
 
 test('a power can be used once a turn', () => {

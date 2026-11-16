@@ -207,9 +207,9 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   elrond: power('elrond', 'Vilya', 'Ring of Air', {
-    text: '0: Target creature you control gains hexproof and indestructible until end of turn.',
-    target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.HEXPROOF, KEYWORD.INDESTRUCTIBLE] }],
+    text: '0: Shuffle a Glorfindel, Dauntless Rescuer into your library. Activate only as a sorcery.',
+    effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }],
+    timing: SORCERY,
   }),
   galadriel: power('galadriel', 'Nenya', 'Light of Eärendil', {
     text: '0: Put a +1/+1 counter on target creature you control. Activate only as a sorcery.',

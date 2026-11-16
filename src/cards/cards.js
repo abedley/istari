@@ -358,6 +358,8 @@ export const EFFECT = Object.freeze({
   EXILE_SOURCE_FROM_GRAVEYARD: 'exileSourceFromGraveyard',
   /** Lembas: "its owner shuffles it into their library" (the source card, from the graveyard). */
   SHUFFLE_SOURCE_INTO_LIBRARY: 'shuffleSourceIntoLibrary',
+  /** `{ cardIds }`: new cards (by card id) are shuffled into your library (Elrond's ring: a Glorfindel, Dauntless Rescuer). */
+  SHUFFLE_CARDS_INTO_LIBRARY: 'shuffleCardsIntoLibrary',
   /** Crew (702.122): the source becomes an artifact creature until end of turn. */
   BECOME_CREATURE: 'becomeCreature',
   /** `{ at: 'endOfCombat', effects }`: a delayed triggered ability (603.7), with this resolution's targets and subject. */
