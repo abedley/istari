@@ -261,12 +261,23 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }, { type: EFFECT.SCRY, count: 2 }],
     timing: SORCERY,
   }),
-  galadriel: power('galadriel', 'Nenya', 'Light of Eärendil', {
-    text: '0: Put a +1/+1 counter on target creature you control. Activate only as a sorcery.',
-    target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.ADD_COUNTERS, counter: COUNTER.PLUS_ONE, count: 1 }],
-    timing: SORCERY,
-  }),
+  // A passive power that adds cards to the library as the game starts (`shufflesIn`, as Gildor's), and one to activate.
+  galadriel: {
+    id: 'galadriel',
+    name: 'Nenya',
+    ring: true,
+    passive: true,
+    power: 'The Lord and Lady of the Wood',
+    text: 'At the start of the game, shuffle three Forests, a Galadriel of Lothlórien and a Celeborn the Wise into your library.',
+    shufflesIn: ['forest', 'forest', 'forest', 'galadrielOfLothlorien', 'celebornTheWise'],
+    activationsPerTurn: 1,
+    abilities: [{
+      id: 'power', name: 'Light of Eärendil', text: '0: Put a +1/+1 counter on target creature you control. Activate only as a sorcery.',
+      cost: {}, target: TARGET.CREATURE_YOU_CONTROL,
+      effects: [{ type: EFFECT.ADD_COUNTERS, counter: COUNTER.PLUS_ONE, count: 1 }],
+      timing: SORCERY,
+    }],
+  },
 });
 
 /** Emblems each player starts with unless the game is told otherwise. */

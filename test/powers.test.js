@@ -199,7 +199,7 @@ test('a power can be used once a turn', () => {
 test('fast forward ignores powers that could do nothing more', () => {
   // Nothing in hand and no creatures: a power on your own creature is no action, one on theirs is.
   const empty = { p1: [], p2: ['bear'] };
-  assert.equal(outOfActions(powerGame('galadriel', null, empty).getState(), 'p1'), true);
+  assert.equal(outOfActions(powerGame('burglarBilbo', null, empty).getState(), 'p1'), true);
   assert.equal(outOfActions(powerGame('gandalf', null, empty).getState(), 'p1'), false);
   assert.equal(outOfActions(powerGame('gandalf', null, { p1: [], p2: [] }).getState(), 'p1'), true);
   assert.equal(outOfActions(powerGame('sauron', null, empty).getState(), 'p1'), false);
@@ -628,6 +628,19 @@ test("Legolas's Quick Reflexes: split second; untap target creature; reach, hexp
   assert.ok(!s.battlefield.some((p) => p.id === theirs.id), 'the Bear shot theirs for 2');
   bear = s.battlefield.find((p) => p.id === mine.id);
   assert.equal(bear.tapped, true);
+});
+
+test("Galadriel's ring: as the game starts, three Forests, a Galadriel of Lothlórien and a Celeborn the Wise are shuffled into the library", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 2,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['galadriel'], p2: [] }, startingPlayerId: 'p2', seed: 7,
+  });
+  game.start();
+  const [mine, theirs] = game.getState().players;
+  // The opening hand is still the deck's own.
+  assert.deepEqual(mine.hand.map((c) => c.cardId), ['bear', 'bear']);
+  assert.deepEqual(mine.library.map((c) => c.cardId).sort(), ['celebornTheWise', 'forest', 'forest', 'forest', 'galadrielOfLothlorien']);
+  assert.equal(theirs.library.length, 0);
 });
 
 test("the Rider in Black's power: at his end step, each opponent with a Ring-bearer loses life equal to their Ring's abilities", () => {
