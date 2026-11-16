@@ -1232,3 +1232,22 @@ test("Glamdring's bonus follows the graveyard as spells resolve", () => {
   cast(game, 'p1', 'salve');
   assert.equal(permanent(game, bear.id).power, 3);
 });
+
+test('Warbeast of Gorgoroth dying triggers once: destroyed, or dealt lethal damage', () => {
+  const MURDER = { id: 'murder', name: 'Murder', manaCost: {}, types: ['Instant'], target: 'creature', effects: [{ type: 'destroy' }] };
+  const BLAST = { id: 'blast', name: 'Blast', manaCost: {}, types: ['Instant'], target: 'any', effects: [{ type: 'dealDamage', amount: 4 }] };
+  for (const [spell, extra] of [['murder', { murder: MURDER }], ['blast', { blast: BLAST }]]) {
+    const { game, events } = setup({ p1: ['warbeastOfGorgoroth', spell], cards: ['warbeastOfGorgoroth'], extra });
+    advanceTo(game, main(1));
+    cast(game, 'p1', 'warbeastOfGorgoroth');
+    const [warbeast] = byCard(game, 'warbeastOfGorgoroth');
+    cast(game, 'p1', spell, { targets: [warbeast.id] });
+    resolveAll(game);
+    assert.equal(byCard(game, 'warbeastOfGorgoroth').length, 0, `${spell}: it died`);
+    const triggered = events.filter((e) => e.name === 'abilityTriggered' && e.payload.sourceId === warbeast.id);
+    const armies = state(game).battlefield.filter((p) => p.controllerId === 'p1' && p.subtypes?.includes('Army'));
+    assert.equal(armies.length, 1, `${spell}: an Army`);
+    assert.equal(armies[0].counters['+1/+1'], 2, `${spell}: amassed 2 once, not twice`);
+    if (events.some((e) => e.name === 'abilityTriggered')) assert.equal(triggered.length, 1, `${spell}: one trigger`);
+  }
+});

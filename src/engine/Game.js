@@ -3813,7 +3813,11 @@ export class Game extends EventEmitter {
    * work from a graveyard trigger there.
    */
   #triggerWatchers(type, subject, { alsoFrom = [], matches = () => true } = {}) {
-    const sources = [...this.#battlefield, ...alsoFrom.filter((p) => !this.#permanent(p.id))];
+    // Each permanent once: one that dies may be both the subject and among those leaving with it (a destroy's, or the
+    // state-based actions'), and it sees its own death once (Warbeast of Gorgoroth: "this creature or another …").
+    const seen = new Set();
+    const sources = [...this.#battlefield, ...alsoFrom.filter((p) => !this.#permanent(p.id))]
+      .filter((p) => !seen.has(p.id) && seen.add(p.id));
     for (const permanent of sources) {
       this.#trigger(permanent, type, permanent.controllerId, (ability) => (
         matchesFilter(subject, ability.filter, this.#filterContext(permanent.controllerId, permanent.id)) && matches(ability, permanent)
