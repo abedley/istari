@@ -55,7 +55,9 @@ html, body {
   touch-action: manipulation;
   -webkit-font-smoothing: antialiased;
 }
-body { position: fixed; inset: 0; overflow: hidden; }
+/* The whole screen, top to bottom: --app-height is set by app/main.js (an iOS home-screen app's page can otherwise
+   stop short of the bottom by the status bar's height). */
+body { position: fixed; top: 0; left: 0; right: 0; height: var(--app-height, 100%); overflow: hidden; }
 img { -webkit-user-drag: none; }
 button { font: inherit; color: inherit; touch-action: manipulation; }
 #app { position: absolute; inset: 0; overflow: hidden; }
