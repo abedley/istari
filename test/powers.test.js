@@ -128,7 +128,8 @@ test('each power does what it says', () => {
   assert.equal(s.players[0].life, 19);
   assert.equal(s.players[1].graveyard.length, 1);
   s = usePower(powerGame('elrond'));
-  assert.deepEqual(s.players[0].library.map((c) => c.cardId), ['glorfindelDauntlessRescuer']);
+  // Beside the two Forests and the Elrond, Master of Healing he starts with.
+  assert.equal(s.players[0].library.filter((c) => c.cardId === 'glorfindelDauntlessRescuer').length, 1);
   s = usePower(powerGame('galadriel'));
   assert.equal(p1Bear(s).power, 3);
   s = usePower(powerGame('birthdayBilbo'));
@@ -141,7 +142,7 @@ test('each power does what it says', () => {
 test("Elrond's power is a sorcery that shuffles a new Glorfindel, Dauntless Rescuer into the library, then scries 2", () => {
   assert.equal(EMBLEMS.elrond.abilities[0].timing, 'sorcery');
   assert.equal(EMBLEMS.elrond.abilities[0].target, undefined);
-  assert.equal(EMBLEMS.elrond.power, 'Help from Rivendell');
+  assert.equal(EMBLEMS.elrond.abilities[0].name, 'Help from Rivendell');
   const game = powerGame('elrond', null, { p1: Array(9).fill('bear') });
   const before = game.getState().players[0].library.length;
   assert.ok(before >= 2);
@@ -628,6 +629,19 @@ test("Legolas's Quick Reflexes: split second; untap target creature; reach, hexp
   assert.ok(!s.battlefield.some((p) => p.id === theirs.id), 'the Bear shot theirs for 2');
   bear = s.battlefield.find((p) => p.id === mine.id);
   assert.equal(bear.tapped, true);
+});
+
+test("Elrond's ring: as the game starts, two Forests and an Elrond, Master of Healing are shuffled into the library", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 2,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['elrond'], p2: [] }, startingPlayerId: 'p2', seed: 7,
+  });
+  game.start();
+  const [mine, theirs] = game.getState().players;
+  // The opening hand is still the deck's own.
+  assert.deepEqual(mine.hand.map((c) => c.cardId), ['bear', 'bear']);
+  assert.deepEqual(mine.library.map((c) => c.cardId).sort(), ['elrondMasterOfHealing', 'forest', 'forest']);
+  assert.equal(theirs.library.length, 0);
 });
 
 test("Galadriel's ring: as the game starts, three Forests, a Galadriel of Lothlórien and a Celeborn the Wise are shuffled into the library", () => {

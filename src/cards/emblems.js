@@ -256,11 +256,22 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
   // Glorfindel was sent from Rivendell to find the hobbits; he grows whenever you scry, as this power does.
-  elrond: power('elrond', 'Vilya', 'Help from Rivendell', {
-    text: '0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery.',
-    effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }, { type: EFFECT.SCRY, count: 2 }],
-    timing: SORCERY,
-  }),
+  // A passive power that adds cards to the library as the game starts (`shufflesIn`, as Gildor's), and one to activate.
+  elrond: {
+    id: 'elrond',
+    name: 'Vilya',
+    ring: true,
+    passive: true,
+    power: 'The Last Homely House',
+    text: 'At the start of the game, shuffle two Forests and an Elrond, Master of Healing into your library.',
+    shufflesIn: ['forest', 'forest', 'elrondMasterOfHealing'],
+    activationsPerTurn: 1,
+    abilities: [{
+      id: 'power', name: 'Help from Rivendell', text: '0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery.',
+      cost: {}, effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }, { type: EFFECT.SCRY, count: 2 }],
+      timing: SORCERY,
+    }],
+  },
   // A passive power that adds cards to the library as the game starts (`shufflesIn`, as Gildor's), and one to activate.
   galadriel: {
     id: 'galadriel',

@@ -84,7 +84,7 @@ and costs nothing or a little life (mana means nothing here). Samwise's is passi
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
 from the command zone. So is Gildor's: the emblem's `shufflesIn` cards are shuffled into the library as the first
-turn begins, after the opening hands; Legolas's and Galadriel's too, beside a power each activates. And Radagast's: the emblem's `staticAbilities` work as a card's do, from the command zone:
+turn begins, after the opening hands; Legolas's, Elrond's and Galadriel's too, beside a power each activates. And Radagast's: the emblem's `staticAbilities` work as a card's do, from the command zone:
 one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They're placeholders to tune:
 
 | Who | Ring | Power | What it does |
@@ -107,7 +107,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
 | Théoden | The Ring of Eorl *(made up)* | Forth Eorlingas! | *Passive:* whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that's tapped and attacking that player (art: TLTC 9). |
 | Denethor | The Steward's Ring *(made up)* | Despair | Pay 1 life: Each opponent discards a card. Sorcery speed. |
-| Elrond | Vilya | Help from Rivendell | 0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery. |
+| Elrond | Vilya | The Last Homely House · Help from Rivendell | *Passive:* at the start of the game, shuffle two Forests and an Elrond, Master of Healing into your library. Plus 0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery. |
 | Galadriel | Nenya | The Lord and Lady of the Wood · Light of Eärendil | *Passive:* at the start of the game, shuffle three Forests, a Galadriel of Lothlórien and a Celeborn the Wise into your library. Plus 0: Put a +1/+1 counter on target creature you control. Sorcery speed. |
 
 Each is written with `power(id, ring, powerName, { text, cost, effects, target, timing })`: change the effects
