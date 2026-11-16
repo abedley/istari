@@ -53,7 +53,8 @@ function usePower(game, targetOf = null) {
     if (s.stack.length === 0 && !s.pendingDecision) return s;
     const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
     const acts = s.validActions.filter((a) => a.playerId === actor);
-    assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]).ok, true);
+    // A scry: everything to the bottom.
+    assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type === ACTION.CONFIRM_CHOICE) ?? acts[0]).ok, true);
   }
   throw new Error('The power did not resolve.');
 }
@@ -139,16 +140,36 @@ test('each power does what it says', () => {
   assert.ok(p1Bear(s).keywords.includes('menace'));
 });
 
-test("Elrond's power is a sorcery that shuffles a new Glorfindel, Dauntless Rescuer into the library each time", () => {
+test("Elrond's power is a sorcery that shuffles a new Glorfindel, Dauntless Rescuer into the library, then scries 2", () => {
   assert.equal(EMBLEMS.elrond.abilities[0].timing, 'sorcery');
   assert.equal(EMBLEMS.elrond.abilities[0].target, undefined);
-  const game = powerGame('elrond', null, { p1: ['bear', 'bear', 'bear'] });
+  assert.equal(EMBLEMS.elrond.power, 'Help from Rivendell');
+  const game = powerGame('elrond', null, { p1: Array(9).fill('bear') });
   const before = game.getState().players[0].library.length;
-  let s = usePower(game);
+  assert.ok(before >= 2);
+  game.dispatch(activation(game.getState(), 'p1'));
+  // Resolve it: the scry, after the shuffle, looks at the top two cards.
+  let scry = null;
+  for (let i = 0; i < 20 && !scry; i++) {
+    const s = game.getState();
+    if (s.pendingDecision?.kind === 'scry') scry = s.pendingDecision;
+    else game.dispatch(s.validActions.find((a) => a.type === ACTION.PASS_PRIORITY));
+  }
+  assert.ok(scry, 'p1 scries');
+  assert.equal(scry.playerId, 'p1');
+  assert.equal(scry.options.length, 2);
   const glorfindels = (st) => st.players[0].library.filter((c) => c.cardId === 'glorfindelDauntlessRescuer');
+  assert.equal(glorfindels(game.getState()).length, 1, 'shuffled in before the scry');
+  // Keep one on top, the other to the bottom.
+  const [top, bottom] = scry.options;
+  assert.equal(game.dispatch({ type: ACTION.TOGGLE_CHOICE, playerId: 'p1', choice: top }).ok, true);
+  assert.equal(game.dispatch({ type: ACTION.CONFIRM_CHOICE, playerId: 'p1' }).ok, true);
+  const s = game.getState();
+  assert.equal(s.stack.length, 0);
   assert.equal(s.players[0].library.length, before + 1);
+  assert.equal(s.players[0].library[0].id, top);
+  assert.equal(s.players[0].library.at(-1).id, bottom);
   assert.equal(glorfindels(s).length, 1);
-  assert.equal(glorfindels(s)[0].ownerId ?? 'p1', 'p1');
   // Once a turn: not again until p1's next turn.
   assert.equal(activation(s, 'p1'), undefined);
 });

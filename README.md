@@ -104,9 +104,9 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Tom Bombadil | Goldberry's Ring *(made up)* | Hey Dol! Merry Dol! | 0: Untap target creature you control; it gets +0/+2 until end of turn. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
-| Théoden | The Ring of Eorl *(made up)* | Ride Now! | *Passive:* whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that's tapped and attacking that player (art: TLTC 9). |
+| Théoden | The Ring of Eorl *(made up)* | Forth Eorlingas! | *Passive:* whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that's tapped and attacking that player (art: TLTC 9). |
 | Denethor | The Steward's Ring *(made up)* | Despair | Pay 1 life: Each opponent discards a card. Sorcery speed. |
-| Elrond | Vilya | Ring of Air | 0: Shuffle a Glorfindel, Dauntless Rescuer into your library. Activate only as a sorcery. |
+| Elrond | Vilya | Help from Rivendell | 0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery. |
 | Galadriel | Nenya | Light of Eärendil | 0: Put a +1/+1 counter on target creature you control. Sorcery speed. |
 
 Each is written with `power(id, ring, powerName, { text, cost, effects, target, timing })`: change the effects

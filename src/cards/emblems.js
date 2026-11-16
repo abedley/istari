@@ -201,7 +201,7 @@ export const EMBLEMS = deepFreeze({
     name: 'The Ring of Eorl',
     ring: true,
     passive: true,
-    power: 'Ride Now!',
+    power: 'Forth Eorlingas!',
     text: 'Whenever you attack, create a 2/2 red Human Knight creature token with trample and haste that\u2019s tapped and attacking that player.',
     abilities: [],
     triggeredAbilities: [{
@@ -223,9 +223,10 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.DISCARD, count: 1, affected: AFFECTED.EACH_OPPONENT }],
     timing: SORCERY,
   }),
-  elrond: power('elrond', 'Vilya', 'Ring of Air', {
-    text: '0: Shuffle a Glorfindel, Dauntless Rescuer into your library. Activate only as a sorcery.',
-    effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }],
+  // Glorfindel was sent from Rivendell to find the hobbits; he grows whenever you scry, as this power does.
+  elrond: power('elrond', 'Vilya', 'Help from Rivendell', {
+    text: '0: Shuffle a Glorfindel, Dauntless Rescuer into your library, then scry 2. Activate only as a sorcery.',
+    effects: [{ type: EFFECT.SHUFFLE_CARDS_INTO_LIBRARY, cardIds: ['glorfindelDauntlessRescuer'] }, { type: EFFECT.SCRY, count: 2 }],
     timing: SORCERY,
   }),
   galadriel: power('galadriel', 'Nenya', 'Light of Eärendil', {
