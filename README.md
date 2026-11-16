@@ -25,8 +25,8 @@ A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain m
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
 scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see *The campaign*: *Begin* or
 *Continue* on the title screen) or the day's one match (see *Today's road*):
-0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry or Pippin (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
-   with a Ring of Power of their own (see *Rings of Power*). Three are open at first and three are met on the road (see *Unlocks*). The app remembers the last one.
+0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry, Legolas or Pippin (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
+   with a Ring of Power of their own (see *Rings of Power*). Four are open at first and three are met on the road (see *Unlocks*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
@@ -84,7 +84,7 @@ and costs nothing or a little life (mana means nothing here). Samwise's is passi
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
 from the command zone. So is Gildor's: the emblem's `shufflesIn` cards are shuffled into the library as the first
-turn begins, after the opening hands. And Radagast's: the emblem's `staticAbilities` work as a card's do, from the command zone:
+turn begins, after the opening hands; Legolas's too, beside a power he activates. And Radagast's: the emblem's `staticAbilities` work as a card's do, from the command zone:
 one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They're placeholders to tune:
 
 | Who | Ring | Power | What it does |
@@ -94,6 +94,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Radagast | The Ring of Rhosgobel | Friend of Beasts | (passive) You may cast creature spells as though they had flash. Birds and Beasts you control get +1/+1. |
 | Merry | The Ring of Buckland *(made up)* | Halflings of the Shire | Sacrifice a Food: Create two 1/1 white Halfling creature tokens. Sorcery speed. |
+| Legolas | The Ring of the Woodland Realm *(made up)* | Elves of Mirkwood · Quick Reflexes | *Passive:* at the start of the game, shuffle two Elven Farsight, an Elven Chorus and seven Forests into your library. Plus: Mill six cards: Add a *Legolas's Quick Reflexes* (LTC 493, from the LTR Commander decks, so never in a booster) to your hand. Any time you have priority. |
 | Pippin | The Ring of the Tooks *(made up)* | Second Breakfast | 0: Create a Morsel token (a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life"). Sorcery speed. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
@@ -115,8 +116,8 @@ and the `text` to match. Your power is a button beside your portrait in a round;
 its cost by theirs (hold it to read it). The *vs* screen before a round shows both, and so does tapping
 the opponent on the deck builder or either side on the scoreboard. For fast forward, a power that
 targets your own creature, or one that can do nothing more (no creature of theirs to target, none of
-theirs bigger than Strider's 4 to shrink, no cards for them to discard, the Ring at its last level), doesn't
-count as an action.
+theirs bigger than Strider's 4 to shrink, no cards for them to discard, the Ring at its last level, fewer than
+six cards for Legolas to mill or no creature of his own for the card it gives him), doesn't count as an action.
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
@@ -170,7 +171,7 @@ blow you struck. `recordRound` keeps a round's stats with its result, and the fi
 the road that decided it (`decidingRound`), the hardest blow, the totals, and what it added to the Red Book (new
 cards, a first win against that opponent, anything unlocked).
 
-**Unlocks** (`src/paigow/unlocks.js`, worked out from the Red Book): Frodo, Samwise and Merry are open from the
+**Unlocks** (`src/paigow/unlocks.js`, worked out from the Red Book): Frodo, Samwise, Merry and Legolas are open from the
 start; Pippin joins once you've beaten Birthday Bilbo, Radagast once you've beaten Old Man Willow, and Strider once
 you've beaten the Rider in Black (in any match, a daily one included). Until then the heroes screen shows them
 hooded, with what it takes. Winning a campaign with a hero opens their second portrait (`altPortrait` in
@@ -178,7 +179,7 @@ hooded, with what it takes. Winning a campaign with a hero opens their second po
 remembered in `istari.portraits`. A campaign going on keeps its hero whatever the book says.
 
 **Today's road** (`src/paigow/daily.js`, from the title): one match a day, the same for everyone who plays that
-day. The day (the player's own calendar date) seeds the hero you're given (any of the six, open to you or not), the
+day. The day (the player's own calendar date) seeds the hero you're given (any of the seven, open to you or not), the
 opponent, both boosters and the opponent's decks (`dailyMatch`). It's saved as it goes (`istari.daily`), so a
 reload goes on with it; once it's over the title shows the score until the next day. Nothing of the campaign is at
 stake in it, but it counts in the Red Book, with a streak of days played. Its last screen has *Share*: a line such
@@ -277,7 +278,8 @@ mythics. They brought:
   - **Smaller rules:** goad, ward with a sacrifice cost, "can't be countered", legendary
     instants that need a legendary creature, losing the game as an effect, two modes at once
     (Flame of Anor), draw and life-gain replacements (Phial of Galadriel), lands that enter
-    tapped unless you control a legend.
+    tapped unless you control a legend; and, for Legolas's Quick Reflexes, split second and "whenever this
+    creature becomes tapped" (tapped to attack, for a cost or by an effect, not by entering tapped).
 - **Left out**, because they need rules this game doesn't model (each is listed with the reason in
   `cards/ltr-cards.txt`): spell copying (Display of Power, Storm of Saruman, Gandalf the Grey,
   Saruman of Many Colors), phasing (King of the Oathbreakers), triggers that trigger an
@@ -628,7 +630,8 @@ the importer, it waits and tries again. A line can pin a printing: `Shock (M21)`
 (Node 22.21+), because Node's `fetch` ignores `HTTPS_PROXY` otherwise.
 
 The card pool is the LTR cards in `cards/ltr-cards.txt`, plus the basic lands in their LTR
-printings (`"Plains (LTR)"` and so on). Forest and Llanowar Elves are defined by hand, so for those
+printings (`"Plains (LTR)"` and so on). A few cards from the LTR Commander decks (`set: 'ltc'`) are imported
+by name for the Rings of Power (Field-Tested Frying Pan, `"Legolas's Quick Reflexes (LTC)"`); they're never in a booster. Forest and Llanowar Elves are defined by hand, so for those
 the importer records only their art, in `CARD_PRESENTATION`.
 
 Each imported card also keeps what the app needs to show it: `image: { art, card }` (Scryfall's

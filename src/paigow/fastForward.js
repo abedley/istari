@@ -14,13 +14,16 @@ const usable = (abilities) => (abilities ?? []).some((ability) => !ability.isMan
  * Whether an emblem's power could still do something for `player`, who has no hand and no creatures:
  * not one that targets their own creature, nor one that sets a creature's power when none of the opponent's is
  * bigger, nor one that targets an opponent's creature or makes
- * opponents discard when there are none, nor one that sacrifices a Food they don't have, nor the Ring tempting them once it's at its last level.
+ * opponents discard when there are none, nor one that sacrifices a Food they don't have, nor one that
+ * mills more cards than they have or hands them a card to cast on a creature of their own they don't have, nor the Ring tempting them once it's at its last level.
  */
 function powerLeft(state, player, ability) {
   // Merry's "Sacrifice a Food": nothing to sacrifice, no power.
   const sacrifice = ability.cost?.sacrifice;
   const subtypes = typeof sacrifice === 'object' ? sacrifice?.filter?.subtypes : null;
   if (subtypes && !state.battlefield.some((p) => p.controllerId === player.id && subtypes.some((t) => (p.subtypes ?? []).includes(t)))) return false;
+  // Legolas's "Mill six cards": not without six cards to mill.
+  if (ability.cost?.mill && (player.library?.length ?? player.librarySize ?? 0) < ability.cost.mill) return false;
   const target = typeof ability.target === 'object' && ability.target ? ability.target.kind : ability.target;
   if (target === TARGET.CREATURE_YOU_CONTROL) return false;
   const opponents = state.players.filter((p) => p.id !== player.id);
@@ -33,6 +36,8 @@ function powerLeft(state, player, ability) {
   }
   if (effects.length && effects.every((e) => e.type === EFFECT.DISCARD)) return opponents.some((p) => (p.hand?.length ?? p.handSize ?? 0) > 0);
   if (effects.length && effects.every((e) => e.type === EFFECT.RING_TEMPTS)) return (player.ring?.level ?? 0) < 4;
+  // Legolas's Quick Reflexes is for a creature of their own, and they have none.
+  if (effects.length && effects.every((e) => e.type === EFFECT.PUT_CARDS_IN_HAND)) return state.battlefield.some((p) => p.controllerId === player.id && isCreature(p));
   // Gaining life on an otherwise empty side changes nothing worth waiting for.
   if (effects.length && effects.every((e) => e.type === EFFECT.GAIN_LIFE)) return false;
   return true;

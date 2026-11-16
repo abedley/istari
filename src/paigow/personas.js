@@ -256,6 +256,13 @@ export const PAIGOW_HEROES = deepFreeze({
     // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
     altPortrait: portrait('b/7/b7c5fe73-1684-4edc-9f9b-976b2246d5ea.jpg?1783916252', 47, 34, 350, 'Merry, Esquire of Rohan', 'Tomas Duchek'),
   },
+  legolas: {
+    name: 'Legolas', color: 'gold', emblem: 'legolas',
+    blurb: 'An Elf of the Woodland Realm, swift of eye and swifter of hand.',
+    portrait: portrait('a/9/a9405577-c1dc-48e0-b2aa-6237c569d02e.jpg?1783916270', 53, 20, 420, 'Legolas, Master Archer', 'Campbell White'),
+    // A second portrait, opened by winning a campaign with them (src/paigow/unlocks.js).
+    altPortrait: portrait('c/8/c8bd408c-9e6d-436d-9c4f-9ef3203aeb64.jpg?1783916250', 43, 0, 350, 'Legolas, Counter of Kills', 'Yongjae Choi'),
+  },
   pippin: {
     name: 'Pippin', color: 'gold', emblem: 'pippin',
     blurb: 'A Took of the Shire, who has never once skipped second breakfast.',

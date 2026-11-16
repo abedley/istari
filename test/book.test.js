@@ -129,7 +129,7 @@ test('heroes and portraits open on the road', () => {
   let book = emptyBook();
   assert.deepEqual(Object.keys(HERO_UNLOCKS).sort(), Object.keys(PAIGOW_HEROES).sort());
   for (const beat of Object.values(HERO_UNLOCKS)) if (beat) assert.ok(CAMPAIGN_OPPONENTS.includes(beat), beat);
-  assert.deepEqual(Object.keys(PAIGOW_HEROES).filter((id) => heroOpen(book, id)).sort(), ['frodo', 'merry', 'samwise']);
+  assert.deepEqual(Object.keys(PAIGOW_HEROES).filter((id) => heroOpen(book, id)).sort(), ['frodo', 'legolas', 'merry', 'samwise']);
   assert.equal(heroNeeds('frodo'), null);
   assert.match(heroNeeds('pippin'), /Beat Birthday Bilbo/);
   assert.deepEqual(unlocksOf(book), []);

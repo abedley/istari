@@ -287,6 +287,10 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
         case EFFECT.REVEAL_HAND_DISCARD:
           score -= side(id) * 3;
           break;
+        case EFFECT.PUT_CARDS_IN_HAND:
+          // As good as drawing them, and better: you know what they are.
+          if (isPlayer) score += side(id) * 2 * (effect.cardIds?.length ?? 0);
+          break;
         case EFFECT.SHUFFLE_CARDS_INTO_LIBRARY:
           // A card to draw some turn later: a little better deck.
           if (isPlayer) score += side(id) * 0.5 * (effect.cardIds?.length ?? 0);
@@ -362,7 +366,9 @@ export function costScore(state, me, cost, costChoices, sourceId, doomed = null)
     ?? (isCreature(p) ? (p.token ? creatureValue(p) : permanentValue(p)) : 1);
   return -(cost.life ?? 0) * (life <= 10 ? 1 : 0.4)
     - sacrificed.reduce((sum, p) => sum + (p ? value(p) : 0), 0)
-    - (costChoices.discard?.length ?? 0) * 2;
+    - (costChoices.discard?.length ?? 0) * 2
+    // "Mill six cards": cards that won't be drawn.
+    - (cost.mill ?? 0) * 0.3;
 }
 
 const COMBAT_TARGETS = new Set([TARGET.ATTACKING_CREATURE, TARGET.ATTACKING_OR_BLOCKING_CREATURE]);

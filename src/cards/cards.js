@@ -362,6 +362,8 @@ export const EFFECT = Object.freeze({
   SHUFFLE_SOURCE_INTO_LIBRARY: 'shuffleSourceIntoLibrary',
   /** `{ cardIds }`: new cards (by card id) are shuffled into your library (Elrond's ring: a Glorfindel, Dauntless Rescuer). */
   SHUFFLE_CARDS_INTO_LIBRARY: 'shuffleCardsIntoLibrary',
+  /** `{ cardIds }`: new cards (by card id) are put into your hand (Legolas's ring: a Legolas's Quick Reflexes). */
+  PUT_CARDS_IN_HAND: 'putCardsInHand',
   /** Crew (702.122): the source becomes an artifact creature until end of turn. */
   BECOME_CREATURE: 'becomeCreature',
   /** `{ at: 'endOfCombat', effects }`: a delayed triggered ability (603.7), with this resolution's targets and subject. */
@@ -489,6 +491,11 @@ export const TRIGGER = Object.freeze({
   ATTACKS: 'attacks',
   /** "Whenever this creature attacks or blocks" (508.3a, 509.3c). */
   ATTACKS_OR_BLOCKS: 'attacksOrBlocks',
+  /**
+   * "Whenever this creature becomes tapped" (Legolas's Quick Reflexes): tapped to attack, for a cost or by an effect,
+   * but not by entering tapped, which isn't becoming tapped.
+   */
+  BECOMES_TAPPED: 'becomesTapped',
   /** "Whenever another creature you control enters", "Whenever another Elf enters". */
   CREATURE_ENTERS: 'creatureEnters',
   /** Landfall: "Whenever a land you control enters". */

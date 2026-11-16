@@ -10,6 +10,7 @@ export const HERO_UNLOCKS = Object.freeze({
   frodo: null,
   samwise: null,
   merry: null,
+  legolas: null,
   pippin: 'birthdayBilbo',
   radagast: 'oldManWillow',
   strider: 'riderInBlack',

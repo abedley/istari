@@ -89,7 +89,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Pippin']);
+  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Legolas', 'Pippin']);
   for (const hero of Object.values(PAIGOW_HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
@@ -518,6 +518,114 @@ test("Gildor's power: as the game starts, after the opening hand, two Forests an
   assert.equal(theirs.library.length, 0);
   // There's nothing to activate.
   assert.equal(activation(s, 'p1'), undefined);
+});
+
+/** Passes (or takes the first choice) until `done(state)`, and returns that state. */
+function passUntil(game, done) {
+  for (let i = 0; i < 500; i++) {
+    const s = game.getState();
+    if (done(s)) return s;
+    const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+    const acts = s.validActions.filter((a) => a.playerId === actor);
+    assert.equal(game.dispatch(acts.find((a) => a.type === ACTION.PASS_PRIORITY || a.type === ACTION.CONFIRM_CHOICE) ?? acts[0]).ok, true);
+  }
+  throw new Error('Too many steps');
+}
+
+const p1Main = (s) => s.activePlayerId === 'p1' && s.phase === 'precombatMain' && s.priorityPlayerId === 'p1' && !s.stack.length && !s.pendingDecision;
+
+test("Legolas's power: his library starts with his kit; mill six cards to add a Legolas's Quick Reflexes to his hand", () => {
+  const game = new Game({
+    players, decks: { p1: ['bear', 'bear'], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 2,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['legolas'], p2: [] }, startingPlayerId: 'p2', seed: 3,
+  });
+  game.start();
+  let s = game.getState();
+  // The opening hand is still the deck's own; his library is two Elven Farsight, an Elven Chorus and seven Forests.
+  assert.deepEqual(s.players[0].hand.map((c) => c.cardId), ['bear', 'bear']);
+  assert.deepEqual(s.players[0].library.map((c) => c.cardId).sort(), ['elvenChorus', 'elvenFarsight', 'elvenFarsight', ...Array(7).fill('forest')]);
+  s = passUntil(game, p1Main);
+  // He drew one: nine left.
+  assert.equal(s.players[0].library.length, 9);
+  s = usePower(game);
+  const me = s.players[0];
+  assert.equal(me.library.length, 3);
+  assert.equal(me.graveyard.length, 6);
+  // His two Bears, the card he drew, and Legolas's Quick Reflexes.
+  assert.equal(me.hand.length, 4);
+  assert.equal(me.hand.filter((c) => c.cardId === 'legolassQuickReflexes').length, 1);
+  // Once a turn.
+  assert.equal(activation(s, 'p1'), undefined);
+  // On his next turn, with fewer than six cards to mill, it can't be used.
+  passUntil(game, (st) => st.activePlayerId === 'p2');
+  s = passUntil(game, p1Main);
+  assert.equal(s.players[0].library.length, 2);
+  assert.equal(activation(s, 'p1'), undefined);
+  // Fast forward doesn't count it with too few cards to mill, nor with no creature of his own to cast the card on.
+  assert.equal(outOfActions(s, 'p1'), false, 'he has cards in hand');
+  const empty = new Game({
+    players, decks: { p1: [], p2: ['bear'] }, cards: { ...CARDS, bear: BEAR }, openingHandSize: 0,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: ['legolas'], p2: [] }, startingPlayerId: 'p1', seed: 3,
+  });
+  empty.start();
+  const st = passUntil(empty, p1Main);
+  assert.equal(st.players[0].library.length, 10);
+  assert.ok(activation(st, 'p1'), 'the power can be used');
+  assert.equal(outOfActions(st, 'p1'), true);
+});
+
+test("Legolas's Quick Reflexes: split second; untap target creature; reach, hexproof, and it shoots when it becomes tapped", () => {
+  const TAPPER = { id: 'tapper', name: 'Tapper', manaCost: {}, types: ['Instant'], target: 'creature', effects: [{ type: 'tap' }] };
+  const game = new Game({
+    players, decks: { p1: ['bear', 'legolassQuickReflexes', 'tapper', 'tapper'], p2: ['bear', 'shock'] },
+    cards: { ...CARDS, bear: BEAR, tapper: TAPPER, shock: SHOCK }, shuffleLibraries: false, openingHandSize: 4,
+    deckingLoss: false, infiniteMana: true, emblems: { p1: [], p2: [] }, startingPlayerId: 'p2',
+  });
+  game.start();
+  const castBy = (playerId, cardId, targets) => {
+    const s = game.getState();
+    const card = s.players.find((p) => p.id === playerId).hand.find((c) => c.cardId === cardId);
+    const action = s.validActions.find((a) => a.type === ACTION.CAST_SPELL && a.cardId === card.id
+      && (!targets || JSON.stringify(a.targets) === JSON.stringify(targets)));
+    assert.ok(action, `${cardId} can be cast: ${JSON.stringify(s.validActions.filter((a) => a.cardId === card.id))} ${s.phase} ${s.priorityPlayerId}`);
+    assert.equal(game.dispatch(action).ok, true);
+  };
+  // p2 casts its Bear on its turn.
+  let s = passUntil(game, (st) => st.activePlayerId === 'p2' && st.phase === 'precombatMain' && st.priorityPlayerId === 'p2');
+  castBy('p2', 'bear');
+  s = passUntil(game, p1Main);
+  castBy('p1', 'bear');
+  s = passUntil(game, (st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  const mine = s.battlefield.find((p) => p.controllerId === 'p1' && p.cardId === 'bear');
+  const theirs = s.battlefield.find((p) => p.controllerId === 'p2' && p.cardId === 'bear');
+  // Tap the Bear first, so there's something to untap.
+  castBy('p1', 'tapper', [mine.id]);
+  s = passUntil(game, (st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  assert.equal(s.battlefield.find((p) => p.id === mine.id).tapped, true);
+  castBy('p1', 'legolassQuickReflexes', [mine.id]);
+  // Split second: p1 passes, and p2, with Shock in hand and priority, can only pass too.
+  assert.equal(game.dispatch(passPriority('p1')).ok, true);
+  s = game.getState();
+  assert.equal(s.priorityPlayerId, 'p2');
+  assert.deepEqual(s.validActions.filter((a) => a.playerId === 'p2').map((a) => a.type), [ACTION.PASS_PRIORITY]);
+  s = passUntil(game, (st) => !st.stack.length && st.priorityPlayerId === 'p1');
+  let bear = s.battlefield.find((p) => p.id === mine.id);
+  assert.equal(bear.tapped, false);
+  assert.ok(bear.keywords.includes('reach') && bear.keywords.includes('hexproof'));
+  // Once it's resolved, spells can be cast again; and as the Bear becomes tapped, it shoots theirs.
+  castBy('p1', 'tapper', [mine.id]);
+  s = passUntil(game, (st) => !st.stack.length && !st.pendingTriggers?.length && (st.pendingDecision || st.priorityPlayerId === 'p1'));
+  for (let i = 0; i < 20 && s.battlefield.some((p) => p.id === theirs.id); i++) {
+    const actor = s.pendingDecision?.playerId ?? s.priorityPlayerId;
+    const acts = s.validActions.filter((a) => a.playerId === actor);
+    const aim = acts.find((a) => a.targets?.[0] === theirs.id);
+    if (!aim && !s.stack.length && !s.pendingDecision) break;
+    assert.equal(game.dispatch(aim ?? acts.find((a) => a.type === ACTION.PASS_PRIORITY) ?? acts[0]).ok, true);
+    s = game.getState();
+  }
+  assert.ok(!s.battlefield.some((p) => p.id === theirs.id), 'the Bear shot theirs for 2');
+  bear = s.battlefield.find((p) => p.id === mine.id);
+  assert.equal(bear.tapped, true);
 });
 
 test("the Rider in Black's power: at his end step, each opponent with a Ring-bearer loses life equal to their Ring's abilities", () => {

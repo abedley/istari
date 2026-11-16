@@ -142,7 +142,7 @@ function describe(state, me, action) {
   const cost = ability.cost ?? {};
   return {
     card: source, spell: false, permanent: false, effects: ability.effects ?? [], cost, ability,
-    free: !cost.life && !cost.sacrifice && !cost.sacrificeSelf && !cost.discard && !cost.tap,
+    free: !cost.life && !cost.sacrifice && !cost.sacrificeSelf && !cost.discard && !cost.tap && !cost.mill,
     instant: ability.timing !== 'sorcery', sorcerySpeed: ability.timing === 'sorcery', group: `a:${source.id}:${ability.id}`,
   };
 }

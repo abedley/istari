@@ -8133,6 +8133,69 @@ export const IMPORTED_CARDS = {
     "scryfallId": "a9405577-c1dc-48e0-b2aa-6237c569d02e",
     "scryfallUri": "https://scryfall.com/card/ltr/173/legolas-master-archer?utm_source=api"
   },
+  "legolassQuickReflexes": {
+    "id": "legolassQuickReflexes",
+    "name": "Legolas's Quick Reflexes",
+    "manaCost": {
+      "G": 1
+    },
+    "supertypes": [],
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "effects": [
+      {
+        "type": "untap"
+      },
+      {
+        "type": "pump",
+        "keywords": [
+          "reach",
+          "hexproof"
+        ],
+        "grantTriggers": [
+          {
+            "trigger": "becomesTapped",
+            "text": "Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.",
+            "effects": [
+              {
+                "type": "dealDamage",
+                "amount": 1,
+                "per": {
+                  "of": "powerOf",
+                  "who": "source"
+                }
+              }
+            ],
+            "id": "quickReflexesShot",
+            "target": {
+              "kind": "creature",
+              "optional": true
+            }
+          }
+        ]
+      }
+    ],
+    "target": "creature",
+    "splitSecond": true,
+    "text": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nUntap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\"",
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/8/5/851c0167-04ba-4d15-b0fa-c211bd8826f1.jpg?1783914204",
+      "card": "https://cards.scryfall.io/normal/front/8/5/851c0167-04ba-4d15-b0fa-c211bd8826f1.jpg?1783914204"
+    },
+    "artist": "Jason Rainville",
+    "colors": [
+      "G"
+    ],
+    "rarity": "rare",
+    "set": "ltc",
+    "collectorNumber": "493",
+    "typeLine": "Instant",
+    "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nUntap target creature. Until end of turn, it gains reach, hexproof, and \"Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.\"",
+    "scryfallId": "851c0167-04ba-4d15-b0fa-c211bd8826f1",
+    "scryfallUri": "https://scryfall.com/card/ltc/493/legolass-quick-reflexes?utm_source=api"
+  },
   "lembas": {
     "id": "lembas",
     "name": "Lembas",

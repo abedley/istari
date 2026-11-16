@@ -725,6 +725,15 @@ export class Game extends EventEmitter {
   #priorityActions(holder) {
     const actions = [{ type: ACTION.PASS_PRIORITY, playerId: holder }];
     const zone = this.#zones.get(holder);
+    // 702.61a: split second: while such a spell is on the stack, no spells and no abilities but mana abilities.
+    if (this.#stack.some((o) => o.splitSecond)) {
+      for (const source of [...this.#battlefield.filter((p) => p.controllerId === holder), ...zone.emblems]) {
+        for (const ability of this.#abilitiesOf(source).filter(isManaAbility)) {
+          if (this.#canActivate(holder, source, ability)) actions.push(...this.#activationOptions(holder, source, ability));
+        }
+      }
+      return actions;
+    }
     const { hand } = zone;
     if (this.#canPlayLand(holder)) {
       for (const card of hand.filter(isLand)) {
@@ -1906,6 +1915,7 @@ export class Game extends EventEmitter {
     // Boromir: "if no mana was spent to cast it".
     stackObject.manaSpent = MANA_TYPES.reduce((sum, type) => sum + manaPaid[type], manaPaid.any ?? 0);
     if (definition.cantBeCountered || manaPaid.uncounterable) stackObject.uncounterable = true;
+    if (definition.splitSecond) stackObject.splitSecond = true;
     delete manaPaid.uncounterable;
     // 601.2f: additional costs, such as sacrificing a creature, are part of the total cost.
     const additionalCostPaid = alternative ? this.#payCost(playerId, null, { ...alternative, mana: undefined }, costChoices ?? {}) : null;
@@ -2000,6 +2010,8 @@ export class Game extends EventEmitter {
     if (cost.exileSelfFromGraveyard && !this.#zones.get(playerId).graveyard.some((c) => c.id === permanent?.id)) return false;
     // "Exile three cards from your graveyard" (chosen as it's paid, see CHOICE.EXILE_COST).
     if (cost.exileFromGraveyard && this.#zones.get(playerId).graveyard.length < cost.exileFromGraveyard) return false;
+    // "Mill six cards" (Legolas's ring): there must be that many cards to mill.
+    if (cost.mill && this.#zones.get(playerId).library.length < cost.mill) return false;
     // "Remove an indestructible counter from Arwen".
     if (cost.removeCounter && !((permanent?.counters?.[cost.removeCounter.counter] ?? 0) >= (cost.removeCounter.count ?? 1))) return false;
     // Choices such as which creature to sacrifice are checked by #costChoiceOptions.
@@ -2012,6 +2024,7 @@ export class Game extends EventEmitter {
     if (cost.tap) {
       permanent.tapped = true;
       paid.tap = true;
+      this.#becameTapped(permanent);
     }
     if (mana) paid.mana = this.#payManaFrom(playerId, mana, null);
     if (cost.life) {
@@ -2023,6 +2036,7 @@ export class Game extends EventEmitter {
       const creature = this.#permanent(id);
       creature.tapped = true;
       this.#emitEvent('permanentTapped', { cardId: id, sourceId: permanent?.id ?? null });
+      this.#becameTapped(creature);
     }
     if (choices.tap?.length) paid.tapped = [...choices.tap];
     if (cost.exileSelf) {
@@ -2044,6 +2058,14 @@ export class Game extends EventEmitter {
     if (discards.length) {
       for (const id of discards) this.#discardCard(playerId, id);
       paid.discarded = discards;
+    }
+    if (cost.mill) {
+      // 701.13a: the top cards of the library go to the graveyard.
+      const zone = this.#zones.get(playerId);
+      const milled = zone.library.splice(0, cost.mill);
+      zone.graveyard.push(...milled);
+      this.#emitEvent('cardsMilled', { playerId, cardIds: milled.map((c) => c.id), librarySize: zone.library.length });
+      paid.milled = milled.map((c) => c.id);
     }
     if (cost.removeCounter) {
       const { counter, count = 1 } = cost.removeCounter;
@@ -2685,6 +2707,7 @@ export class Game extends EventEmitter {
           if (!tapped && this.#stunned(permanent)) continue;
           permanent.tapped = tapped;
           this.#emitEvent(tapped ? 'permanentTapped' : 'permanentUntapped', { cardId: permanent.id, sourceId });
+          if (tapped) this.#becameTapped(permanent);
         }
         break;
       }
@@ -3033,6 +3056,16 @@ export class Game extends EventEmitter {
       case EFFECT.SHUFFLE_CARDS_INTO_LIBRARY:
         this.#shuffleIn(controllerId, effect.cardIds ?? [], sourceId, 'an effect');
         break;
+      case EFFECT.PUT_CARDS_IN_HAND: {
+        const zone = this.#zones.get(controllerId);
+        const cards = (effect.cardIds ?? []).map((cardId) => {
+          if (!this.#cardDefinitions[cardId]) throw new Error(`Unknown card for an effect: ${cardId}`);
+          return this.#createCard(cardId, controllerId, `${controllerId}-added-${this.#nextTokenNumber++}`);
+        });
+        zone.hand.push(...cards);
+        this.#emitEvent('cardsPutInHand', { playerId: controllerId, cardIds: cards.map((c) => c.id), sourceId });
+        break;
+      }
       case EFFECT.BECOME_CREATURE:
         for (const permanent of permanents()) {
           this.#addTemporaryEffect({ sourceId, targetId: permanent.id, addTypes: [CARD_TYPE.ARTIFACT, CARD_TYPE.CREATURE] });
@@ -3763,6 +3796,11 @@ export class Game extends EventEmitter {
       if (!triggersOn(ability, type) || ability.zone === 'graveyard' || !matches(ability)) continue;
       this.#triggerAbility(ability, { sourceId: permanent.id, sourceName: permanent.name, controllerId, subject });
     }
+  }
+
+  /** 701.21a: a permanent became tapped: its "Whenever this creature becomes tapped" abilities trigger (Legolas's Quick Reflexes). */
+  #becameTapped(permanent) {
+    this.#trigger(permanent, TRIGGER.BECOMES_TAPPED, permanent.controllerId);
   }
 
   /** An ability triggers, unless its intervening "if" (603.4) or "only once each turn" stops it. */
@@ -4679,7 +4717,10 @@ export class Game extends EventEmitter {
     // 508.1f: attacking creatures become tapped, except those with vigilance (702.20b).
     for (const id of attackers) {
       const creature = this.#permanent(id);
-      if (!hasKeyword(creature, KEYWORD.VIGILANCE)) creature.tapped = true;
+      if (!hasKeyword(creature, KEYWORD.VIGILANCE)) {
+        creature.tapped = true;
+        this.#becameTapped(creature);
+      }
     }
     this.#combat.declaredAttackers = [...attackers];
     this.#combat.attackers = attackers.map((cardId) => (

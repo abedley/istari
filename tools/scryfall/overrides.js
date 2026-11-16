@@ -9,7 +9,7 @@
  * `target(s)`, `modes`, `handAbilities`, `graveyardAbilities`, `additionalCost`,
  * `costReduction`, `enchant`, `entersTapped`, `ward`, and `power`/`toughness` for
  * one whose printed values aren't numbers. Abilities get ids if they have none. Any other
- * field (`entersTappedUnless`, `entersWithCounters`, `cantBeCountered`, `chooseTwo`) is
+ * field (`entersTappedUnless`, `entersWithCounters`, `cantBeCountered`, `chooseTwo`, `splitSecond`) is
  * copied into the definition as it is.
  *
  * So far: The Lord of the Rings: Tales of Middle-earth (LTR), except the cards listed as
@@ -992,6 +992,19 @@ export const OVERRIDES = {
   'Last March of the Ents': {
     cantBeCountered: true,
     effects: [draw(1, { per: { of: 'greatestToughness' } }), { type: EFFECT.PUT_FROM_HAND_ONTO_BATTLEFIELD, filter: { types: [CREATURE] }, any: true }],
+  },
+  // From the LTR Commander decks (LTC 493), for Legolas's Ring of Power; not in a booster.
+  "Legolas's Quick Reflexes": {
+    splitSecond: true,
+    target: TARGET.CREATURE,
+    effects: [
+      { type: EFFECT.UNTAP },
+      grant([KEYWORD.REACH, KEYWORD.HEXPROOF], {
+        grantTriggers: [when(TRIGGER.BECOMES_TAPPED, 'Whenever this creature becomes tapped, it deals damage equal to its power to up to one target creature.', [
+          damage(1, { per: { of: 'powerOf', who: 'source' } }),
+        ], { id: 'quickReflexesShot', target: upTo(TARGET.CREATURE) })],
+      }),
+    ],
   },
   'Legolas, Master Archer': {
     keywords: [KEYWORD.REACH],

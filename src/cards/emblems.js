@@ -110,6 +110,21 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.CREATE_TOKEN, count: 2, token: { colors: ['white'], subtypes: ['Halfling'], power: 1, toughness: 1 } }],
     timing: SORCERY,
   }),
+  // A passive power that fills the library as the game starts (`shufflesIn`, as Gildor's), and a power that mills it.
+  legolas: {
+    id: 'legolas',
+    name: 'The Ring of the Woodland Realm',
+    ring: true,
+    passive: true,
+    power: 'Elves of Mirkwood',
+    text: 'At the start of the game, shuffle two Elven Farsight, an Elven Chorus and seven Forests into your library.',
+    shufflesIn: ['elvenFarsight', 'elvenFarsight', 'elvenChorus', ...Array(7).fill('forest')],
+    activationsPerTurn: 1,
+    abilities: [{
+      id: 'power', name: 'Quick Reflexes', text: 'Mill six cards: Add a Legolas\u2019s Quick Reflexes to your hand.',
+      cost: { mill: 6 }, effects: [{ type: EFFECT.PUT_CARDS_IN_HAND, cardIds: ['legolassQuickReflexes'] }],
+    }],
+  },
   pippin: power('pippin', 'The Ring of the Tooks', 'Second Breakfast', {
     text: '0: Create a Morsel token. (It\u2019s a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life.") Activate only as a sorcery.',
     effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: TOKEN.MORSEL }],
