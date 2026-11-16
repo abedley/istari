@@ -1062,6 +1062,9 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-chip-cost:empty { display: none; }
 .pg-chip-pt { position: absolute; top: 2px; right: 2px; padding: 0 4px; border-radius: 4px / 6px; background: linear-gradient(180deg, #fbf6e6, #ddd2b0); color: #15120d; font: 800 10.5px/1.35 var(--display); box-shadow: 0 0 0 1px rgba(0, 0, 0, .6); }
 /* Picked up, to move to another deck or swap with a card there. */
+.pg-chip.locked { cursor: default; box-shadow: inset 0 0 0 1.5px rgba(233, 196, 106, .55); }
+.pg-locked { display: inline-flex; align-items: center; gap: 3px; color: var(--gold); }
+.pg-locked .icon { width: 11px; height: 11px; }
 .pg-chip.picked { outline: 2px solid #fff; outline-offset: 1px; box-shadow: 0 0 14px 3px rgba(255, 255, 255, .55); z-index: 1; }
 .pg-tray-empty { grid-column: 1 / -1; margin: 18px 8px 0; font: italic 16px/1.35 var(--rules); color: var(--muted); text-align: center; }
 .pg-clear { min-height: 34px; padding: 4px 8px; }

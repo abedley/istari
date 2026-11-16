@@ -179,11 +179,18 @@ export const EMBLEMS = deepFreeze({
       effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringAbilities' } }],
     }],
   },
-  tomBombadil: power('tomBombadil', 'Goldberry’s Ring', 'Hey Dol! Merry Dol!', {
-    text: '0: Untap target creature you control. It gets +0/+2 until end of turn.',
-    target: TARGET.CREATURE_YOU_CONTROL,
-    effects: [{ type: EFFECT.UNTAP }, { type: EFFECT.PUMP, power: 0, toughness: 2 }],
-  }),
+  // A passive power for the match rather than the game (see createMatch in src/paigow/paigow.js): what's in the
+  // booster, and how its decks are made. Nothing to do in a round.
+  tomBombadil: {
+    id: 'tomBombadil',
+    name: 'Goldberry\u2019s Ring',
+    ring: true,
+    passive: true,
+    power: 'Treasure of the Barrow',
+    text: 'Your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build.',
+    abilities: [],
+    match: { rareBooster: true, lockedFirstDeck: true },
+  },
   sauron: power('sauron', 'The Ruling Ring', 'Armies of Mordor', {
     text: '0: Amass Orcs 1. Activate only as a sorcery.',
     effects: [{ type: EFFECT.AMASS, count: 1, subtype: 'Orc' }],

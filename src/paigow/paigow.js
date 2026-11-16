@@ -14,6 +14,7 @@
  * Everything here is pure: a match is a plain object, and each function returns a new one.
  */
 import { CARDS, isCreature, manaValue } from '../cards/cards.js';
+import { EMBLEMS } from '../cards/emblems.js';
 import { GAME_LIMITS } from '../engine/Game.js';
 import { seededRandom, shuffle } from '../engine/random.js';
 import {
@@ -84,6 +85,34 @@ export function openBooster(random, { extraCommons = 0 } = {}) {
     PAIGOW_POOL[Math.floor(random() * PAIGOW_POOL.length)],
   ];
 }
+
+/**
+ * A booster of only rares and mythics (Tom Bombadil's ring): `size` different cards, each rare twice as likely as
+ * each mythic, as in a booster's rare slot.
+ */
+export function openRareBooster(random, { size = PAIGOW_RULES.cardsDealt } = {}) {
+  const { rare, mythic } = POOL_BY_RARITY;
+  let slots = [...rare, ...rare, ...mythic];
+  const booster = [];
+  while (booster.length < size && slots.length) {
+    const cardId = slots[Math.floor(random() * slots.length)];
+    booster.push(cardId);
+    slots = slots.filter((id) => id !== cardId);
+  }
+  return booster;
+}
+
+/**
+ * The match rules a side's Rings of Power make (an emblem's `match`, see src/cards/emblems.js): `rareBooster`, an
+ * all-rare booster; `lockedFirstDeck`, a first deck of five of its cards picked at random.
+ */
+export function matchRules(emblemIds) {
+  const rules = (emblemIds ?? []).map((id) => EMBLEMS[id]?.match ?? {});
+  return { rareBooster: rules.some((r) => r.rareBooster), lockedFirstDeck: rules.some((r) => r.lockedFirstDeck) };
+}
+
+/** Five places in `cards`, picked at random: a locked first deck. */
+const pickLocked = (cards, random) => shuffle([...cards.keys()], random).slice(0, PAIGOW_RULES.deckSize).sort((a, b) => a - b);
 
 /**
  * A booster with `cards` in it (an opponent's `pack`, see opponentSetup): each one not already there takes the
@@ -169,14 +198,25 @@ export function createMatch({
   if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
   if (chosen && !PAIGOW_OPPONENTS[chosen]) throw new Error(`Unknown opponent: ${chosen}`);
   const random = seededRandom(seed);
-  const cards = openBooster(random, { extraCommons });
-  const cpuCards = openBooster(random);
+  let cards = openBooster(random, { extraCommons });
+  let cpuCards = openBooster(random);
   // The order of the CPU's decks, then its opponent (the random draws come in the order they always did).
   const order = shuffle([...Array(PAIGOW_RULES.decks).keys()], random);
   const candidates = Object.keys(PAIGOW_OPPONENTS);
   const drawn = candidates[Math.floor(random() * candidates.length)];
   const opponentId = chosen ?? drawn;
-  const built = buildDecks(withCards(cpuCards, opponentSetup(opponentId).pack), null, { persona: opponentId });
+  // Rings that change the match (Tom Bombadil's): drawn from a random of their own, so other matches stay as they were.
+  const extra = seededRandom((seed ^ 0x7b0b5ad1) >>> 0);
+  const mine = matchRules([heroId, ...rings]);
+  const theirs = matchRules([PAIGOW_OPPONENTS[opponentId].emblem]);
+  if (mine.rareBooster) cards = openRareBooster(extra, { size: cards.length });
+  if (theirs.rareBooster) cpuCards = openRareBooster(extra, { size: cpuCards.length });
+  const lockedDeck = mine.lockedFirstDeck ? pickLocked(cards, extra) : null;
+  cpuCards = withCards(cpuCards, opponentSetup(opponentId).pack);
+  const cpuLocked = theirs.lockedFirstDeck ? pickLocked(cpuCards, extra).map((n) => cpuCards[n]) : null;
+  const built = buildDecks(cpuCards, null, { persona: opponentId, locked: cpuLocked });
+  // A locked deck stays first; the others go in a random order.
+  const cpuOrder = cpuLocked ? [0, ...order.filter((i) => i !== 0)] : order;
   return {
     seed,
     heroId,
@@ -184,8 +224,10 @@ export function createMatch({
     rings: [...rings],
     ...(campaign ? { campaign: true } : {}),
     cards,
+    // Places in `cards` that must make up the first deck (Tom Bombadil's ring), or none.
+    ...(lockedDeck ? { lockedDeck } : {}),
     decks: null,
-    cpuDecks: order.map((i) => built[i]),
+    cpuDecks: cpuOrder.map((i) => built[i]),
     playerStarts: random() < 0.5,
     rounds: [],
   };
@@ -204,13 +246,20 @@ export function validDecks(match, decks) {
     if (!left.get(id)) return false;
     left.set(id, left.get(id) - 1);
   }
+  // A locked first deck (Tom Bombadil's ring) is just those cards.
+  if (match.lockedDeck) {
+    const sorted = (ids) => [...ids].sort().join();
+    if (sorted(decks[0]) !== sorted(match.lockedDeck.map((n) => match.cards[n]))) return false;
+  }
   return true;
 }
 
 /** The match with the player's decks set. */
 export function setDecks(match, decks) {
   if (match.decks) throw new Error('The decks are already set.');
-  if (!validDecks(match, decks)) throw new Error('Make three decks of five cards from your cards.');
+  if (!validDecks(match, decks)) {
+    throw new Error(match.lockedDeck ? 'Make three decks of five cards from your cards, the first one the locked cards.' : 'Make three decks of five cards from your cards.');
+  }
   return { ...match, decks: decks.map((deck) => [...deck]) };
 }
 

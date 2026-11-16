@@ -74,10 +74,24 @@ export function deckPlan(deck) {
 /**
  * Three decks of five from `cards` (15, or more: the lowest rated are left out), in a random order
  * (with no `random`, as they come).
- * `persona`: an opponent's id or a temperament, for its tastes.
+ * `persona`: an opponent's id or a temperament, for its tastes. `locked`: five of `cards` that must make up the
+ * first deck (Tom Bombadil's ring); then only the other two are built, and the locked deck stays first.
  */
-export function buildDecks(cards, random, { persona = null } = {}) {
-  const pool = [...cards].sort((a, b) => (CARD_RATINGS[b] ?? 0) - (CARD_RATINGS[a] ?? 0) || (a < b ? -1 : 1)).slice(0, DECKS * SIZE);
+export function buildDecks(cards, random, { persona = null, locked = null } = {}) {
+  const byRating = (list) => [...list].sort((a, b) => (CARD_RATINGS[b] ?? 0) - (CARD_RATINGS[a] ?? 0) || (a < b ? -1 : 1));
+  let pool;
+  if (locked) {
+    if (locked.length !== SIZE) throw new Error(`A locked deck is ${SIZE} cards.`);
+    const rest = [...cards];
+    for (const id of locked) {
+      const at = rest.indexOf(id);
+      if (at < 0) throw new Error(`A locked card isn't among the cards: ${id}`);
+      rest.splice(at, 1);
+    }
+    pool = [...locked, ...byRating(rest).slice(0, (DECKS - 1) * SIZE)];
+  } else {
+    pool = byRating(cards).slice(0, DECKS * SIZE);
+  }
   const n = pool.length;
   const { tastes = {} } = profileFor(persona);
   const liking = pool.map((id) => cardTags(id).reduce((sum, tag) => sum + ((tastes[tag] ?? 1) - 1), 0));
@@ -114,7 +128,8 @@ export function buildDecks(cards, random, { persona = null } = {}) {
     for (let i = from; i < n; i++) if (available & (1 << i)) pick(mask | (1 << i), available, left - 1, i + 1, out);
     return out;
   };
-  for (const first of pick(1, all & ~1, SIZE - 1, 1, [])) {
+  // A locked first deck: the pool's first five cards.
+  for (const first of locked ? [(1 << SIZE) - 1] : pick(1, all & ~1, SIZE - 1, 1, [])) {
     const rest = all & ~first;
     const low = lowest(rest);
     for (const second of pick(1 << low, rest & ~(1 << low), SIZE - 1, low + 1, [])) {
@@ -128,5 +143,6 @@ export function buildDecks(cards, random, { persona = null } = {}) {
   const chosen = near.filter((s) => s.value >= best.value - NEAR)
     .reduce((a, b) => (b.taste > a.taste + 1e-9 || (Math.abs(b.taste - a.taste) <= 1e-9 && b.value > a.value) ? b : a));
   const decks = chosen.masks.map(cardsOf);
+  if (locked) return [decks[0], ...(random ? shuffle(decks.slice(1), random) : decks.slice(1))];
   return random ? shuffle(decks, random) : decks;
 }

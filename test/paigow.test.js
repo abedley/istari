@@ -11,8 +11,10 @@ import { playout } from '../src/ai/simulate.js';
 import {
   PAIGOW_POOL, POOL_BY_RARITY, PAIGOW_RULES, openBooster, createMatch, setDecks, validDecks, recordRound, roundSetup, nextRound, outcome, score,
   arrangeCpuDecks, playerStartsRound, withCards, spreadDecks, cardStrength, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
+  openRareBooster, matchRules,
 } from '../src/paigow/paigow.js';
 import { seededRandom } from '../src/engine/random.js';
+import { buildDecks } from '../src/paigow/deckBuilder.js';
 import { outOfActions, canFastForward, planFastForward } from '../src/paigow/fastForward.js';
 import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
 import { banterProblems } from '../src/ai/banter.js';
@@ -479,6 +481,67 @@ test('a game can start a player with cards in the graveyard', () => {
   const game = newGame({ p1: ['bear'], p2: ['bear'] }, { startsInGraveyard: { p2: ['bear', 'bear'] } });
   assert.deepEqual(game.getState().players[1].graveyard.map((c) => c.cardId), ['bear', 'bear']);
   assert.deepEqual(game.getState().players[0].graveyard, []);
+});
+
+const rareOrBetter = (id) => ['rare', 'mythic'].includes(CARDS[id].rarity);
+
+test('a rare booster: different rares and mythics, as many as asked', () => {
+  const booster = openRareBooster(seededRandom(3));
+  assert.equal(booster.length, PAIGOW_RULES.cardsDealt);
+  assert.equal(new Set(booster).size, booster.length);
+  assert.ok(booster.every(rareOrBetter));
+  assert.equal(openRareBooster(seededRandom(3), { size: 18 }).length, 18);
+});
+
+test('Tom Bombadil’s packs are all rares and mythics, and his first deck is five of them picked at random', () => {
+  assert.deepEqual(matchRules(['tomBombadil']), { rareBooster: true, lockedFirstDeck: true });
+  assert.deepEqual(matchRules(['frodo', 'gandalf']), { rareBooster: false, lockedFirstDeck: false });
+  const firsts = new Set();
+  for (let seed = 1; seed <= 12; seed += 1) {
+    const match = createMatch({ seed, opponentId: 'tomBombadil' });
+    const cards = match.cpuDecks.flat();
+    assert.equal(cards.length, PAIGOW_RULES.cardsDealt, `seed ${seed}`);
+    assert.ok(cards.every(rareOrBetter), `seed ${seed}: all rare`);
+    assert.ok(match.cpuDecks.every((deck) => deck.length === PAIGOW_RULES.deckSize));
+    // The player's booster is as ever, and nothing of theirs is locked.
+    assert.ok(!match.cards.every(rareOrBetter));
+    assert.equal(match.lockedDeck, undefined);
+    firsts.add(match.cpuDecks[0].join());
+  }
+  assert.equal(firsts.size, 12, 'a different first deck each time');
+  // The same seed, the same match.
+  assert.deepEqual(createMatch({ seed: 4, opponentId: 'tomBombadil' }), createMatch({ seed: 4, opponentId: 'tomBombadil' }));
+});
+
+test('buildDecks with a locked deck: it comes first, as given, and the other two are made from the rest', () => {
+  const cards = openRareBooster(seededRandom(8));
+  const locked = [cards[14], cards[2], cards[9], cards[5], cards[0]];
+  const decks = buildDecks(cards, seededRandom(1), { locked });
+  assert.deepEqual(decks[0], locked);
+  assert.deepEqual([...decks.flat()].sort(), [...cards].sort());
+  assert.throws(() => buildDecks(cards, null, { locked: locked.slice(0, 4) }));
+});
+
+test('Goldberry’s Ring borne by the player: an all-rare booster, and five of its cards locked in the first deck', () => {
+  const match = createMatch({ seed: 6, opponentId: 'gandalf', rings: ['tomBombadil'] });
+  assert.ok(match.cards.every(rareOrBetter));
+  assert.equal(match.lockedDeck.length, PAIGOW_RULES.deckSize);
+  assert.equal(new Set(match.lockedDeck).size, PAIGOW_RULES.deckSize);
+  // A campaign's extra commons: just as many cards, all rare.
+  const more = createMatch({ seed: 6, opponentId: 'gandalf', rings: ['tomBombadil'], extraCommons: 2 });
+  assert.equal(more.cards.length, PAIGOW_RULES.cardsDealt + 2);
+  assert.ok(more.cards.every(rareOrBetter));
+  // The CPU (Gandalf) is unchanged by the player's ring: its decks are those of the same match without it.
+  assert.deepEqual(match.cpuDecks, createMatch({ seed: 6, opponentId: 'gandalf' }).cpuDecks);
+  // Decks: the first must be the locked cards.
+  const locked = match.lockedDeck.map((n) => match.cards[n]);
+  const rest = match.cards.filter((_, n) => !match.lockedDeck.includes(n));
+  const good = [locked, rest.slice(0, 5), rest.slice(5, 10)];
+  assert.equal(validDecks(match, good), true);
+  assert.equal(validDecks(match, [rest.slice(0, 5), locked, rest.slice(5, 10)]), false);
+  assert.equal(validDecks(match, [[...locked.slice(0, 4), rest[0]], [locked[4], ...rest.slice(1, 5)], rest.slice(5, 10)]), false);
+  assert.throws(() => setDecks(match, [rest.slice(0, 5), locked, rest.slice(5, 10)]), /locked/);
+  assert.deepEqual(setDecks(match, good).decks, good);
 });
 
 test('the Rider in Black’s packs always hold three Nazgûl', () => {

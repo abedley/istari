@@ -75,7 +75,7 @@ test('every hero and opponent has a power of their own, once a turn', () => {
         assert.ok(emblem.abilities.every((a) => a.name && a.text));
       }
       assert.ok(emblem.text && [...(emblem.startsWith ?? []), ...(emblem.shufflesIn ?? [])].every((id) => CARDS[id]));
-      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length || emblem.staticAbilities?.length, `${person.name}'s passive power does something`);
+      assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length || emblem.staticAbilities?.length || emblem.match, `${person.name}'s passive power does something`);
       continue;
     }
     assert.equal(emblem.activationsPerTurn, 1);
@@ -131,8 +131,6 @@ test('each power does what it says', () => {
   assert.deepEqual(s.players[0].library.map((c) => c.cardId), ['glorfindelDauntlessRescuer']);
   s = usePower(powerGame('galadriel'));
   assert.equal(p1Bear(s).power, 3);
-  s = usePower(powerGame('tomBombadil'));
-  assert.equal(p1Bear(s).toughness, 4);
   s = usePower(powerGame('birthdayBilbo'));
   assert.equal(s.players[0].life, 21);
   s = usePower(powerGame('burglarBilbo'));

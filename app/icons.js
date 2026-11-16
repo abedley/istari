@@ -65,6 +65,8 @@ const PATHS = {
   horn: 'M4 10 17 4v15L4 13zM4 10v3M17 8.5c2 0 3.5 1.4 3.5 3s-1.5 3-3.5 3',
   flame: 'M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z',
   wind: 'M3 8h11a3 3 0 1 0-3-3M3 12h16a3 3 0 1 1-3 3M3 16h8',
+  // A padlock: a deck locked in (Tom Bombadil's ring).
+  lock: 'M6 11h12v10H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
   // Théoden's Knights: a horse's head, mane flying.
   horse: 'M18.5 21v-6.5c0-5-3-8.5-7.5-9.5L10.5 3 8 6.5 4 11l1.5 2.5 4.5-1L8.5 21M14 6.5c2.3 1 4 3 4.5 5.5M8.5 9h.01',
   // Elrond's Glorfindel: the light he shines with.
@@ -85,7 +87,7 @@ const PATHS = {
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
   'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
-  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'pan', 'willow', 'mug', 'teapot']);
+  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot']);
 
 /** Icons whose inner shapes are holes. */
 const EVEN_ODD = new Set(['eye', 'seedCake']);

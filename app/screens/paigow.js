@@ -76,12 +76,15 @@ function showPowers(app, match) {
   app.overlays.sheet({ title: 'Rings of Power', body: h('div.powers', side(opponent), side(hero, match.rings ?? [])), options: [], cancel: 'Close' });
 }
 
-/** A placed card, small: its art, name, mana cost and power/toughness. Tap for `onTap`, hold to read it. `picked`: chosen to move. */
-function slotChip(app, cardId, { onTap, picked = false }) {
+/**
+ * A placed card, small: its art, name, mana cost and power/toughness. Tap for `onTap`, hold to read it. `picked`: chosen to move.
+ * `locked`: it can't be moved (Tom Bombadil's ring locks the first deck).
+ */
+function slotChip(app, cardId, { onTap, picked = false, locked = false }) {
   const card = { ...app.definitions[cardId], cardId, id: cardId };
   const art = card.image?.art;
-  const el = h(`button.pg-chip${picked ? '.picked' : ''}`, {
-    type: 'button', 'aria-label': card.name, 'aria-pressed': picked ? 'true' : 'false', dataset: { card: cardId },
+  const el = h(`button.pg-chip${picked ? '.picked' : ''}${locked ? '.locked' : ''}`, {
+    type: 'button', 'aria-label': locked ? `${card.name}, locked` : card.name, 'aria-pressed': picked ? 'true' : 'false', dataset: { card: cardId },
     style: art ? { backgroundImage: `url("${art}")` } : {},
   },
   manaPips(card.manaCost, 'pg-chip-cost'),
@@ -332,8 +335,12 @@ function buildView(app, match) {
   updateBook(app, (book) => recordBooster(book, match));
   saveDaily(app, match);
   /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
-  let placed = new Map();
-  let selected = 0;
+  // Tom Bombadil's ring: five cards locked in the first deck, from the start, that can't be moved.
+  const locked = new Set(match.lockedDeck ?? []);
+  const lockedPlaces = () => new Map([...locked].map((n) => [n, 0]));
+  let placed = lockedPlaces();
+  const firstFree = () => (locked.size ? 1 : 0);
+  let selected = firstFree();
   /** A placed card chosen to move (its place in `match.cards`), or null. */
   let picked = null;
   const indexes = match.cards.map((_, n) => n);
@@ -350,7 +357,7 @@ function buildView(app, match) {
   const zoom = trayZoom(app, tray);
   const start = h('button.btn.primary.pg-start', { onclick: () => play() });
   const autoFill = h('button.btn', { onclick: () => fill() }, 'Auto-fill');
-  const clear = h('button.btn.ghost.small.pg-clear', { onclick: () => change(() => { placed = new Map(); selected = 0; }) }, 'Clear');
+  const clear = h('button.btn.ghost.small.pg-clear', { onclick: () => change(() => { placed = lockedPlaces(); selected = firstFree(); }) }, 'Clear');
 
   /** Makes a change to the decks, dropping any card picked up to move. */
   const change = (make) => {
@@ -372,6 +379,8 @@ function buildView(app, match) {
   };
   /** A placed card tapped: pick it up to move; with one picked up already, swap the two; tapped again, back to the booster. */
   const tapPlaced = (n) => {
+    // A locked card stays put (hold it to read it).
+    if (locked.has(n)) return;
     if (picked === n) {
       change(() => { selected = placed.get(n); placed.delete(n); });
     } else if (picked !== null && placed.get(picked) !== placed.get(n)) {
@@ -400,7 +409,8 @@ function buildView(app, match) {
       return;
     }
     picked = null;
-    selected = i;
+    // A locked deck takes no cards.
+    if (!(i === 0 && locked.size)) selected = i;
     render();
   };
   const fill = () => {
@@ -439,8 +449,10 @@ function buildView(app, match) {
         if (event.target.closest('.pg-chip:not(.empty)')) return;
         tapDeck(i);
       } },
-      h('div.pg-col-label', { 'aria-label': `${deckName(i)}, round ${i + 1}, ${cards.length} of ${deckSize}` }, h('b', deckName(i)), h('span', `${cards.length}/${deckSize}`)),
-      ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked })),
+      i === 0 && locked.size
+        ? h('div.pg-col-label', { 'aria-label': `${deckName(i)}, round ${i + 1}, locked in by Goldberry\u2019s Ring` }, h('b', deckName(i)), h('span.pg-locked', icon('lock'), 'Locked'))
+        : h('div.pg-col-label', { 'aria-label': `${deckName(i)}, round ${i + 1}, ${cards.length} of ${deckSize}` }, h('b', deckName(i)), h('span', `${cards.length}/${deckSize}`)),
+      ...cards.map((n) => slotChip(app, match.cards[n], { onTap: () => tapPlaced(n), picked: n === picked, locked: locked.has(n) })),
       ...Array.from({ length: deckSize - cards.length }, () => h('div.pg-chip.empty')));
     }));
     const left = indexes.filter((n) => !placed.has(n));
@@ -455,7 +467,7 @@ function buildView(app, match) {
     start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
     start.disabled = !full;
     autoFill.disabled = full;
-    clear.hidden = placed.size === 0;
+    clear.hidden = placed.size === locked.size;
   };
   render();
 
