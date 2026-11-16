@@ -417,12 +417,10 @@ function buildView(app, match) {
     await part();
     app.go('battle', { match: ready });
   };
-  /** The Fellowship divides: the three decks go their ways, under a banner that says so. */
+  /** The three decks go their ways. */
   const part = async () => {
     if (reducedMotion()) return;
     const speed = app.settings.speed;
-    const banner = h('div.pg-parting', h('span', 'The Fellowship divides'));
-    el.append(banner);
     app.sound('turn');
     const ways = [{ x: -70, r: -9 }, { x: 0, r: 0 }, { x: 70, r: 9 }];
     [...board.children].forEach((col, i) => {
@@ -430,7 +428,6 @@ function buildView(app, match) {
       col.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${way.x}px, -46px) rotate(${way.r}deg)`, opacity: 0 }],
         { duration: 700 * speed + 200, delay: 250 * speed, easing: 'cubic-bezier(.5, 0, .8, .4)', fill: 'forwards' });
     });
-    banner.animate([{ opacity: 0, transform: 'scale(1.3)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' });
     await wait(950 * speed + 250);
   };
 
