@@ -386,7 +386,7 @@ export class BasicAIController extends EventEmitter {
     const permanents = state.battlefield.filter((p) => p.controllerId === me);
     const graveyard = player.graveyard.filter((c) => c.graveyardAbilities);
     for (const source of [...permanents, ...player.emblems, ...graveyard]) {
-      if (source.emblemId && source.activationsThisTurn >= source.activationsPerTurn) continue;
+      if (source.emblemId && (source.activationsThisTurn >= source.activationsPerTurn || source.activationsThisGame >= source.activationsPerGame)) continue;
       for (const ability of (graveyard.includes(source) ? source.graveyardAbilities : source.abilities) ?? []) {
         if (ability.isManaAbility) continue;
         if (ability.timing === 'sorcery' && window !== WINDOW.MAIN) continue;

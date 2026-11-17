@@ -55,11 +55,11 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, the Rider in Black, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, the Rider in Black, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
-Burglar Bilbo are Raiders, Saruman, Denethor, Elrond and Old Man Willow are Wardens, the rest Tricksters. The match is saved with its campaign
+Burglar Bilbo are Raiders, Saruman, Denethor, Elrond, Old Man Willow and Goldberry are Wardens, the rest Tricksters. The match is saved with its campaign
 after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
@@ -79,7 +79,7 @@ a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by th
 `src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
 `power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
 and the One Ring under its names: *the magic ring* of The Hobbit, Gollum's *birthday
-present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn, uses the stack,
+present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Goldberry's only once a game), uses the stack,
 and costs nothing or a little life (mana means nothing here). Samwise's is passive instead: the emblem's
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
@@ -102,6 +102,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
+| Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |
@@ -121,7 +122,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Tom Bombadil, Gildor, the Rider in Black,
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black,
 Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
@@ -443,7 +444,7 @@ player's card counts; a Saga shows its chapter; restricted mana shows as a wildc
 (and its targets) are sheets; Mount Doom's "choose up to two creatures" and Mines of Moria's
 "exile three cards from your graveyard" are card grids like scry's. Cards you may play from exile
 light up your exile count (shown once anything is exiled), and a creature you may cast from the
-top of your library lights up your library count: tap either to see them and play them. Stun,
+top of your library lights up your library count: tap either to see them and play them. Shield, stun,
 hope, verse, burden and influence counters show as small badges, protection as *Pro* with the
 color's or card type's symbol, a goaded creature as *Goaded*, and a player with protection from
 everything has a gold ring around their portrait. Hybrid mana ({W/B}) is drawn as a split circle.
@@ -1161,7 +1162,9 @@ stall coming. The variant survives `serialize()` and `clone()`.
     anything with the quality; for a player (702.16j), damage is prevented and they can't be
     targeted.
   - Keyword counters (122.1b) give their keyword; a stun counter (122.1d) is removed instead of
-    the permanent untapping.
+    the permanent untapping; a shield counter (122.1c) is removed instead of the permanent being dealt
+    damage (all of a combat damage step's at once) or destroyed (by an effect, or by lethal damage
+    already marked on it, which destroys it on the next check).
   - Extra turns (500.7, the most recent first) and additional combat phases (500.8).
   - Goad (701.15): with two players, the creature attacks each combat if able until its goader's
     next turn (the declaration starts with it, and it can't be left out).
@@ -1249,7 +1252,7 @@ the time; the search AI's evaluation, given its best scale, 76.6%.
 `patience` scale what its own clock, the opponent's clock and its cards in hand count for in the
 evaluation; `foresight` is how many guesses it makes of the hidden hand; `tastes` are for building
 decks. Raiders (Sauron, Théoden, the Rider in Black, Burglar Bilbo) race, Wardens (Saruman,
-Denethor, Elrond, Old Man Willow) hold on and imagine what you might have, Tricksters (the rest)
+Denethor, Elrond, Old Man Willow, Goldberry) hold on and imagine what you might have, Tricksters (the rest)
 sit between. Each deck also has a plan (`deckPlan`: race, grind or tempo, from what's in it) that
 shifts the profile for that round, so a Warden handed a racing deck races a little more.
 

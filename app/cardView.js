@@ -77,8 +77,8 @@ const RESTRICTIONS = [
   ['attacks each combat if able', 'Goaded', 'lure'],
 ];
 
-/** Counters other than +1/+1 and lore, as small badges: "Stun 9", "Verse 3" (keyword counters show as keywords). */
-const BADGE_COUNTERS = ['stun', 'hope', 'verse', 'burden', 'influence'];
+/** Counters other than +1/+1 and lore, as small badges: "Shield 1", "Stun 9", "Verse 3" (keyword counters show as keywords). */
+const BADGE_COUNTERS = ['shield', 'stun', 'hope', 'verse', 'burden', 'influence'];
 
 function counterBadges(counters = {}) {
   const badges = BADGE_COUNTERS.filter((kind) => counters[kind] > 0)

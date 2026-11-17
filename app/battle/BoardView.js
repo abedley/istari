@@ -637,11 +637,14 @@ export class BoardView {
   #renderAbilities(player, side) {
     const parts = this.#parts[side];
     const abilities = player.emblems.flatMap((emblem) => emblem.abilities.map((ability) => ({ emblem, ability })));
-    const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}`).join();
+    const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}/${emblem.activationsThisGame ?? 0}`).join();
     if (parts.abilities.dataset.key === key) return;
     parts.abilities.dataset.key = key;
     const buttons = abilities.slice(0, 5).map(({ emblem, ability }) => {
-      const left = Number.isFinite(emblem.activationsPerTurn) ? emblem.activationsPerTurn - emblem.activationsThisTurn : null;
+      // Uses left this turn, or this game for a power that has fewer ("once per game").
+      const lefts = [[emblem.activationsPerTurn, emblem.activationsThisTurn], [emblem.activationsPerGame ?? Infinity, emblem.activationsThisGame ?? 0]]
+        .filter(([most]) => Number.isFinite(most)).map(([most, used]) => most - used);
+      const left = lefts.length ? Math.min(...lefts) : null;
       const cost = ability.cost ?? {};
       // A short name: the ability's own, or its emblem's ("Warden's Growth" → "Growth").
       const label = ability.name ?? (emblem.abilities.length === 1 ? emblem.name.replace(/^.*['’]s\s+/, '') : ability.text.replace(/^[^:]*:\s*/, ''));

@@ -155,6 +155,8 @@ export const COUNTER = Object.freeze({
   INFLUENCE: 'influence',
   /** 122.1d: if a permanent with a stun counter would become untapped, one is removed from it instead. */
   STUN: 'stun',
+  /** 122.1c: if a permanent with a shield counter would be dealt damage or destroyed, one is removed from it instead. */
+  SHIELD: 'shield',
   // 122.1b: keyword counters give the permanent that keyword.
   FIRST_STRIKE: 'first strike',
   VIGILANCE: 'vigilance',

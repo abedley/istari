@@ -496,6 +496,7 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .counter-badges { position: absolute; left: 3px; bottom: 26px; display: flex; flex-direction: column; gap: 1px; z-index: 4; pointer-events: none; }
 .cb { padding: 0 4px; border-radius: 6px; font: 800 10px/13px var(--display); color: #fff; background: rgba(44, 38, 28, .9); border: 1px solid rgba(255, 255, 255, .35); }
 .cb-stun { background: rgba(70, 90, 160, .95); }
+.cb-shield { background: rgba(176, 140, 40, .95); }
 /* The One Ring: a player with protection from everything. */
 .avatar.protected .crest { box-shadow: 0 0 0 3px var(--gold), 0 0 14px 4px rgba(233, 196, 106, .7); }
 /* Only this turn: from a spell or ability, not printed. */

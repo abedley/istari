@@ -121,6 +121,20 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['Yesss. Put it on. We see you better so.', 'Another ring. It all returns to the Master in the end.'],
     },
   },
+  goldberry: {
+    name: 'Goldberry', color: 'green', emblem: 'goldberry', ai: strategist(),
+    portrait: portrait('b/f/bf4f0a7c-620e-4ed8-8da3-fa6564e8a0cd.jpg?1783916317', 56, 12, 300, 'Goldberry, River-Daughter', 'Marie Magny'),
+    banter: {
+      start: ['Come, dear guests! Laugh and be merry! Let us play while Tom is out.', 'Shut the door on the night. Here you are safe, and here we play.', 'The rain is my washing-day. A game, then, while the river sings.'],
+      win: ['There! The river has the last word. It always does.', 'Rest now, and fear nothing. It was only a game.'],
+      lose: ['Well played, fair guest! The water-lilies bow to you.', 'You played as the river runs: with no doubt at all.'],
+      comeback: ['The stream rises after rain.', 'Fear nothing! The night is not over yet.'],
+      collapse: ['Oh! The river runs low tonight.', 'Tom will laugh when he hears of this.'],
+      kill: ['Gone down the Withywindle, light as a leaf.', 'Hush. He sleeps now, and dreams of water.'],
+      loss: ['Ah, the poor dear. I had a lily for him.', 'The river will carry him gently. Still, I am sorry.'],
+      ring: ['A ring? Tom would only laugh at it. I am more careful.', 'Keep it close, but not too close. Rings are heavy things.'],
+    },
+  },
   tomBombadil: {
     name: 'Tom Bombadil', color: 'gold', emblem: 'tomBombadil', ai: strategist(),
     portrait: portrait('2/a/2ab04c49-76a1-4896-8dca-8cb4c615f489.jpg?1783916244', 56, 0, 300, 'Tom Bombadil', 'Dmitry Burmak'),

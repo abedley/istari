@@ -216,6 +216,16 @@ export const EMBLEMS = deepFreeze({
     abilities: [],
     match: { rareBooster: true, lockedFirstDeck: true },
   },
+  // "Once per game": `activationsPerGame` (see Game's #canActivate).
+  goldberry: {
+    ...power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {
+      text: '0: Put a shield counter on target creature you control. Activate only as a sorcery and only once each game. (If it would be dealt damage or destroyed, instead remove a shield counter from it.)',
+      target: TARGET.CREATURE_YOU_CONTROL,
+      effects: [{ type: EFFECT.ADD_COUNTERS, counter: COUNTER.SHIELD, count: 1 }],
+      timing: SORCERY,
+    }),
+    activationsPerGame: 1,
+  },
   sauron: power('sauron', 'The Ruling Ring', 'Armies of Mordor', {
     text: '0: Amass Orcs 1. Activate only as a sorcery.',
     effects: [{ type: EFFECT.AMASS, count: 1, subtype: 'Orc' }],

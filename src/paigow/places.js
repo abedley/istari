@@ -16,6 +16,7 @@ export const PLACES = Object.freeze({
   burglarBilbo: place('Bag End', 'A round green door, and a hobbit who has been there and back again.', 'shireTerrace', 30, 35, AMBIENCE.SHIRE),
   gandalf: place('The Bridge of Khazad-dûm', 'Deep under the mountains, where the drums have stopped.', 'minesOfMoria', 55, 45, AMBIENCE.HALL),
   oldManWillow: place('The Old Forest', 'The trees do not like strangers, and the paths move.', 'oldManWillow', 60, 50, AMBIENCE.FOREST),
+  goldberry: place('The House of Tom Bombadil', 'Water-lilies in bowls, candles on the table, and a song like a river.', 'goldberryRiverDaughter', 56, 25, AMBIENCE.FOREST),
   tomBombadil: place('The Barrow-downs', 'Cold fog on the green mounds, and a song coming over the hill.', 'fogOnTheBarrowDowns', 50, 45, AMBIENCE.SHADOW),
   gildor: place('Woody End', 'Starlight between the trees, and voices singing in the Fair tongue.', 'chanceMetElves', 50, 30, AMBIENCE.FOREST),
   riderInBlack: place('The Road to Bree', 'Hoofbeats behind you on the empty road.', 'nazgul', 45, 35, AMBIENCE.SHADOW),

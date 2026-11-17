@@ -209,7 +209,7 @@ function priorityMacros(state, me, mine) {
   const permanents = state.battlefield.filter((p) => p.controllerId === me);
   const graveyard = player.graveyard.filter((c) => c.graveyardAbilities);
   for (const source of [...permanents, ...player.emblems, ...graveyard]) {
-    if (source.emblemId && source.activationsThisTurn >= source.activationsPerTurn) continue;
+    if (source.emblemId && (source.activationsThisTurn >= source.activationsPerTurn || source.activationsThisGame >= source.activationsPerGame)) continue;
     for (const ability of (graveyard.includes(source) ? source.graveyardAbilities : source.abilities) ?? []) {
       if (ability.isManaAbility || (ability.timing === 'sorcery' && !sorceryTiming)) continue;
       if (ability.cost.tap && (source.tapped || (isCreature(source) && source.summoningSick && !hasKeyword(source, KEYWORD.HASTE)))) continue;

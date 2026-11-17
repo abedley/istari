@@ -43,6 +43,9 @@ export function creatureValue(creature) {
   if (has(creature, KEYWORD.CANT_ATTACK) && has(creature, KEYWORD.CANT_BLOCK)) value -= toughness;
   // Bewitching Leechcraft: with no +1/+1 counter to remove, it stays tapped, as good as pacified.
   if (has(creature, KEYWORD.UNTAPS_BY_REMOVING_COUNTER) && !(creature.counters?.[COUNTER.PLUS_ONE] > 0)) value -= 1.5 * power + toughness;
+  // A shield counter (122.1c): the first damage or destruction only takes the counter, so it's that much harder to kill.
+  const shields = Math.min(2, creature.counters?.[COUNTER.SHIELD] ?? 0);
+  if (shields > 0 && value > 0) value *= 1 + 0.35 * shields;
   return value;
 }
 

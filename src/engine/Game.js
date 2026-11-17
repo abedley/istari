@@ -1352,6 +1352,8 @@ export class Game extends EventEmitter {
       })),
       activationsPerTurn: definition.activationsPerTurn ?? Infinity,
       activationsThisTurn: 0,
+      // "Activate only once each game." (Only when it has a limit: Infinity doesn't survive JSON.)
+      ...(definition.activationsPerGame ? { activationsPerGame: definition.activationsPerGame, activationsThisGame: 0 } : {}),
       // Rules it changes (Radagast's "creature spells as though they had flash"), for the AI to see.
       ...(definition.staticAbilities ? { rules: definition.staticAbilities.filter((s) => s.rule).map((s) => s.rule) } : {}),
     };
@@ -1980,6 +1982,7 @@ export class Game extends EventEmitter {
     if (ability.timing === ACTIVATION_TIMING.SORCERY && !this.#hasSorceryTiming(playerId) && !instantEquip) return false;
     // Like 606.3 for loyalty abilities: a limited number of activations per emblem each turn.
     if (source.emblemId && source.activationsThisTurn >= source.activationsPerTurn) return false;
+    if (source.emblemId && source.activationsThisGame >= source.activationsPerGame) return false;
     // "Activate only once each turn."
     if (ability.oncePerTurn && this.#zones.get(playerId).turnTally.activated?.[`${source.id}:${ability.id}`]) return false;
     // "Activate only if you control a legendary creature."
@@ -2089,7 +2092,10 @@ export class Game extends EventEmitter {
     const ability = this.#abilitiesOf(permanent).find((a) => a.id === abilityId);
     const mana = this.#abilityManaCost(playerId, permanent, ability, x);
     const costPaid = this.#payCost(playerId, permanent, ability.cost, costChoices, mana);
-    if (permanent.emblemId) permanent.activationsThisTurn += 1;
+    if (permanent.emblemId) {
+      permanent.activationsThisTurn += 1;
+      if (permanent.activationsPerGame) permanent.activationsThisGame += 1;
+    }
     if (abilityId.startsWith('equip')) this.#zones.get(playerId).turnTally.equipped = true;
     const tally = this.#zones.get(playerId).turnTally;
     if (ability.oncePerTurn) tally.activated = { ...tally.activated, [`${cardId}:${abilityId}`]: true };
@@ -2650,6 +2656,8 @@ export class Game extends EventEmitter {
         for (const permanent of permanents()) {
           // 702.12b: an indestructible permanent can't be destroyed.
           if (hasKeyword(permanent, KEYWORD.INDESTRUCTIBLE)) continue;
+          // 122.1c: a shield counter is removed instead.
+          if (this.#shielded(permanent, 'destroy')) continue;
           // 701.7a: move it from the battlefield to its owner's graveyard.
           this.#putIntoGraveyard(permanent);
           this.#emitEvent('permanentDestroyed', {
@@ -3353,6 +3361,18 @@ export class Game extends EventEmitter {
   }
 
   /**
+   * 122.1c: a shield counter is removed instead of a permanent being dealt damage or destroyed. Returns true if that
+   * happened (and the damage or destruction doesn't).
+   */
+  #shielded(permanent, reason) {
+    if (!(permanent?.counters?.[COUNTER.SHIELD] > 0)) return false;
+    permanent.counters[COUNTER.SHIELD] -= 1;
+    if (!permanent.counters[COUNTER.SHIELD]) delete permanent.counters[COUNTER.SHIELD];
+    this.#emitEvent('countersRemoved', { cardId: permanent.id, counter: COUNTER.SHIELD, count: 1, counters: { ...permanent.counters }, reason });
+    return true;
+  }
+
+  /**
    * Permanents with a static ability that changes the rules (`{ rule }`), such as
    * Gandalf's "You may cast sorcery spells as though they had flash."
    */
@@ -3746,6 +3766,8 @@ export class Game extends EventEmitter {
       if (!target || !isCreature(target)) return;
       // 702.16e: damage from a source it has protection from is prevented.
       if (this.#protectedFrom(target, source ?? this.#sourceObject(sourceId))) return;
+      // 122.1c: a shield counter is removed instead of the damage being dealt.
+      if (this.#shielded(target, 'damage')) return;
       // Shelob: "dealt damage this turn by a Spider you controlled".
       if (source && hasSubtype(source, 'Spider')) target.damagedBySpiderOf = [...new Set([...(target.damagedBySpiderOf ?? []), source.controllerId])];
       // 120.4a: excess damage is damage beyond what's lethal (with deathtouch, beyond 1).
@@ -4274,7 +4296,9 @@ export class Game extends EventEmitter {
         break;
       case CHOICE.KEEP: {
         // Mount Doom: "Choose up to two creatures, then destroy the rest."
-        const doomed = this.#battlefield.filter((p) => isCreature(p) && !selected.includes(p.id) && !hasKeyword(p, KEYWORD.INDESTRUCTIBLE));
+        const doomed = this.#battlefield.filter((p) => isCreature(p) && !selected.includes(p.id) && !hasKeyword(p, KEYWORD.INDESTRUCTIBLE))
+          // 122.1c: a shield counter is removed instead.
+          .filter((p) => !this.#shielded(p, 'destroy'));
         this.#leaving = doomed;
         for (const permanent of doomed) {
           this.#putIntoGraveyard(permanent);
@@ -4948,8 +4972,16 @@ export class Game extends EventEmitter {
       }
     }
 
+    // 122.1c: combat damage is dealt all at once, so a creature with a shield counter loses one and is dealt none of it.
+    const shielded = new Set(damage.filter((d) => d.targetCardId && d.amount > 0).map((d) => d.targetCardId)
+      .filter((id) => {
+        const target = this.#permanent(id);
+        return damage.some((d) => d.targetCardId === id && !this.#protectedFrom(target, this.#permanent(d.sourceId)))
+          && this.#shielded(target, 'damage');
+      }));
     const lifeGained = {};
     for (const { sourceId, targetPlayerId, targetCardId, amount } of damage) {
+      if (shielded.has(targetCardId)) continue;
       const source = this.#permanent(sourceId);
       if (targetPlayerId) {
         // 120.3a: damage to a player causes that much life loss.
@@ -5045,8 +5077,11 @@ export class Game extends EventEmitter {
       });
       // 704.5f: toughness 0 or less; 704.5g: lethal damage; 704.5h: damage from a deathtouch source
       // (702.12b: an indestructible creature isn't destroyed by those two).
+      // 122.1c: lethal damage and deathtouch destroy, so a shield counter is removed instead (once each check).
+      let shieldsLost = false;
       const dying = this.#battlefield.filter((p) => isCreature(p) && (
-        p.toughness <= 0 || (!hasKeyword(p, KEYWORD.INDESTRUCTIBLE) && (p.damage >= p.toughness || (p.damage > 0 && p.damagedByDeathtouch)))
+        p.toughness <= 0 || (!hasKeyword(p, KEYWORD.INDESTRUCTIBLE) && (p.damage >= p.toughness || (p.damage > 0 && p.damagedByDeathtouch))
+          && !(this.#shielded(p, 'destroy') && (shieldsLost = true)))
       ));
       // 714.4: a Saga whose lore counters reached its final chapter, with no chapter ability waiting, is sacrificed.
       const finishedSagas = this.#battlefield.filter((p) => isSaga(p) && !dying.includes(p)
@@ -5061,6 +5096,8 @@ export class Game extends EventEmitter {
         isEquipment(p) && p.attachedTo && !dying.includes(p) && !this.#isLegallyAttached(p)
       ));
       if (losers.length === 0 && dying.length === 0 && fallenAuras.length === 0 && looseEquipment.length === 0 && finishedSagas.length === 0) {
+        // A shield counter was removed in place of a destruction: check again.
+        if (shieldsLost) continue;
         return false;
       }
       for (const saga of finishedSagas) this.#sacrifice(saga, saga.controllerId);

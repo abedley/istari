@@ -5,7 +5,7 @@
 import {
   isCreature, isPermanentCard, hasKeyword, cantAttack, KEYWORD, EFFECT, AFFECTED, TARGET, PLAYER_TARGETS, SPELL_TARGETS,
   effectAffects, matchesPermanentKind, matchesFilter, countOf, scaleEffect, targetKindOf, targetFilterOf, isOptionalTarget,
-  GRAVEYARD_TARGETS, abilityEffects, targetList,
+  GRAVEYARD_TARGETS, abilityEffects, targetList, COUNTER,
 } from '../cards/cards.js';
 import { creatureValue, anthemValue } from './combat.js';
 import { doomedSacrificeCost } from './doomed.js';
@@ -247,7 +247,9 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           break;
         }
         case EFFECT.ADD_COUNTERS:
-          if (isCreature(permanent)) score += side(id) * 3 * (effect.count ?? 1);
+          // A shield counter is worth more on a better creature (see creatureValue); on a small one, keep it for later.
+          if (isCreature(permanent) && effect.counter === COUNTER.SHIELD) score += side(id) * (0.35 * creatureValue(permanent) - 1.5);
+          else if (isCreature(permanent)) score += side(id) * 3 * (effect.count ?? 1);
           break;
         case EFFECT.GAIN_LIFE: {
           const { life } = playerById(id);
