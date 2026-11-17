@@ -544,9 +544,9 @@ test("Legolas's power: his library starts with his kit; as a sorcery, mill six c
   let s = passUntil(game, (st) => st.activePlayerId === 'p2' && st.phase === 'precombatMain' && st.priorityPlayerId === 'p1');
   // Sorcery speed: not on the opponent's turn.
   assert.equal(activation(s, 'p1'), undefined);
-  // The opening hand is still the deck's own; his library is two Elven Farsight, an Elven Chorus and seven Forests.
+  // The opening hand is still the deck's own; his library is two Elven Farsight, a Legolas, Counter of Kills and seven Forests.
   assert.deepEqual(s.players[0].hand.map((c) => c.cardId), ['bear', 'bear']);
-  assert.deepEqual(s.players[0].library.map((c) => c.cardId).sort(), ['elvenChorus', 'elvenFarsight', 'elvenFarsight', ...Array(7).fill('forest')]);
+  assert.deepEqual(s.players[0].library.map((c) => c.cardId).sort(), ['elvenFarsight', 'elvenFarsight', ...Array(7).fill('forest'), 'legolasCounterOfKills']);
   s = passUntil(game, p1Main);
   // He drew one: nine left.
   assert.equal(s.players[0].library.length, 9);

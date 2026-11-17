@@ -117,8 +117,8 @@ export const EMBLEMS = deepFreeze({
     ring: true,
     passive: true,
     power: 'Elves of Mirkwood',
-    text: 'At the start of the game, shuffle two Elven Farsight, an Elven Chorus and seven Forests into your library.',
-    shufflesIn: ['elvenFarsight', 'elvenFarsight', 'elvenChorus', ...Array(7).fill('forest')],
+    text: 'At the start of the game, shuffle two Elven Farsight, a Legolas, Counter of Kills and seven Forests into your library.',
+    shufflesIn: ['elvenFarsight', 'elvenFarsight', 'legolasCounterOfKills', ...Array(7).fill('forest')],
     activationsPerTurn: 1,
     abilities: [{
       id: 'power', name: 'Quick Reflexes', text: 'Mill six cards: Add a Legolas\u2019s Quick Reflexes to your hand. Activate only as a sorcery.',

@@ -94,7 +94,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Samwise | Field-Tested Frying Pan | (passive) | Start the game with Field-Tested Frying Pan on the battlefield. |
 | Radagast | The Ring of Rhosgobel | Friend of Beasts | (passive) You may cast creature spells as though they had flash. Birds and Beasts you control get +1/+1. |
 | Merry | The Ring of Buckland *(made up)* | Halflings of the Shire | Sacrifice a Food: Create two 1/1 white Halfling creature tokens. Sorcery speed. |
-| Legolas | The Ring of the Woodland Realm *(made up)* | Elves of Mirkwood · Quick Reflexes | *Passive:* at the start of the game, shuffle two Elven Farsight, an Elven Chorus and seven Forests into your library. Plus: Mill six cards: Add a *Legolas's Quick Reflexes* (LTC 493, from the LTR Commander decks, so never in a booster) to your hand. Sorcery speed. |
+| Legolas | The Ring of the Woodland Realm *(made up)* | Elves of Mirkwood · Quick Reflexes | *Passive:* at the start of the game, shuffle two Elven Farsight, a Legolas, Counter of Kills and seven Forests into your library. Plus: Mill six cards: Add a *Legolas's Quick Reflexes* (LTC 493, from the LTR Commander decks, so never in a booster) to your hand. Sorcery speed. |
 | Pippin | The Ring of the Tooks *(made up)* | Second Breakfast | 0: Create a Morsel token (a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life"). Sorcery speed. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
