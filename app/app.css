@@ -662,6 +662,12 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .target-line { fill: none; stroke-width: 3; stroke-linecap: round; }
 .target-glow.mine, .target-line.mine { stroke: #ffe08a; }
 .target-glow.theirs, .target-line.theirs { stroke: #ff6b6b; }
+.target-label {
+  font: 700 11px/1 var(--ui); text-anchor: middle; dominant-baseline: central;
+  paint-order: stroke; stroke: rgba(0, 0, 0, .85); stroke-width: 4px; stroke-linejoin: round;
+}
+.target-label.mine { fill: #ffe08a; }
+.target-label.theirs { fill: #ff8a8a; }
 .target-ring { fill: none; stroke-width: 2; stroke-dasharray: 4 4; opacity: .9; }
 .target-ring.mine { stroke: #ffe08a; }
 .target-ring.theirs { stroke: #ff6b6b; }

@@ -14,7 +14,7 @@ import { fit } from '../fit.js';
 import { fullCard, boardCard, chipFace, abilityFace, boardSignature, manaPips, cardBack } from '../cardView.js';
 import { isCreature, isLand } from '../../src/cards/cards.js';
 import { DECISION } from '../../src/engine/Game.js';
-import { TURN_PIPS, COMBAT_STEPS, combatStepIndex, findCard } from './describe.js';
+import { TURN_PIPS, COMBAT_STEPS, combatStepIndex, findCard, targetRoles } from './describe.js';
 import {
   relRect, flip, floatText, shake, pop, flyAway, crumble, banner, enter,
   impact, shakeScreen, lunge, LUNGE_MS, LUNGE_HIT, projectile, sparkle, slam, showcase, FX_COLORS,
@@ -733,7 +733,9 @@ export class BoardView {
     // Something still flying in would give the arrow a wrong end: draw it once it lands.
     // (Only animations that end: a glow loops forever.)
     const flights = (el) => el.getAnimations().filter((a) => a.playState === 'running' && a.effect?.getComputedTiming().endTime !== Infinity);
-    for (const targetId of top?.targets ?? []) {
+    // A spell with several targets says on each arrow what happens to that one ("deals 3", "takes 3").
+    const roles = top ? targetRoles(state, top, this.#app.definitions) : null;
+    for (const [index, targetId] of (top?.targets ?? []).entries()) {
       const source = this.#arrowSource(top);
       const target = this.elementFor(targetId);
       const pending = source && target ? [...flights(source), ...flights(target)] : [];
@@ -750,6 +752,12 @@ export class BoardView {
         const side = top.controllerId === this.#me ? 'mine' : 'theirs';
         paths.push(`<path class="target-glow ${side}" d="${d}" /><path class="target-line ${side}" d="${d}" marker-end="url(#arrow-${side})" />`
           + `<circle class="target-ring ${side}" cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="13" />`);
+        if (roles?.[index]) {
+          // Three quarters of the way along the curve, near the target it names.
+          const at = (a, c, b) => 0.0625 * a + 0.375 * c + 0.5625 * b;
+          const label = roles[index].replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
+          paths.push(`<text class="target-label ${side}" x="${at(x1, mx, x2).toFixed(1)}" y="${at(y1, my, y2).toFixed(1)}">${label}</text>`);
+        }
       }
     }
     const html = paths.join('');

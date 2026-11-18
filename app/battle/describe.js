@@ -2,6 +2,9 @@
 import { DECISION, CHOICE, OPENING_HAND_SIZE } from '../../src/engine/Game.js';
 import { PHASE, STEP } from '../../src/engine/turnStructure.js';
 import { formatMana } from '../../src/engine/mana.js';
+import {
+  EFFECT, AFFECTED, COUNTER, effectAffects, targetList,
+} from '../../src/cards/cards.js';
 
 
 /** Finds a card anywhere in a state (battlefield, hands, graveyards, exile, stack). */
@@ -181,4 +184,97 @@ function choosePrompt(decision) {
     case CHOICE.HAND_CARD: return `Choose a card from your hand${from}`;
     default: return `Choose${from}`;
   }
+}
+
+/**
+ * The effects and target kinds of a stack object: a spell's from its card (its chosen
+ * modes, their targets numbered one after another), an ability's from the object itself.
+ */
+function stackHolder(object, definitions) {
+  if (object.kind !== 'spell') return { effects: object.effects ?? [] };
+  const definition = definitions?.[object.card?.cardId];
+  if (!definition) return { effects: [] };
+  if (!definition.modes || object.mode === undefined) return { effects: definition.effects ?? [] };
+  if (!Array.isArray(object.mode)) return { effects: definition.modes[object.mode]?.effects ?? [] };
+  const effects = [];
+  let offset = 0;
+  for (const index of object.mode) {
+    const mode = definition.modes[index];
+    const aimed = (effect) => [AFFECTED.TARGET, AFFECTED.TARGET_CONTROLLER].includes(effectAffects(effect));
+    effects.push(...(mode.effects ?? []).map((e) => (aimed(e) ? { ...e, targetIndex: (e.targetIndex ?? 0) + offset } : e)));
+    offset += targetList(mode).length;
+  }
+  return { effects };
+}
+
+/** What an effect does to what it affects, in a word or two ("destroyed", "+2/+2"). */
+function effectVerb(effect, amount) {
+  switch (effect.type) {
+    case EFFECT.DEAL_DAMAGE: return amount !== null ? `takes ${amount}` : 'takes damage';
+    case EFFECT.DESTROY: return 'destroyed';
+    case EFFECT.EXILE: case EFFECT.EXILE_UNTIL_SOURCE_LEAVES: case EFFECT.EXILE_FROM_GRAVEYARD: return 'exiled';
+    case EFFECT.RETURN_TO_HAND: case EFFECT.RETURN_SPELL_TO_HAND: return 'to hand';
+    case EFFECT.TAP: return 'tapped';
+    case EFFECT.UNTAP: return 'untapped';
+    case EFFECT.GAIN_CONTROL: return 'stolen';
+    case EFFECT.FIGHT: return 'fights';
+    case EFFECT.FLICKER: return 'flickered';
+    case EFFECT.GOAD: return 'goaded';
+    case EFFECT.SACRIFICE: return 'sacrifices';
+    case EFFECT.COUNTER_SPELL: case EFFECT.COUNTER_UNLESS_PAID: return 'countered';
+    case EFFECT.RETURN_FROM_GRAVEYARD: return 'returns';
+    case EFFECT.PUT_INTO_LIBRARY: return 'to library';
+    case EFFECT.ADD_COUNTERS:
+      if (effect.counter === COUNTER.STUN) return 'stunned';
+      return effect.counter === COUNTER.PLUS_ONE ? `+${effect.count ?? 1} counter` : `${effect.counter} counter`;
+    case EFFECT.PUMP: {
+      const { power = 0, toughness = 0, keywords = [] } = effect;
+      if (power || toughness) {
+        const sign = (n) => (n < 0 ? `${n}` : `+${n}`);
+        return `${sign(power)}/${sign(toughness)}`;
+      }
+      if (keywords.length) return `gains ${keywords.join(', ')}`;
+      return effect.grantTriggers?.length ? 'gains ability' : null;
+    }
+    default: return null;
+  }
+}
+
+/**
+ * Words for each target of a spell or ability with more than one, by target number,
+ * so its arrows say what happens to each: Breaking of the Fellowship's "deals 3" and
+ * "takes 3". A target nothing names a role for is numbered instead ("#2").
+ */
+export function targetRoles(state, object, definitions) {
+  const targets = object?.targets ?? [];
+  if (targets.length < 2) return null;
+  const roles = targets.map(() => []);
+  const add = (index, word) => {
+    if (word && roles[index] && !roles[index].includes(word)) roles[index].push(word);
+  };
+  const powerOf = (index) => findCard(state, targets[index])?.power ?? null;
+  const visit = (effect) => {
+    if (effect.type === EFFECT.IF) {
+      [...(effect.then ?? []), ...(effect.else ?? [])].forEach(visit);
+      return;
+    }
+    if (effect.type === EFFECT.FIGHT) {
+      if (effect.withSource) add(effect.targetIndex ?? 0, 'fights');
+      else (effect.targetIndexes ?? [0, 1]).forEach((i) => add(i, 'fights'));
+      return;
+    }
+    let amount = effect.amount ?? null;
+    if (effect.per) amount = effect.per.of === 'powerOf' ? (powerOf(effect.per.index ?? 0) ?? null) : null;
+    if (amount !== null && effect.per?.of === 'powerOf') amount *= effect.amount ?? 1;
+    if (effect.type === EFFECT.DEAL_DAMAGE && effect.from?.target !== undefined) {
+      add(effect.from.target, amount !== null ? `deals ${amount}` : 'deals damage');
+    }
+    if (effect.type === EFFECT.GAIN_CONTROL && effect.toTarget !== undefined) add(effect.toTarget, 'gains control');
+    if (effectAffects(effect) !== AFFECTED.TARGET && effectAffects(effect) !== AFFECTED.YOU_AND_TARGET) return;
+    const word = effectVerb(effect, amount);
+    if (effect.targetIndex !== undefined) add(effect.targetIndex, word);
+    else targets.forEach((_, i) => add(i, word));
+  };
+  stackHolder(object, definitions).effects.forEach(visit);
+  return roles.map((words, i) => (words.length ? words.join(', ') : `#${i + 1}`));
 }

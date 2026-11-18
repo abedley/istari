@@ -8,7 +8,7 @@ import {
   playOptions, variantsFor, secondTargets, perform, sameAction, nextChoice, narrow, interchangeableTargets,
 } from '../app/battle/play.js';
 import { shouldAutoPass, primaryAction, blockHint } from '../app/battle/autopass.js';
-import { promptFor } from '../app/battle/describe.js';
+import { promptFor, targetRoles } from '../app/battle/describe.js';
 import { PlayHistory } from '../app/battle/history.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
@@ -401,4 +401,19 @@ test('the deck builder’s tray shows 3 cards a row by default, zooming between 
   assert.equal(trayColumns({ trayColumns: 9 }), 5);
   assert.equal(trayColumns({ trayColumns: 0 }), 1);
   assert.equal(trayColumns({ trayColumns: 'x' }), 3);
+});
+
+test('the arrows of a spell with several targets say what happens to each', async () => {
+  const { CARDS } = await import('../src/cards/cards.js');
+  const state = {
+    battlefield: [{ id: 'a', name: 'Orc', power: 3 }, { id: 'b', name: 'Goblin', power: 1 }], players: [], stack: [],
+  };
+  const spell = (cardId, targets, extra = {}) => ({ kind: 'spell', card: { cardId }, targets, ...extra });
+  assert.deepEqual(targetRoles(state, spell('breakingOfTheFellowship', ['a', 'b']), CARDS), ['deals 3', 'takes 3']);
+  assert.equal(targetRoles(state, spell('breakingOfTheFellowship', ['a']), CARDS), null);
+  const castIntoTheFire = Object.keys(CARDS).find((id) => CARDS[id].name === 'Cast into the Fire');
+  assert.deepEqual(targetRoles(state, spell(castIntoTheFire, ['a', 'b'], { mode: 0 }), CARDS), ['takes 1', 'takes 1']);
+  // An ability: its effects are on the stack object. A target no effect names is numbered.
+  const ability = { kind: 'triggeredAbility', targets: ['a', 'b'], effects: [{ type: 'untap', targetIndex: 0 }] };
+  assert.deepEqual(targetRoles(state, ability, CARDS), ['untapped', '#2']);
 });
