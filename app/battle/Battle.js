@@ -1172,8 +1172,8 @@ export class Battle {
       this.#cancel();
       return;
     }
-    // Targeting: tap a target, or anything else to cancel.
-    if (mode.kind === 'targeting') {
+    // Targeting: tap a target, the main button ("Done", "No target"), or anything else to cancel.
+    if (mode.kind === 'targeting' && target.kind !== 'main') {
       const id = target.kind === 'player' ? target.id
         : target.kind === 'card' ? (target.stackId && mode.targets.has(target.stackId) ? target.stackId : target.id) : null;
       if (id && mode.targets.has(id)) {
