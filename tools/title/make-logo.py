@@ -1,5 +1,5 @@
 """
-Cuts the title logo (tools/title/logo-source.jpg, gold letters on black) into
+Cuts the title logo (tools/title/logo-source.jpg, pale gold letters on black) into
 app/title/logo.webp: cropped to the letters and their glow, with the black made
 transparent (alpha from brightness, colour un-premultiplied), so the glow sits
 on the valley rather than on a black box.
