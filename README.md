@@ -165,7 +165,7 @@ when the match ends, the cards of a round that wasn't played are turned over too
 the turning are skipped when the system asks for reduced motion.
 
 **The Red Book** (`src/match/book.js`, pure functions over a plain object; `app/book.js` keeps it in
-`localStorage` as `istari.book`; its screen is `app/screens/book.js`, from the title): what you've done across every
+`localStorage` as `istari.book`; its screen is `app/screens/book.js`, from the book icon on the title): what you've done across every
 campaign. *Cards*: every card that can be opened, by rarity, the found ones with their art (opened
 in a booster of yours, or *Met* in an opponent's deck) and the rest blank, with no picture fetched. *People*: each
 opponent at their place with your record against them, a stranger until you've played them. *Rings*: the Rings of
@@ -328,7 +328,7 @@ battle) → the scoreboard → … → the final score, inside a campaign. The t
 **Teaching the format** (`app/coach.js`): the first time you reach the deck builder, and the first time you can
 act in a round, a few coach marks ring something on the screen and say what it does (a tap moves on; *Skip*
 ends them). They're shown once, remembered in `localStorage` (`istari.seen`); *Show tips again* in the settings
-forgets that. *How to play*, on the title screen and in the settings, is a sheet with the format's rules
+forgets that. *How to play*, in the settings, is a sheet with the format's rules
 (taken from `MATCH_RULES` and `CAMPAIGN_RULES`), the campaign's, and the gestures. They teach Istari and the
 app, not Magic: Magic's terms, costs and card frames are the game's own and stay as printed.
 

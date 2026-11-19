@@ -42,6 +42,8 @@ const PATHS = {
   plus: 'M12 4v16M4 12h16',
   minus: 'M4 12h16',
   check: 'M4 12l5 5L20 6',
+  // The Red Book: a closed book, its spine, and a ribbon.
+  book: 'M5 5a2 2 0 0 1 2-2h12v15H7a2 2 0 0 0-2 2zM5 20a2 2 0 0 0 2 2h12v-4M14 3v7l-2-1.5L10 10V3',
   // A seed-cake for the road (a life in the campaign), and the crumbs of one that's been eaten.
   seedCake: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM7.9 9a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM13.4 8.5a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM10.9 12.5a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM7.4 15a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0zM14.4 15a1.1 .7 0 1 0 2.2 0 1.1 .7 0 1 0-2.2 0z',
   crumbs: 'M5.8 15a2.2 2.2 0 1 0 4.4 0 2.2 2.2 0 1 0-4.4 0zM12.9 16.5a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 1 0-3.2 0zM10.7 11a1.3 1.3 0 1 0 2.6 0 1.3 1.3 0 1 0-2.6 0zM16 12a1 1 0 1 0 2 0 1 1 0 1 0-2 0zM5.1 10.5a0.9 0.9 0 1 0 1.8 0 0.9 0.9 0 1 0-1.8 0z',
@@ -100,7 +102,7 @@ const PATHS = {
 
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
-  'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
+  'cards', 'plus', 'minus', 'check', 'book', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
   'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot', 'bow', 'lily', 'spoon', 'coins', 'drumstick', 'waves', 'dagger']);
 
 /** Icons whose inner shapes are holes. */

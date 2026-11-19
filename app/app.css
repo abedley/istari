@@ -815,7 +815,6 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 .begin:focus-visible { outline: 1px solid rgba(233, 196, 106, .8); outline-offset: 2px; border-radius: 4px; }
 /* Back at the title in the same visit: the camera is already where its pull-back ends, and drifts. */
 .rv.settled .rv-layer { animation: rv-camera 24s ease-in-out infinite alternate; }
-.title-how { padding: 10px 14px; border-radius: 22px; background: rgba(12, 9, 4, .5); min-height: 44px; color: #f2e3b8; font: 600 14px var(--display); letter-spacing: .04em; text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 12px rgba(0, 0, 0, .8); }
 .title-foot .icon-btn { background: rgba(12, 9, 4, .5); }
 .title-foot { position: absolute; left: 0; right: 0; bottom: calc(14px + var(--safe-bottom)); display: flex; justify-content: space-between; align-items: center; padding: 0 16px; }
 
@@ -1261,11 +1260,6 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
   .vs-place-line { display: none; }
   .versus.placed { padding-top: calc(var(--safe-top) + 44px); }
 }
-
-/* ---------------------------------------------------------------- the title's lesser ways in (today's road, the Red Book) */
-.begin.minor { font-size: 13px; padding: 9px 0; letter-spacing: .2em; color: #ecdcb0; min-height: 44px; }
-.begin.minor::before, .begin.minor::after { max-width: 40px; opacity: .7; }
-.menu { gap: 4px; }
 
 /* ---------------------------------------------------------------- the tale of a match (its recap) */
 .recap { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); background: rgba(0, 0, 0, .28); }
