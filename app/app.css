@@ -976,10 +976,11 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pg-zoom:disabled { opacity: .35; cursor: default; }
 .pg-board { position: relative; z-index: 1; }
 .pg-card.full { width: 100%; }
-.pg-build-cta { padding-top: 10px; }
-.pg-build-cta .row { gap: 8px; }
-.pg-build-cta .btn { white-space: nowrap; padding: 13px 10px; font-size: 16px; }
-.pg-build-cta .pg-start { flex: 1.6; }
+.pg-build-head { gap: 8px; }
+.pg-build-actions { flex: 1; min-width: 0; display: flex; gap: 8px; }
+.pg-build-actions .btn { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 11px 8px; font-size: 15px; }
+.pg-build-actions .pg-start { flex: 1.4; }
+.screen-match .pg-builder { padding-bottom: max(10px, var(--safe-bottom)); }
 .pg-side { display: flex; gap: 6px; }
 .pg-card { position: relative; flex: none; width: 58px; aspect-ratio: 63 / 88; }
 .pg-card { appearance: none; border: 0; padding: 0; background: none; cursor: pointer; -webkit-touch-callout: none; user-select: none; }

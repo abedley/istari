@@ -61,9 +61,9 @@ const lookOf = (app, match) => heroLook(app, heroOf(match), currentHeroId(match.
 const backTo = (app) => app.go('campaign');
 
 /** The opponent, for the header: their portrait and name. Tap to read the Rings of Power. */
-const opponentBadge = (app, match) => {
+const opponentBadge = (app, match, { compact = false } = {}) => {
   const opponent = opponentById(match.opponentId);
-  return h('button.pg-head-opp', { type: 'button', onclick: () => showPowers(app, match) }, h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
+  return h('button.pg-head-opp', { type: 'button', 'aria-label': opponent.name, onclick: () => showPowers(app, match) }, compact ? null : h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
 };
 
 /** Both sides' Rings of Power (planeswalker powers), on a sheet: yours are your hero's and any taken in a campaign. */
@@ -461,7 +461,7 @@ function buildView(app, match) {
     tray.replaceChildren(...(left.length
       ? left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true }))
       : [h('p.pg-tray-empty', `Your decks are ready. Deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
-    start.textContent = full ? 'Start match' : `Place ${toPlace} more`;
+    start.textContent = full ? 'Start match' : `Place ${toPlace}`;
     start.disabled = !full;
     autoFill.disabled = full;
     clear.hidden = placed.size === locked.size;
@@ -469,9 +469,12 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: 'Build your decks', onBack: () => backTo(app), right: opponentBadge(app, match) }),
-    h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
-    h('div.cta.pg-build-cta', h('div.row', autoFill, start)));
+    // The header holds Auto-fill and Start, in place of a title, to leave the cards more room.
+    h('header.top.pg-build-head',
+      h('button.icon-btn', { onclick: () => backTo(app), 'aria-label': 'Back' }, icon('back')),
+      h('div.pg-build-actions', autoFill, start),
+      opponentBadge(app, match, { compact: true })),
+    h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)));
   // The booster, still wrapped, covers the screen from the start.
   const parcel = present(app, match, el);
   return {
