@@ -11,8 +11,6 @@ export function titleScreen(app) {
   const el = h('div',
     rivendell(h),
     h('div.title-main',
-      // Fades in once the camera has settled (app.css, "title").
-      h('p.tagline', 'Fifteen cards. Three decks. Best of three.'),
       h('div.menu',
         loadCampaign(app)
           ? h('button.begin', { onclick: () => app.go('campaign') }, h('span.begin-label', 'Continue'))
