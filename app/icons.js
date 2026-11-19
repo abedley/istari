@@ -86,6 +86,8 @@ const PATHS = {
   lily: 'M12 6c2 3 2 7 0 10-2-3-2-7 0-10zM12 16c-3-1-6-4-7-8 3 0 6 2 7 8zM12 16c3-1 6-4 7-8-3 0-6 2-7 8zM3 19c3 1 6 1 9 0s6-1 9 0',
   // A spoon: Lobelia, who took Bag End's.
   spoon: 'M7 3a3 4 0 1 0 0 8 3 4 0 1 0 0-8zM8.5 10.5 19 21',
+  // A stack of coins: Bill Ferny, who sells anything to anyone.
+  coins: 'M4 7a6 2.5 0 1 0 12 0 6 2.5 0 1 0-12 0M4 7v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7M8 15v2c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4c0-1.2-2-2.2-4.5-2.4',
   // A hooded figure: the portrait of someone without art.
   hooded: 'M12 2C8 2 5.5 5 5.5 9.5c0 2.6.8 4.6 1.8 6L4 22h16l-3.3-6.5c1-1.4 1.8-3.4 1.8-6C18.5 5 16 2 12 2zm0 5.5c1.9 0 3.2 1.7 3.2 4 0 1.6-.7 3-1.6 3.8L12 17l-1.6-1.7c-.9-.8-1.6-2.2-1.6-3.8 0-2.3 1.3-4 3.2-4z',
 };
@@ -93,7 +95,7 @@ const PATHS = {
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
   'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
-  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot', 'bow', 'lily', 'spoon']);
+  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot', 'bow', 'lily', 'spoon', 'coins']);
 
 /** Icons whose inner shapes are holes. */
 const EVEN_ODD = new Set(['eye', 'seedCake']);
@@ -118,6 +120,7 @@ export const POWER_ICONS = Object.freeze({
   oldManWillow: 'willow',
   gildor: 'star',
   riderInBlack: 'hooded',
+  billFerny: 'coins',
   tomBombadil: 'leaf',
   goldberry: 'lily',
   sauron: 'eye',

@@ -87,6 +87,18 @@ export const TOKEN_PRESENTATION = {
     "typeLine": "Token Artifact — Food",
     "scryfallId": "bfcff41e-b6ff-4ddd-bcb6-8943f7d88aef"
   },
+  "token:Nazgûl:1/2:black:deathtouch": {
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/8/3/833936c6-9381-4c0b-a81c-4a938be95040.jpg?1783916298",
+      "card": "https://cards.scryfall.io/normal/front/8/3/833936c6-9381-4c0b-a81c-4a938be95040.jpg?1783916298"
+    },
+    "artist": "Igor Krstic",
+    "rarity": "uncommon",
+    "set": "ltr",
+    "collectorNumber": "100",
+    "typeLine": "Creature — Wraith Knight",
+    "scryfallId": "833936c6-9381-4c0b-a81c-4a938be95040"
+  },
   "token:Orc Army:0/0:black:": {
     "image": {
       "art": "https://cards.scryfall.io/art_crop/front/6/9/6943f966-fd21-427c-a13f-44727edcaa4b.jpg?1783916045",

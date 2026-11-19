@@ -23,7 +23,7 @@ export const TEMPERAMENTS = Object.freeze({
 export const PERSONA_TEMPERAMENT = Object.freeze({
   sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider',
   saruman: 'warden', denethor: 'warden', elrond: 'warden', oldManWillow: 'warden', goldberry: 'warden', lobelia: 'warden',
-  gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster',
+  gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster', billFerny: 'trickster',
 });
 
 /** How a deck's plan (deckPlan in src/paigow/deckBuilder.js) shifts the way it's played, whoever plays it. */

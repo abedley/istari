@@ -17,7 +17,7 @@ const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
 test('a campaign faces every opponent in turn, Sauron last, with three lives', () => {
   assert.deepEqual(CAMPAIGN_OPPONENTS, [
-    'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack',
+    'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'billFerny',
     'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
   ]);
   assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(PAIGOW_OPPONENTS).sort(), 'no opponent is left out');

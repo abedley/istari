@@ -137,6 +137,22 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['Yesss. Put it on. We see you better so.', 'Another ring. It all returns to the Master in the end.'],
     },
   },
+  billFerny: {
+    name: 'Bill Ferny', color: 'black', emblem: 'billFerny', ai: strategist(),
+    // Himself twice over, and the pony he starved and sold, twice.
+    setup: { pack: ['billFernyBreeSwindler', 'billFernyBreeSwindler', 'billThePony', 'billThePony'] },
+    portrait: portrait('2/0/20ac63cb-fa4d-4340-8062-1029c8bd5ec8.jpg?1783916321', 50, 10, 300, 'Bill Ferny, Bree Swindler', 'Hristo D. Chukov'),
+    banter: {
+      start: ['Well, well. Hobbits, a long way from home. Fancy a game?', 'Sit down, sit down. I\'ll deal. Honest as the day.', 'Friends of mine are asking after you. Black cloaks. Very generous.'],
+      win: ['Pay up, little master. Every penny.', 'Ha! I\'ll take that, and the pony too.'],
+      lose: ['You\'ll not get far. My friends are on the road.', 'Lucky. Squint all you like, you were lucky.'],
+      comeback: ['Coin talks, and it\'s talking to me.', 'Don\'t look so pleased. I\'ve sold better than you.'],
+      collapse: ['Here, that weren\'t fair!', 'Bah! Mind the turnip, I\'m off.'],
+      kill: ['Good riddance. I know a buyer for what\'s left.', 'There. Squashed, like a beetle.'],
+      loss: ['That was my best hand, that was. Bought and paid for.', 'Hey! That cost me good silver!'],
+      ring: ['A ring, eh? There\'s Riders who\'d pay well to hear of it.', 'Shiny. I know someone who\'d like to see that.'],
+    },
+  },
   goldberry: {
     name: 'Goldberry', color: 'green', emblem: 'goldberry', ai: strategist(),
     portrait: portrait('b/f/bf4f0a7c-620e-4ed8-8da3-fa6564e8a0cd.jpg?1783916317', 56, 12, 300, 'Goldberry, River-Daughter', 'Marie Magny'),

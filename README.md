@@ -55,7 +55,7 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Bill Ferny, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
@@ -69,8 +69,8 @@ rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `lib
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option);
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring); and
 `graveyard`, cards already in its graveyard as every round begins (the Game's `startsInGraveyard` option).
-Gandalf, Old Man Willow, the Rider in Black and Lobelia have one. Gandalf's packs always hold *Glamdring*, and he starts
-every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Lobelia's always hold *Lobelia Sackville-Baggins* and her son *Lotho, Corrupt Shirriff* (both make Treasures, which her ring turns into an anthem). Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
+Gandalf, Old Man Willow, the Rider in Black, Lobelia and Bill Ferny have one. Gandalf's packs always hold *Glamdring*, and he starts
+every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Lobelia's always hold *Lobelia Sackville-Baggins* and her son *Lotho, Corrupt Shirriff* (both make Treasures, which her ring turns into an anthem). Bill Ferny's always hold two *Bill Ferny, Bree Swindler* and two *Bill the Pony* (both legendary, so two in one deck run into the legend rule). Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
 with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
 power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 
@@ -103,6 +103,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
+| Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed. |
 | Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
@@ -123,7 +124,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black,
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Bill Ferny,
 Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you

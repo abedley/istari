@@ -1,6 +1,10 @@
 import {
   EFFECT, ACTIVATION_TIMING, TARGET, KEYWORD, COUNTER, AFFECTED, TRIGGER, TOKEN,
 } from './cards.js';
+import { IMPORTED_CARDS } from './importedCards.js';
+
+/** The Nazgûl card, whose abilities Bill Ferny's tokens have. */
+const NAZGUL = IMPORTED_CARDS.nazgul;
 
 /**
  * Emblem definitions.
@@ -230,6 +234,18 @@ export const EMBLEMS = deepFreeze({
       per: { of: 'permanents', filter: { subtypes: ['Treasure'] } },
     }],
   },
+  // Sacrifice a Treasure (a cost, as Merry's Food) for a Nazgûl: a token with the card's characteristics and abilities.
+  billFerny: power('billFerny', 'The Swindler\u2019s Ring', 'Sold to the Black Riders', {
+    text: 'Sacrifice a Treasure: Create a Nazg\u00fbl creature token. (It\u2019s a 1/2 black Wraith Knight with deathtouch, "When this creature enters, the Ring tempts you" and "Whenever the Ring tempts you, put a +1/+1 counter on each Wraith you control.") Activate only as a sorcery.',
+    cost: { sacrifice: { kind: TARGET.PERMANENT, filter: { subtypes: ['Treasure'] } } },
+    effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: {
+      name: 'Nazg\u00fbl', colors: ['black'], subtypes: ['Wraith', 'Knight'], power: 1, toughness: 2, keywords: [KEYWORD.DEATHTOUCH],
+      triggeredAbilities: NAZGUL.triggeredAbilities,
+      // No Nazgûl token was printed: it borrows the card's art (LTR 100).
+      artScryfallId: '833936c6-9381-4c0b-a81c-4a938be95040',
+    } }],
+    timing: SORCERY,
+  }),
   // "Once per game": `activationsPerGame` (see Game's #canActivate).
   goldberry: {
     ...power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {
