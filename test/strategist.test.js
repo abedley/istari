@@ -1,7 +1,7 @@
 // The Strategist (src/ai/strategist/): what it's allowed to know, and the plays it must and mustn't make.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Game, GAME_STATUS, PHASE, STEP, ACTION, BasicAIController, seededRandom } from '../src/index.js';
+import { Game, GAME_STATUS, PHASE, STEP, ACTION, BasicAIController, seededRandom, CARDS as LTR } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
 import { actingPlayerId } from '../src/ai/simulate.js';
 import { blindView, sampleWorld } from '../src/ai/strategist/beliefs.js';
@@ -31,6 +31,8 @@ const CARDS = {
   growth: { id: 'growth', name: 'Growth', manaCost: { generic: 1 }, types: ['Instant'], target: 'creature', effects: [{ type: 'pump', power: 3, toughness: 3 }] },
   murder: { id: 'murder', name: 'Murder', manaCost: { generic: 1 }, types: ['Instant'], target: 'creature', effects: [{ type: 'destroy' }] },
   zap: { id: 'zap', name: 'Zap', manaCost: { generic: 1 }, types: ['Instant'], target: 'any', effects: [{ type: 'dealDamage', amount: 2 }] },
+  lobelia: { ...LTR.lobeliaSackvilleBaggins, id: 'lobelia' },
+  eowyn: { ...LTR.eowynFearlessKnight, id: 'eowyn' },
 };
 
 /** Passes (or confirms empty declarations) until `until(state)`. */
@@ -241,6 +243,46 @@ test('burn is kept for something it kills', () => {
   const casts = play(second, 'p1', (s) => s.turn > 5).filter((a) => a.type === ACTION.CAST_SPELL);
   assert.equal(casts.length, 1);
   assert.ok(!second.peekState().battlefield.some((p) => p.cardId === 'hawk'));
+});
+
+// ---------------------------------------------------------------------------
+// Creatures cast for what they do on entering
+
+test('Lobelia waits for a creature to die before she comes down', () => {
+  // Nothing has died: her trigger would have no target, so she stays in hand, main phase and end step alike.
+  const game = position({ p1: { hand: ['lobelia'] }, p2: { board: ['ox'] } });
+  const lobelia = game.peekState().players[0].hand.find((c) => c.cardId === 'lobelia').id;
+  assert.ok(!candidates(game.peekState(), 'p1', game).some((m) => m.action?.cardId === lobelia), 'not a move');
+  const taken = play(game, 'p1', (s) => s.turn > 6);
+  assert.ok(!taken.some((a) => a.cardId === lobelia), 'never cast');
+});
+
+test('Lobelia comes down once an opponent\'s creature has died this turn', () => {
+  const game = position({ p1: { hand: ['murder', 'lobelia'] }, p2: { board: ['giant'] } });
+  cast(game, 'p1', 'murder', 'giant');
+  passTo(game, (s) => s.stack.length === 0);
+  const lobelia = game.peekState().players[0].hand.find((c) => c.cardId === 'lobelia').id;
+  assert.ok(candidates(game.peekState(), 'p1', game).some((m) => m.action?.cardId === lobelia), 'a move');
+  const macro = choose(game);
+  assert.equal(macro.action.cardId, lobelia);
+  game.dispatch(macro.action);
+  play(game, 'p1', (s) => s.stack.length === 0 && !s.pendingDecision);
+  assert.equal(game.peekState().battlefield.filter((p) => p.name === 'Treasure').length, 5, 'five Treasures for the giant');
+});
+
+test('Éowyn waits for a creature bigger than her to exile', () => {
+  const game = position({ p1: { hand: ['eowyn'] }, p2: { board: ['bear'] } });
+  const eowyn = game.peekState().players[0].hand[0].id;
+  assert.ok(!candidates(game.peekState(), 'p1', game).some((m) => m.action?.cardId === eowyn), 'nothing bigger: not a move');
+  const second = position({ p1: { hand: ['eowyn'] }, p2: { board: ['giant'] } });
+  const moves = candidates(second.peekState(), 'p1', second);
+  assert.ok(moves.some((m) => m.action?.cardId === second.peekState().players[0].hand[0].id), 'the giant: a move');
+});
+
+test('with nothing left that could give her a target, a creature with an entry trigger comes down for its body', () => {
+  const game = position({ p1: { hand: ['eowyn'] }, p2: {} });
+  const eowyn = game.peekState().players[0].hand[0].id;
+  assert.ok(candidates(game.peekState(), 'p1', game).some((m) => m.action?.cardId === eowyn));
 });
 
 // ---------------------------------------------------------------------------

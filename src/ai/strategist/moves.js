@@ -6,6 +6,7 @@
  *   nothing to weigh); a free power with no target is used at once; sorceries, Auras, and powers
  *   that need a target or a payment are choices, each on its best targets. Instants and tricks
  *   wait, unless they win on the spot or have to come before blockers ("can't block", haste, menace).
+ *   A creature cast for its entry trigger's target (Lobelia, Éowyn) waits until there's a target worth it.
  * - **After blockers, and when the opponent's spell or ability is on the stack:** anything at
  *   instant speed, but only if it *flips an outcome* (see probe): it kills a creature that would
  *   live, saves one that would die, wins, or stops a loss (a free power may also just save life).
@@ -47,6 +48,8 @@ const MAX_BLOCKS = 7;
 const IDLE = 0.004;
 const CARD_GAIN = 2.5;
 const FREE_GAIN = 0.4;
+/** What an enters-the-battlefield trigger with a target must gain (in material points) to be worth casting the creature for. */
+const ETB_GAIN = 1;
 
 const WINDOW = Object.freeze({ MAIN: 'main', BEGIN_COMBAT: 'beginCombat', ATTACKED: 'attacked', COMBAT: 'combat', RESPONSE: 'response', END: 'end' });
 
@@ -99,9 +102,15 @@ export function probe(game, me, action, { life = true } = {}) {
   const copy = game.clone();
   const worth = new Map(copy.peekState().battlefield.map((p) => [p.id, isCreature(p) ? 2 + creatureValue(p) : 2]));
   if (action) copy.applyTrusted(action);
+  settle(copy);
+  return material(copy.peekState(), me, { life, worth });
+}
+
+/** Lets `game` take its course, everyone passing (the basic AI making any choice): the stack empties and combat damage is dealt. */
+function settle(game) {
   const helpers = {};
   for (let step = 0; step < 80; step++) {
-    const state = copy.peekState();
+    const state = game.peekState();
     if (state.status !== GAME_STATUS.IN_PROGRESS) break;
     const fighting = state.combat.attackers.length > 0
       && (state.step === STEP.DECLARE_ATTACKERS || state.step === STEP.DECLARE_BLOCKERS || state.step === STEP.FIRST_STRIKE_DAMAGE || state.step === STEP.COMBAT_DAMAGE);
@@ -114,9 +123,9 @@ export function probe(game, me, action, { life = true } = {}) {
       next = helpers[actor].chooseAction(state) ?? mine[0];
     }
     if (!next) break;
-    copy.applyTrusted(next);
+    game.applyTrusted(next);
   }
-  return material(copy.peekState(), me, { life, worth });
+  return game;
 }
 
 /** What a cast or activation does: its source, effects, and how it's timed. */
@@ -155,6 +164,40 @@ function enables(effects) {
 
 /** A pump or protection that only lasts the turn: a trick, wasted outside a fight. */
 const isTrick = (effects) => flattenEffects(effects).some((e) => e.type === EFFECT.PUMP && !e.untilYourNextTurn) && !flattenEffects(effects).some(isHarmfulEffect);
+
+/**
+ * The enters-the-battlefield triggers of `card` that target something and do more than pump for
+ * the turn (Lobelia's exile for Treasures, Éowyn's exile, the Ringwraiths' -2/-2): what the
+ * creature is mostly cast for. A pump on entering (Quickbeam) is a combat trick: the body is the point.
+ */
+function targetedEntryTriggers(card) {
+  return (card.triggeredAbilities ?? []).filter((t) => String(t.trigger ?? '').split(',').includes('entersBattlefield')
+    && (t.target || t.targets?.length) && !isTrick(t.effects ?? (t.effect ? [t.effect] : [])));
+}
+
+/**
+ * What casting a creature with a targeted entry trigger gains beyond the creature itself, in
+ * material points: cast it on a copy, let the stack resolve (the trigger finds its best target, or
+ * none and is removed), and count everything but the creature's own body.
+ */
+function entryGain(game, me, action) {
+  const worth = new Map(game.peekState().battlefield.map((p) => [p.id, isCreature(p) ? 2 + creatureValue(p) : 2]));
+  const before = material(game.peekState(), me, { worth });
+  const copy = game.clone();
+  copy.applyTrusted(action);
+  const state = settle(copy).peekState();
+  const body = state.battlefield.find((p) => p.id === action.cardId && p.controllerId === me);
+  return material(state, me, { worth }) - before - (body && isCreature(body) ? 2 + creatureValue(body) : 0);
+}
+
+/**
+ * Could a target still turn up while the card waits in hand? Only if there's something on the
+ * battlefield to fight or die, or the opponent still holds cards. Without that, waiting wastes the body too.
+ */
+function targetsMayCome(state, me) {
+  const opponent = state.players.find((p) => p.id !== me);
+  return (opponent.handSize ?? opponent.hand?.length ?? 0) > 0 || state.battlefield.some((p) => isCreature(p));
+}
 
 function priorityCandidates(state, me, game) {
   const mine = guardActivations(state, state.validActions.filter((a) => a.playerId === me));
@@ -226,9 +269,22 @@ function priorityCandidates(state, me, game) {
     const onTheirCreature = targets.some((id) => byId(id) && isCreature(byId(id)) && !isMine(id));
     const trick = isTrick(what.effects);
     const move = raw(action, { intent: harmful ? 'remove' : what.permanent ? 'deploy' : 'use', score: option.score });
+    // A creature cast for what it does on entering waits for something worth doing it to (Lobelia
+    // for a creature that died this turn, Éowyn for a bigger one), while one may still come. As a
+    // flash blocker it's cast for its body, so that's left alone.
+    // With a target worth it, it comes down now: the target may not last (Lobelia's is gone at end of turn).
+    let entryTarget = false;
+    if ((window === WINDOW.MAIN || window === WINDOW.END) && game && what.spell && isCreature(what.card) && targetedEntryTriggers(what.card).length) {
+      entryTarget = entryGain(game, me, action) >= ETB_GAIN;
+      if (!entryTarget && targetsMayCome(state, me)) continue;
+    }
     switch (window) {
       case WINDOW.MAIN: {
         if (wins) return [move];
+        if (entryTarget) {
+          forced.push(move);
+          break;
+        }
         if (what.spell && what.permanent) {
           // Flash: holding it for their turn is a real choice. Everything else comes down.
           if (hasKeyword(what.card, KEYWORD.FLASH) || isAura(what.card)) choices.push(move);

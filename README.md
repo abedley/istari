@@ -1228,6 +1228,11 @@ right now, so there's little to search.
   target is used at once (neither is a choice). Sorceries, Auras and powers with a target are
   choices, each on its best two targets. Instants wait, unless they win on the spot or must come
   before blockers (tapping a blocker, haste, menace).
+- A creature cast for what it does on entering (Lobelia's Treasures, Éowyn's exile, the
+  Ringwraiths' -3/-3) waits in hand until that has a target worth it: the cast is tried on a copy
+  and must gain something beyond the creature's own body. With one, it comes down at once (Lobelia's
+  target is gone at end of turn); with nothing on the battlefield and an empty opposing hand, so that
+  no target can ever come, it comes down for its body. A pump on entering (Quickbeam) doesn't count.
 - After blockers, and when the opponent's spell or ability is on the stack: anything at instant
   speed, but only if it **flips an outcome**. `probe` plays the action on a copy, lets combat and
   the stack run their course, and compares with doing nothing: a card must change who lives, who
