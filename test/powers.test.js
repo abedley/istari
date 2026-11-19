@@ -59,7 +59,7 @@ function usePower(game, targetOf = null) {
   throw new Error('The power did not resolve.');
 }
 
-test('every hero and opponent has a power of their own, once a turn', () => {
+test('every hero and opponent has a power of their own, once a turn, but for Bill Ferny’s', () => {
   const people = [...Object.values(PAIGOW_HEROES), ...Object.values(PAIGOW_OPPONENTS)];
   const emblems = people.map((p) => p.emblem);
   assert.equal(new Set(emblems).size, people.length);
@@ -78,7 +78,8 @@ test('every hero and opponent has a power of their own, once a turn', () => {
       assert.ok(emblem.startsWith?.length || emblem.triggeredAbilities?.length || emblem.shufflesIn?.length || emblem.staticAbilities?.length || emblem.match, `${person.name}'s passive power does something`);
       continue;
     }
-    assert.equal(emblem.activationsPerTurn, 1);
+    // Once a turn, but for Bill Ferny's, as often as he has a Treasure to sacrifice.
+    assert.equal(emblem.activationsPerTurn, person.emblem === 'billFerny' ? undefined : 1);
     assert.equal(emblem.abilities.length, 1);
     assert.ok(emblem.abilities[0].name && emblem.abilities[0].text);
     // Each is a Ring of Power, with a name of its own and a name for what it does.
