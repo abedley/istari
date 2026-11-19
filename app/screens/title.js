@@ -1,6 +1,6 @@
 import { h } from '../dom.js';
 import { icon } from '../icons.js';
-import { rivendell } from './rivendell.js';
+import { shire } from './shire.js';
 import { loadCampaign } from './campaign.js';
 import { showHowToPlay } from '../coach.js';
 import { loadBook } from '../book.js';
@@ -9,7 +9,7 @@ export function titleScreen(app) {
   // The Red Book catches up with a campaign saved before there was one.
   loadBook(app);
   const el = h('div',
-    rivendell(h),
+    shire(h),
     h('div.title-main',
       h('div.menu',
         loadCampaign(app)
