@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION, PHASE, TOKEN, EFFECT } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
+import { createMatch } from '../src/paigow/paigow.js';
 import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
 import { placeOf } from '../src/paigow/places.js';
 import {
@@ -53,4 +54,11 @@ test('Butterbur’s power can feed an opponent’s creature too: "target creatur
   resolve(game);
   const theirs = byCard(game, 'bear')[0];
   assert.ok(powers(game).some((a) => a.targets?.[0] === theirs.id));
+});
+
+test('Butterbur’s packs always hold his own card', () => {
+  assert.deepEqual(opponentSetup('butterbur').pack, ['butterburBreeInnkeeper']);
+  for (let seed = 1; seed <= 20; seed += 1) {
+    assert.ok(createMatch({ seed, opponentId: 'butterbur' }).cpuDecks.flat().includes('butterburBreeInnkeeper'), `seed ${seed}`);
+  }
 });

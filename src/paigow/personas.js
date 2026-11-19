@@ -139,6 +139,8 @@ export const PAIGOW_OPPONENTS = deepFreeze({
   },
   butterbur: {
     name: 'Butterbur', color: 'gold', emblem: 'butterbur', ai: strategist(),
+    // His own card in every pack: it makes the Food his power eats.
+    setup: { pack: ['butterburBreeInnkeeper'] },
     portrait: portrait('f/3/f3fd9ff1-278b-4e6a-b30b-90250d8b5762.jpg?1783916255', 50, 10, 300, 'Butterbur, Bree Innkeeper', 'Ryan Yee'),
     banter: {
       start: ['Welcome to the Prancing Pony! A game, is it? Nob! Bring the cards!', 'Sit you down, sit you down. There\'s beer and a fire, and a game if you want one.', 'Now, there was something I was to remember... never mind. Deal!'],
