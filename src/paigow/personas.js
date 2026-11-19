@@ -169,6 +169,22 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['A ring, eh? There\'s Riders who\'d pay well to hear of it.', 'Shiny. I know someone who\'d like to see that.'],
     },
   },
+  ringwraiths: {
+    name: 'Ringwraiths', color: 'black', emblem: 'ringwraiths', ai: strategist(),
+    // Two of the Nine in every pack.
+    setup: { pack: ['ringwraiths', 'ringwraiths'] },
+    portrait: portrait('2/a/2a8495c3-96cf-40ab-b68a-1b5711b7659e.jpg?1783916220', 50, 10, 300, 'Ringwraiths', 'Warren Mahy'),
+    banter: {
+      start: ['We are nine. You are one.', 'Give us the Ring, and the knife need not find you.', 'The hill is high, and the night is long. Come up, little one.'],
+      win: ['The shard works inward. You are ours.', 'Fade, and join us in the shadow.'],
+      lose: ['Elbereth... that name... ssss...', 'The fire drives us off. Not far. Never far.'],
+      comeback: ['We return. We always return.', 'Nine riders. Nine. Count us.'],
+      collapse: ['The light... Gilthoniel...', 'Fire! We withdraw.'],
+      kill: ['A cold blade, a cold end.', 'Another shadow walks with us now.'],
+      loss: ['One of us falls. Eight remain.', 'You cannot kill what is already dead. You only delay it.'],
+      ring: ['A ring! Put it on. Let us see you.', 'Every ring calls to us. That one loudest of all.'],
+    },
+  },
   glorfindel: {
     name: 'Glorfindel', color: 'blue', emblem: 'glorfindel', ai: strategist(),
     // His own card in every pack.

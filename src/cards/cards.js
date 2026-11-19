@@ -366,6 +366,11 @@ export const EFFECT = Object.freeze({
   SHUFFLE_CARDS_INTO_LIBRARY: 'shuffleCardsIntoLibrary',
   /** `{ cardIds }`: new cards (by card id) are put into your hand (Legolas's ring: a Legolas's Quick Reflexes). */
   PUT_CARDS_IN_HAND: 'putCardsInHand',
+  /**
+   * `{ cardId }`: a new Aura card (by card id) is put onto the battlefield under your control attached to the target
+   * (the Ringwraiths' ring: "Attach a Morgul-Knife Wound to target creature"). It isn't cast, so it doesn't target.
+   */
+  ATTACH_NEW_AURA: 'attachNewAura',
   /** Crew (702.122): the source becomes an artifact creature until end of turn. */
   BECOME_CREATURE: 'becomeCreature',
   /** `{ at: 'endOfCombat', effects }`: a delayed triggered ability (603.7), with this resolution's targets and subject. */
@@ -433,7 +438,7 @@ export const TARGETED_EFFECTS = Object.freeze(new Set([
   EFFECT.UNTAP, EFFECT.PUMP, EFFECT.ADD_COUNTERS, EFFECT.COUNTER_SPELL, EFFECT.FIGHT, EFFECT.RETURN_FROM_GRAVEYARD,
   EFFECT.RETURN_SPELL_TO_HAND, EFFECT.PUT_INTO_LIBRARY, EFFECT.GAIN_CONTROL, EFFECT.FLICKER, EFFECT.EXILE_UNTIL_SOURCE_LEAVES,
   EFFECT.COUNTER_UNLESS_PAID, EFFECT.REVEAL_HAND_DISCARD, EFFECT.GOAD, EFFECT.MOVE_COUNTERS, EFFECT.EXILE_FROM_GRAVEYARD,
-  EFFECT.EXILE_GRAVEYARD_CARDS,
+  EFFECT.EXILE_GRAVEYARD_CARDS, EFFECT.ATTACH_NEW_AURA,
 ]));
 /** Effects that hurt whatever they affect, for AI decisions. */
 export const HARMFUL_EFFECTS = Object.freeze(new Set([

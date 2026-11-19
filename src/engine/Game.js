@@ -1987,6 +1987,8 @@ export class Game extends EventEmitter {
     if (source.emblemId && source.activationsThisGame >= source.activationsPerGame) return false;
     // "Activate only once each turn."
     if (ability.oncePerTurn && this.#zones.get(playerId).turnTally.activated?.[`${source.id}:${ability.id}`]) return false;
+    // "Activate only once each game." (One of an emblem's abilities, kept on the emblem: the Ringwraiths' Morgul-knife.)
+    if (ability.oncePerGame && source.usedThisGame?.[ability.id]) return false;
     // "Activate only if you control a legendary creature."
     if (ability.activationCondition && !this.#checkCondition(ability.activationCondition, playerId, { sourceId: source.id })) return false;
     return this.#canPayCost(playerId, source, ability.cost, null);
@@ -2101,6 +2103,7 @@ export class Game extends EventEmitter {
     if (abilityId.startsWith('equip')) this.#zones.get(playerId).turnTally.equipped = true;
     const tally = this.#zones.get(playerId).turnTally;
     if (ability.oncePerTurn) tally.activated = { ...tally.activated, [`${cardId}:${abilityId}`]: true };
+    if (ability.oncePerGame) permanent.usedThisGame = { ...permanent.usedThisGame, [abilityId]: true };
     const key = `${cardId}:${abilityId}`;
     tally.activations = { ...tally.activations, [key]: (tally.activations?.[key] ?? 0) + 1 };
     if (ability.cost.discardSelf) this.#emitEvent('cardCycled', { playerId, cardId, cardName: permanent.name });
@@ -3066,6 +3069,15 @@ export class Game extends EventEmitter {
       case EFFECT.SHUFFLE_CARDS_INTO_LIBRARY:
         this.#shuffleIn(controllerId, effect.cardIds ?? [], sourceId, 'an effect');
         break;
+      case EFFECT.ATTACH_NEW_AURA: {
+        if (!this.#cardDefinitions[effect.cardId]) throw new Error(`Unknown card for an effect: ${effect.cardId}`);
+        for (const host of permanents().filter((p) => isCreature(p))) {
+          const card = this.#createCard(effect.cardId, controllerId, `${controllerId}-added-${this.#nextTokenNumber++}`);
+          const aura = this.#putOntoBattlefield(card, controllerId);
+          this.#attach(aura, host.id);
+        }
+        break;
+      }
       case EFFECT.PUT_CARDS_IN_HAND: {
         const zone = this.#zones.get(controllerId);
         const cards = (effect.cardIds ?? []).map((cardId) => {
@@ -3524,6 +3536,13 @@ export class Game extends EventEmitter {
     const subject = { chosenId: cardId, controllerId: playerId };
     for (const permanent of [...this.#battlefield].filter((p) => p.controllerId === playerId)) {
       this.#trigger(permanent, TRIGGER.RING_TEMPTS, playerId, () => true, subject);
+    }
+    // And cards in their graveyard that work from there (Ringwraiths: "return this card from your graveyard to your hand").
+    for (const card of [...this.#zones.get(playerId).graveyard]) {
+      for (const ability of this.#cardDefinitions[card.cardId].triggeredAbilities ?? []) {
+        if (ability.zone !== 'graveyard' || !triggersOn(ability, TRIGGER.RING_TEMPTS)) continue;
+        this.#triggerAbility(ability, { sourceId: card.id, sourceName: card.name, controllerId: playerId, subject });
+      }
     }
   }
 

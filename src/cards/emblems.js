@@ -39,6 +39,17 @@ const power = (id, ring, powerName, { text, cost = {}, effects, target, timing }
   abilities: [{ id: 'power', name: ring, text, cost, effects, ...(target ? { target } : {}), ...(timing ? { timing } : {}) }],
 });
 const SORCERY = ACTIVATION_TIMING.SORCERY;
+/** The Rider in Black's powers (and the Ringwraiths'). */
+const HUNTING_THE_RING = {
+  id: 'hunt',
+  trigger: TRIGGER.END_STEP,
+  text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
+  // Counted for each opponent: their own Ring's abilities, 1 to 4 (no Ring-bearer, no life lost).
+  effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringAbilities' } }],
+};
+const DRAWN_TO_THE_RING = {
+  id: 'tempt', name: 'Drawn to the Ring', text: '0: The Ring tempts you. Activate only as a sorcery.', cost: {}, effects: [{ type: EFFECT.RING_TEMPTS }], timing: SORCERY,
+};
 /** A power with no limit on how often it's used each turn. */
 const anyNumberOfTimes = ({ activationsPerTurn, ...emblem }) => emblem;
 
@@ -196,19 +207,29 @@ export const EMBLEMS = deepFreeze({
     ring: true,
     passive: true,
     power: 'Hunting the Ring',
-    text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
+    text: HUNTING_THE_RING.text,
     // A passive power and a second one to activate (its `name` is the power's name), once a turn.
     activationsPerTurn: 1,
-    abilities: [{
-      id: 'tempt', name: 'Drawn to the Ring', text: '0: The Ring tempts you. Activate only as a sorcery.', cost: {}, effects: [{ type: EFFECT.RING_TEMPTS }], timing: SORCERY,
+    abilities: [DRAWN_TO_THE_RING],
+    triggeredAbilities: [HUNTING_THE_RING],
+  },
+  // The Rider in Black's powers, all nine of them, and a third. Each power has its own limit rather than the ring's
+  // (no `activationsPerTurn`): the Ring's temptation once a turn (`oncePerTurn`), the knife "only once each game"
+  // (`oncePerGame`, kept on the emblem; see Game's #canActivate).
+  ringwraiths: {
+    id: 'ringwraiths',
+    name: 'The Nine Rings',
+    ring: true,
+    passive: true,
+    power: 'Hunting the Ring',
+    text: HUNTING_THE_RING.text,
+    abilities: [{ ...DRAWN_TO_THE_RING, oncePerTurn: true }, {
+      id: 'morgulKnife', name: 'The Morgul-Knife',
+      text: '0: Attach a Morgul-Knife Wound to target creature. Activate only as a sorcery and only once each game. (Enchanted creature gets -3/-0 and has "At the beginning of your upkeep, exile this creature unless you pay 2 life.")',
+      cost: {}, target: TARGET.CREATURE, effects: [{ type: EFFECT.ATTACH_NEW_AURA, cardId: 'morgulKnifeWound' }],
+      timing: SORCERY, oncePerGame: true,
     }],
-    triggeredAbilities: [{
-      id: 'hunt',
-      trigger: TRIGGER.END_STEP,
-      text: 'At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has.',
-      // Counted for each opponent: their own Ring's abilities, 1 to 4 (no Ring-bearer, no life lost).
-      effects: [{ type: EFFECT.LOSE_LIFE, amount: 1, affected: AFFECTED.EACH_OPPONENT, perPlayer: { of: 'ringAbilities' } }],
-    }],
+    triggeredAbilities: [HUNTING_THE_RING],
   },
   // A passive power for the match rather than the game (see createMatch in src/paigow/paigow.js): what's in the
   // booster, and how its decks are made. Nothing to do in a round.

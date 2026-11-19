@@ -11809,6 +11809,85 @@ export const IMPORTED_CARDS = {
     "scryfallId": "3700a65c-6f54-4d56-9c6f-8364c45a058c",
     "scryfallUri": "https://scryfall.com/card/ltr/220/ringsight?utm_source=api"
   },
+  "ringwraiths": {
+    "id": "ringwraiths",
+    "name": "Ringwraiths",
+    "manaCost": {
+      "generic": 4,
+      "B": 2
+    },
+    "supertypes": [],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wraith",
+      "Knight"
+    ],
+    "power": 5,
+    "toughness": 5,
+    "triggeredAbilities": [
+      {
+        "id": "entersBattlefield1",
+        "trigger": "entersBattlefield",
+        "text": "When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life.",
+        "effects": [
+          {
+            "type": "pump",
+            "power": -3,
+            "toughness": -3
+          },
+          {
+            "type": "if",
+            "if": {
+              "targetMatches": {
+                "supertypes": [
+                  "Legendary"
+                ]
+              }
+            },
+            "then": [
+              {
+                "type": "loseLife",
+                "amount": 3,
+                "affected": "targetController"
+              }
+            ],
+            "else": []
+          }
+        ],
+        "target": "creatureOpponentControls"
+      },
+      {
+        "id": "ringTempts2",
+        "trigger": "ringTempts",
+        "text": "When the Ring tempts you, return this card from your graveyard to your hand.",
+        "effects": [
+          {
+            "type": "returnSourceFromGraveyard",
+            "to": "hand"
+          }
+        ],
+        "zone": "graveyard"
+      }
+    ],
+    "text": "When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life.\nWhen the Ring tempts you, return this card from your graveyard to your hand.",
+    "image": {
+      "art": "https://cards.scryfall.io/art_crop/front/2/a/2a8495c3-96cf-40ab-b68a-1b5711b7659e.jpg?1783916220",
+      "card": "https://cards.scryfall.io/normal/front/2/a/2a8495c3-96cf-40ab-b68a-1b5711b7659e.jpg?1783916220"
+    },
+    "artist": "Warren Mahy",
+    "colors": [
+      "B"
+    ],
+    "rarity": "rare",
+    "set": "ltr",
+    "collectorNumber": "284",
+    "typeLine": "Creature — Wraith Knight",
+    "oracleText": "When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life.\nWhen the Ring tempts you, return this card from your graveyard to your hand.",
+    "scryfallId": "2a8495c3-96cf-40ab-b68a-1b5711b7659e",
+    "scryfallUri": "https://scryfall.com/card/ltr/284/ringwraiths?utm_source=api"
+  },
   "riseOfTheWitchKing": {
     "id": "riseOfTheWitchKing",
     "name": "Rise of the Witch-king",

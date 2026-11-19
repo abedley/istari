@@ -5,7 +5,7 @@
 import {
   isCreature, isPermanentCard, hasKeyword, cantAttack, KEYWORD, EFFECT, AFFECTED, TARGET, PLAYER_TARGETS, SPELL_TARGETS,
   effectAffects, matchesPermanentKind, matchesFilter, countOf, scaleEffect, targetKindOf, targetFilterOf, isOptionalTarget,
-  GRAVEYARD_TARGETS, abilityEffects, targetList, COUNTER,
+  GRAVEYARD_TARGETS, abilityEffects, targetList, COUNTER, CARDS,
 } from '../cards/cards.js';
 import { creatureValue, anthemValue } from './combat.js';
 import { doomedSacrificeCost } from './doomed.js';
@@ -202,6 +202,15 @@ export function scoreEffects(state, me, effects, targets, sourceId, options = {}
           // Tapping a would-be blocker before attacking.
           if (!permanent.tapped && isCreature(permanent) && preCombat) score -= side(id) * 2;
           break;
+        case EFFECT.ATTACH_NEW_AURA: {
+          // An Aura from nowhere (the Ringwraiths' Morgul-Knife Wound): its bonus or penalty on the creature, and a
+          // creature that will be exiled in its controller's upkeep unless they pay 2 life is about half gone.
+          if (!isCreature(permanent)) break;
+          const pumps = (CARDS[effect.cardId]?.staticAbilities ?? []).filter((s) => s.affected === AFFECTED.ATTACHED_PERMANENT);
+          score += side(id) * pumps.reduce((sum, e) => sum + 0.3 * ((e.power ?? 0) + (e.toughness ?? 0)), 0);
+          if (pumps.some((e) => e.grantTriggers?.length)) score -= side(id) * 0.5 * worth(permanent);
+          break;
+        }
         case EFFECT.ATTACH: {
           // Equipment attaching itself as it enters (Galadhrim Bow): its bonus on our creature, and far more on
           // one it makes win this combat (cast as a combat trick, see timing.js).

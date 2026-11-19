@@ -85,9 +85,11 @@ test('a deck has a plan, and cards have tags', () => {
 });
 
 test('a match\'s CPU decks come from the builder, whatever the opponent, and the match is the same for the same seed', () => {
-  const match = createMatch({ seed: 77 });
+  // An opponent whose ring doesn't change the match (Tom Bombadil's locks a deck), so drawing a new opponent for
+  // the seed as opponents are added doesn't change what this tests.
+  const match = createMatch({ seed: 77, opponentId: 'saruman' });
   assert.equal(match.cpuDecks.flat().length, 15);
-  assert.deepEqual(createMatch({ seed: 77 }), match);
+  assert.deepEqual(createMatch({ seed: 77, opponentId: 'saruman' }), match);
   const key = (decks) => decks.map((deck) => [...deck].sort().join()).sort().join('|');
   assert.equal(key(match.cpuDecks), key(buildDecks(match.cpuDecks.flat(), null, { persona: match.opponentId })));
 });

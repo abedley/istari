@@ -191,6 +191,7 @@ export const CARD_RATINGS = Object.freeze({
   "reprieve": -0.799,
   "reviveTheShire": 0.161,
   "ringsight": -0.853,
+  "ringwraiths": 1.35,
   "riseOfTheWitchKing": -0.288,
   "risingOfTheDay": 0.115,
   "rivendell": -0.771,

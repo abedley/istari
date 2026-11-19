@@ -23,6 +23,7 @@ export const PLACES = Object.freeze({
   riderInBlack: place('The Road to Bree', 'Hoofbeats behind you on the empty road.', 'nazgul', 45, 35, AMBIENCE.SHADOW),
   butterbur: place('The Prancing Pony', 'A fire in the common-room, beer in the mugs, and a landlord who forgets things.', 'butterburBreeInnkeeper', 50, 30, AMBIENCE.HALL),
   billFerny: place('Bree', 'A dark house on the Greenway, and a squint-eyed face at the window.', 'billFernyBreeSwindler', 50, 30, AMBIENCE.SHADOW),
+  ringwraiths: place('Weathertop', 'A ring of broken stones on the hilltop, a small fire, and five shapes climbing in the dark.', 'morgulKnifeWound', 50, 40, AMBIENCE.SHADOW),
   glorfindel: place('The Ford of Bruinen', 'White horses in the flood, and a rider shining in the dusk.', 'horsesOfTheBruinen', 50, 40, AMBIENCE.FOREST),
   elrond: place('Rivendell', 'The Last Homely House east of the Sea.', 'rivendell', 45, 45, AMBIENCE.HALL),
   galadriel: place('Lothlórien', 'The Golden Wood, where no leaf falls and no shadow lies.', 'lothlorienLookout', 70, 35, AMBIENCE.FOREST),

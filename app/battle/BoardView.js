@@ -637,12 +637,16 @@ export class BoardView {
   #renderAbilities(player, side) {
     const parts = this.#parts[side];
     const abilities = player.emblems.flatMap((emblem) => emblem.abilities.map((ability) => ({ emblem, ability })));
-    const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}/${emblem.activationsThisGame ?? 0}`).join();
+    const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}/${emblem.activationsThisGame ?? 0}/${emblem.usedThisGame?.[ability.id] ? 1 : 0}/${player.turnTally?.activated?.[`${emblem.id}:${ability.id}`] ? 1 : 0}`).join();
     if (parts.abilities.dataset.key === key) return;
     parts.abilities.dataset.key = key;
     const buttons = abilities.slice(0, 5).map(({ emblem, ability }) => {
       // Uses left this turn, or this game for a power that has fewer ("once per game").
-      const lefts = [[emblem.activationsPerTurn, emblem.activationsThisTurn], [emblem.activationsPerGame ?? Infinity, emblem.activationsThisGame ?? 0]]
+      const lefts = [[emblem.activationsPerTurn, emblem.activationsThisTurn], [emblem.activationsPerGame ?? Infinity, emblem.activationsThisGame ?? 0],
+        // One of its powers that can be used only once a game (the Ringwraiths' Morgul-knife).
+        [ability.oncePerGame ? 1 : Infinity, emblem.usedThisGame?.[ability.id] ? 1 : 0],
+        // Or once a turn, on its own (the Ringwraiths' temptation).
+        [ability.oncePerTurn ? 1 : Infinity, player.turnTally?.activated?.[`${emblem.id}:${ability.id}`] ? 1 : 0]]
         .filter(([most]) => Number.isFinite(most)).map(([most, used]) => most - used);
       const left = lefts.length ? Math.min(...lefts) : null;
       const cost = ability.cost ?? {};

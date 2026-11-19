@@ -21,7 +21,7 @@ export const TEMPERAMENTS = Object.freeze({
 
 /** Each Pai Gow opponent's temperament (PAIGOW_OPPONENTS in src/paigow/personas.js). */
 export const PERSONA_TEMPERAMENT = Object.freeze({
-  sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider', glorfindel: 'raider',
+  sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider', glorfindel: 'raider', ringwraiths: 'raider',
   saruman: 'warden', denethor: 'warden', elrond: 'warden', oldManWillow: 'warden', goldberry: 'warden', lobelia: 'warden',
   gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster', billFerny: 'trickster', butterbur: 'trickster',
 });

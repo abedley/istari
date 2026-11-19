@@ -705,6 +705,17 @@ export const OVERRIDES = {
       { type: EFFECT.RETURN_FROM_GRAVEYARD, choose: { notTypes: [INSTANT, SORCERY] }, to: 'battlefield', condition: { youSacrificed: true } },
     ],
   },
+  Ringwraiths: {
+    triggeredAbilities: [
+      when(TRIGGER.ENTERS_BATTLEFIELD, 'When this creature enters, target creature an opponent controls gets -3/-3 until end of turn. If that creature is legendary, its controller loses 3 life.', [
+        pump(-3, -3), ifThen({ targetMatches: legendary }, [loseLife(3, { affected: AFFECTED.TARGET_CONTROLLER })]),
+      ], { target: TARGET.CREATURE_OPPONENT_CONTROLS }),
+      // From the graveyard (see Game's #ringBearerChosen).
+      when(TRIGGER.RING_TEMPTS, 'When the Ring tempts you, return this card from your graveyard to your hand.', [
+        { type: EFFECT.RETURN_SOURCE_FROM_GRAVEYARD, to: 'hand' },
+      ], { zone: 'graveyard' }),
+    ],
+  },
   'Rosie Cotton of South Lane': {
     triggeredAbilities: [
       when(TRIGGER.ENTERS_BATTLEFIELD, 'When Rosie Cotton enters, create a Food token.', [food()]),

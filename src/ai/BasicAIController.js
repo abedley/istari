@@ -388,6 +388,7 @@ export class BasicAIController extends EventEmitter {
     for (const source of [...permanents, ...player.emblems, ...graveyard]) {
       if (source.emblemId && (source.activationsThisTurn >= source.activationsPerTurn || source.activationsThisGame >= source.activationsPerGame)) continue;
       for (const ability of (graveyard.includes(source) ? source.graveyardAbilities : source.abilities) ?? []) {
+        if (ability.oncePerGame && source.usedThisGame?.[ability.id]) continue;
         if (ability.isManaAbility) continue;
         if (ability.timing === 'sorcery' && window !== WINDOW.MAIN) continue;
         if (ability.cost.tap && (source.tapped || (isCreature(source) && source.summoningSick && !hasKeyword(source, KEYWORD.HASTE)))) continue;

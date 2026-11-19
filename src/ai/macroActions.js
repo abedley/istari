@@ -211,6 +211,7 @@ function priorityMacros(state, me, mine) {
   for (const source of [...permanents, ...player.emblems, ...graveyard]) {
     if (source.emblemId && (source.activationsThisTurn >= source.activationsPerTurn || source.activationsThisGame >= source.activationsPerGame)) continue;
     for (const ability of (graveyard.includes(source) ? source.graveyardAbilities : source.abilities) ?? []) {
+      if (ability.oncePerGame && source.usedThisGame?.[ability.id]) continue;
       if (ability.isManaAbility || (ability.timing === 'sorcery' && !sorceryTiming)) continue;
       if (ability.cost.tap && (source.tapped || (isCreature(source) && source.summoningSick && !hasKeyword(source, KEYWORD.HASTE)))) continue;
       if (!affordable(ability.cost.mana) || !canSacrifice(ability.cost, source.id)) continue;

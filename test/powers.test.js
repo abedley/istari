@@ -71,7 +71,9 @@ test('every hero and opponent has a power of their own, once a turn, but for Bil
     if (emblem.passive) {
       // Any ability besides is a second power, with a name of its own, once a turn.
       if (emblem.abilities.length) {
-        assert.equal(emblem.activationsPerTurn, 1);
+        // Once a turn in all, or each power its own limit (the Ringwraiths').
+        if (emblem.activationsPerTurn === undefined) assert.ok(emblem.abilities.every((a) => a.oncePerTurn || a.oncePerGame), person.name);
+        else assert.equal(emblem.activationsPerTurn, 1);
         assert.ok(emblem.abilities.every((a) => a.name && a.text));
       }
       assert.ok(emblem.text && [...(emblem.startsWith ?? []), ...(emblem.shufflesIn ?? [])].every((id) => CARDS[id]));
