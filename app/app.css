@@ -761,13 +761,14 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 
 /* ---------------------------------------------------------------- title */
 .screen-title { justify-content: center; background: #0f0d09; }
-/* The backdrop (shire.js): a picture in depth layers, oversized so a camera move never shows an edge.
+/* The backdrop (shire.js): a picture in depth layers, a little oversized so a camera move never shows
+   an edge, and anchored at the bottom (on a short screen, it's the extra sky at the top that's cut).
    It fades in once loaded; the camera pulls back from close in, then drifts. Each layer moves by its
    depth --d (0 far, 1 near), so near layers move and shrink more: parallax. */
 .rv { position: absolute; inset: 0; overflow: hidden; background: #c9b89a; opacity: 0; transition: opacity .5s ease-out; }
 .rv.ready { opacity: 1; }
 .rv-layer {
-  position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; object-position: 50% 50%;
+  position: absolute; inset: -2%; width: 104%; height: 104%; object-fit: cover; object-position: 50% 100%;
   will-change: transform; transform-origin: 50% 55%; pointer-events: none;
   animation: rv-intro 4.2s cubic-bezier(.25, .8, .25, 1) both, rv-camera 24s 4.2s ease-in-out infinite alternate;
   animation-play-state: paused;
@@ -786,7 +787,7 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 /* Shade behind the name, and at the foot for the buttons. */
 .rv-scrim-top { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14, 12, 8, .12) 0%, rgba(14, 12, 8, .18) 18%, rgba(14, 12, 8, .1) 28%, rgba(14, 12, 8, 0) 40%); }
 .rv-scrim { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(6, 7, 4, .6) 100%); }
-/* The name, as a layer, in the sky above the hills: its box is a layer's (112% of the screen, from -6%), so 22% down it is 18.6% down the screen. */
+/* The name, as a layer, in the sky above the mountains: its box is a layer's (104% of the screen, from -2%). */
 .rv-title .logo-big { position: absolute; left: 0; right: 0; top: calc(22% - 60px + var(--safe-top)); margin: 0; line-height: 1; text-align: center; }
 .title-main { position: relative; flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 0 28px calc(12vh + var(--safe-bottom)); }
 @keyframes tagline-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

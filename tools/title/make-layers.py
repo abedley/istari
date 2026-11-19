@@ -22,6 +22,8 @@ OUT = ROOT / 'app/title'
 WIDTH = 900    # the layers' width in pixels (sharp on a phone at 2x, and not too heavy)
 REF = 600      # the width REGIONS are drawn at (the picture is 600 x 1075 there)
 UNDER = 22     # px a layer is filled in under the edge of the layers in front of it, at REF
+ASPECT = 0.45  # width / height of the layers: the sky is carried on upward to make them a phone's shape,
+               # so a phone shows the painting's full width (anchored at the bottom; app.css, "title")
 
 # Far to near, after the sky (layer 0, the whole picture). Polygons are (x, y) at REF.
 REGIONS = {
@@ -111,16 +113,10 @@ def main():
     img = np.asarray(src)
     h, w = img.shape[:2]
     k = w / REF
+    extra = max(0, round(w / ASPECT) - h)
     masks = {}
     for name, spec in REGIONS.items():
-        mask = polygon_mask((w, h), spec['polys'], k)
-        if 'trees' in spec:
-            # Above this line, only the dark trees, not the bright mist between them.
-            value = img.max(axis=2)
-            above = np.arange(h)[:, None] < spec['trees'] * k
-            dark = soften(value < 150, 1.2) > 128
-            mask &= ~above | dark
-        masks[name] = mask
+        masks[name] = polygon_mask((w, h), spec['polys'], k)
     # A nearer layer wins where regions overlap.
     for i, name in enumerate(ORDER[1:], 1):
         for nearer in ORDER[i + 1:]:
@@ -137,10 +133,19 @@ def main():
         content = fill_in(img, grow(in_front, round(2 * k))) if in_front.any() else img
         if name == 'sky':
             alpha = np.full((h, w), 255, np.uint8)
+            # More sky above: the painting's own, mirrored (the seam is continuous), softened as it goes up.
+            above = content[1:extra + 1][::-1]
+            hazy = np.stack([np.asarray(Image.fromarray(above[..., c]).filter(ImageFilter.GaussianBlur(3 * k))) for c in range(3)], axis=2)
+            t = np.linspace(1, 0, extra)[:, None, None]
+            above = (above * (1 - t * 0.7) + hazy * t * 0.7).astype(np.uint8)
+            content = np.concatenate([above, content])
+            alpha = np.full((h + extra, w), 255, np.uint8)
         else:
             # Its own region, plus a margin carried on under the layers in front.
             region = masks[name] | (grow(masks[name], under) & in_front)
             alpha = soften(region, REGIONS[name]['feather'] * k / 2)
+            content = np.concatenate([np.zeros((extra, w, 3), np.uint8), content])
+            alpha = np.concatenate([np.zeros((extra, w), np.uint8), alpha])
         rgba = np.dstack([content, alpha])
         Image.fromarray(rgba, 'RGBA').save(OUT / f'layer-{i}.webp', quality=82, method=6)
         print(f'layer-{i}.webp ({name})')
