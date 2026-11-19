@@ -55,7 +55,7 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Bill Ferny, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
@@ -103,6 +103,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
+| Butterbur | The Ring of the Prancing Pony *(made up)* | A Good Dinner | Sacrifice a Food: Put two +1/+1 counters on target creature. Sorcery speed. |
 | Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed, any number of times a turn. |
 | Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
@@ -124,7 +125,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Bill Ferny,
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Butterbur, Bill Ferny,
 Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you

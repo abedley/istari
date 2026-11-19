@@ -21,6 +21,7 @@ export const PLACES = Object.freeze({
   tomBombadil: place('The Barrow-downs', 'Cold fog on the green mounds, and a song coming over the hill.', 'fogOnTheBarrowDowns', 50, 45, AMBIENCE.SHADOW),
   gildor: place('Woody End', 'Starlight between the trees, and voices singing in the Fair tongue.', 'chanceMetElves', 50, 30, AMBIENCE.FOREST),
   riderInBlack: place('The Road to Bree', 'Hoofbeats behind you on the empty road.', 'nazgul', 45, 35, AMBIENCE.SHADOW),
+  butterbur: place('The Prancing Pony', 'A fire in the common-room, beer in the mugs, and a landlord who forgets things.', 'butterburBreeInnkeeper', 50, 30, AMBIENCE.HALL),
   billFerny: place('Bree', 'A dark house on the Greenway, and a squint-eyed face at the window.', 'billFernyBreeSwindler', 50, 30, AMBIENCE.SHADOW),
   elrond: place('Rivendell', 'The Last Homely House east of the Sea.', 'rivendell', 45, 45, AMBIENCE.HALL),
   galadriel: place('Lothlórien', 'The Golden Wood, where no leaf falls and no shadow lies.', 'lothlorienLookout', 70, 35, AMBIENCE.FOREST),

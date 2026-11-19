@@ -137,6 +137,20 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['Yesss. Put it on. We see you better so.', 'Another ring. It all returns to the Master in the end.'],
     },
   },
+  butterbur: {
+    name: 'Butterbur', color: 'gold', emblem: 'butterbur', ai: strategist(),
+    portrait: portrait('f/3/f3fd9ff1-278b-4e6a-b30b-90250d8b5762.jpg?1783916255', 50, 10, 300, 'Butterbur, Bree Innkeeper', 'Ryan Yee'),
+    banter: {
+      start: ['Welcome to the Prancing Pony! A game, is it? Nob! Bring the cards!', 'Sit you down, sit you down. There\'s beer and a fire, and a game if you want one.', 'Now, there was something I was to remember... never mind. Deal!'],
+      win: ['Well, there you are! The house wins. It usually does, in Bree.', 'No hard feelings, I hope. Have a pint on me. Well, half a pint.'],
+      lose: ['Well I never! Beaten in my own common-room.', 'You\'re a sharp one. Sharper than old Barliman, anyway.'],
+      comeback: ['A good dinner sets a body right, I always say.', 'There! Nothing like a full plate to turn things round.'],
+      collapse: ['Oh, my! Bob! Nob! Where has everybody got to?', 'Dear, dear. I knew I\'d forgotten something.'],
+      kill: ['Out you go! No brawling in the Pony.', 'That\'s what comes of not paying for your supper.'],
+      loss: ['One of my best regulars, too!', 'Well, that\'s a bed going empty tonight.'],
+      ring: ['A ring? Put it away, put it away! Folk have been asking after rings.', 'I\'ll not have any vanishing in my common-room, mind.'],
+    },
+  },
   billFerny: {
     name: 'Bill Ferny', color: 'black', emblem: 'billFerny', ai: strategist(),
     // Himself twice over, and the pony he starved and sold, twice.

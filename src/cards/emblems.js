@@ -237,6 +237,14 @@ export const EMBLEMS = deepFreeze({
     }],
   },
   // Sacrifice a Treasure (a cost, as Merry's Food) for a Nazgûl: a token with the card's characteristics and abilities.
+  // Sacrifice a Food (a cost, as Merry's) to fatten a creature: a hearty meal at the Prancing Pony.
+  butterbur: power('butterbur', 'The Ring of the Prancing Pony', 'A Good Dinner', {
+    text: 'Sacrifice a Food: Put two +1/+1 counters on target creature. Activate only as a sorcery.',
+    cost: { sacrifice: { kind: TARGET.PERMANENT, filter: { subtypes: ['Food'] } } },
+    target: TARGET.CREATURE,
+    effects: [{ type: EFFECT.ADD_COUNTERS, counter: COUNTER.PLUS_ONE, count: 2 }],
+    timing: SORCERY,
+  }),
   // Any number of times a turn (no `activationsPerTurn`), as long as there's a Treasure to sacrifice.
   billFerny: anyNumberOfTimes(power('billFerny', 'The Swindler\u2019s Ring', 'Sold to the Black Riders', {
     text: 'Sacrifice a Treasure: Create a Nazg\u00fbl creature token. (It\u2019s a 1/2 black Wraith Knight with deathtouch, "When this creature enters, the Ring tempts you" and "Whenever the Ring tempts you, put a +1/+1 counter on each Wraith you control.") Activate only as a sorcery.',
