@@ -482,6 +482,8 @@ export class Game extends EventEmitter {
           life: zone.life,
           library: zone.library,
           hand: zone.hand,
+          // What's been seen of each card in hand (see #noteHand), by card id.
+          handNotes: zone.handNotes ?? {},
           graveyard: zone.graveyard,
           exile: zone.exile,
           // With infinite mana, the pool shows it as mana of any color (see mana.js), so canPayMana says yes.
@@ -691,7 +693,8 @@ export class Game extends EventEmitter {
       zone.librarySize = zone.library.length;
       zone.library = [];
       const notes = zone.handNotes ?? {};
-      delete zone.handNotes;
+      // A player knows what's been seen of their own hand; of another's, only handInfo below.
+      if (id !== playerId) delete zone.handNotes;
       if (id !== playerId) {
         const hidden = zone.hand.filter((card) => !notes[card.id]?.revealed);
         unknown.push(...hidden);
@@ -5290,6 +5293,7 @@ export class Game extends EventEmitter {
    * kept in hand: `noLand` once they've ended a turn without playing a land while
    * holding it, and `heldWithMana`, the most untapped lands they've ended a turn
    * with while holding it. The AI may weigh its guesses by them (see determinize).
+   * `turnsHeld` counts the turns they've ended holding it.
    */
   #noteHand(playerId) {
     const zone = this.#zones.get(playerId);
@@ -5299,6 +5303,7 @@ export class Game extends EventEmitter {
       const note = (notes[card.id] ??= {});
       if (zone.landsPlayedThisTurn === 0) note.noLand = true;
       note.heldWithMana = Math.max(note.heldWithMana ?? 0, untapped);
+      note.turnsHeld = (note.turnsHeld ?? 0) + 1;
     }
   }
 

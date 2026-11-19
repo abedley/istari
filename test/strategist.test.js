@@ -248,13 +248,17 @@ test('burn is kept for something it kills', () => {
 // ---------------------------------------------------------------------------
 // Creatures cast for what they do on entering
 
-test('Lobelia waits for a creature to die before she comes down', () => {
+test('Lobelia waits for a creature to die before she comes down, for two of her turns', () => {
   // Nothing has died: her trigger would have no target, so she stays in hand, main phase and end step alike.
   const game = position({ p1: { hand: ['lobelia'] }, p2: { board: ['ox'] } });
   const lobelia = game.peekState().players[0].hand.find((c) => c.cardId === 'lobelia').id;
+  assert.equal(game.peekState().players[0].handNotes[lobelia].turnsHeld, 1, 'held through turn 2');
   assert.ok(!candidates(game.peekState(), 'p1', game).some((m) => m.action?.cardId === lobelia), 'not a move');
-  const taken = play(game, 'p1', (s) => s.turn > 6);
-  assert.ok(!taken.some((a) => a.cardId === lobelia), 'never cast');
+  const waiting = play(game, 'p1', (s) => s.turn > 4);
+  assert.ok(!waiting.some((a) => a.cardId === lobelia), 'not cast on turn 4');
+  // Held through two of her turns (2 and 4): she settles for her body, with flash at the end of turn 5.
+  const taken = play(game, 'p1', (s) => s.turn > 5);
+  assert.ok(taken.some((a) => a.cardId === lobelia && a.turn === 5), 'cast on turn 5');
 });
 
 test('Lobelia comes down once an opponent\'s creature has died this turn', () => {

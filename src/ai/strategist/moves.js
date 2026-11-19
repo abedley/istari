@@ -6,7 +6,7 @@
  *   nothing to weigh); a free power with no target is used at once; sorceries, Auras, and powers
  *   that need a target or a payment are choices, each on its best targets. Instants and tricks
  *   wait, unless they win on the spot or have to come before blockers ("can't block", haste, menace).
- *   A creature cast for its entry trigger's target (Lobelia, Éowyn) waits until there's a target worth it.
+ *   A creature cast for its entry trigger's target (Lobelia, Éowyn) waits up to two turns for a target worth it.
  * - **After blockers, and when the opponent's spell or ability is on the stack:** anything at
  *   instant speed, but only if it *flips an outcome* (see probe): it kills a creature that would
  *   live, saves one that would die, wins, or stops a loss (a free power may also just save life).
@@ -50,6 +50,8 @@ const CARD_GAIN = 2.5;
 const FREE_GAIN = 0.4;
 /** What an enters-the-battlefield trigger with a target must gain (in material points) to be worth casting the creature for. */
 const ETB_GAIN = 1;
+/** How many of its own turns it holds such a creature for a target before it settles for the body. */
+const ETB_PATIENCE = 2;
 
 const WINDOW = Object.freeze({ MAIN: 'main', BEGIN_COMBAT: 'beginCombat', ATTACKED: 'attacked', COMBAT: 'combat', RESPONSE: 'response', END: 'end' });
 
@@ -191,10 +193,13 @@ function entryGain(game, me, action) {
 }
 
 /**
- * Could a target still turn up while the card waits in hand? Only if there's something on the
- * battlefield to fight or die, or the opponent still holds cards. Without that, waiting wastes the body too.
+ * Is it still worth waiting for a target with `card` in hand? Not once it's been held through
+ * ETB_PATIENCE of our turns, and not if none can come: nothing on the battlefield to fight or die,
+ * and nothing left in the opponent's hand. Then it comes down for its body.
  */
-function targetsMayCome(state, me) {
+function worthWaiting(state, me, card) {
+  const player = state.players.find((p) => p.id === me);
+  if ((player.handNotes?.[card.id]?.turnsHeld ?? 0) >= ETB_PATIENCE) return false;
   const opponent = state.players.find((p) => p.id !== me);
   return (opponent.handSize ?? opponent.hand?.length ?? 0) > 0 || state.battlefield.some((p) => isCreature(p));
 }
@@ -276,7 +281,7 @@ function priorityCandidates(state, me, game) {
     let entryTarget = false;
     if ((window === WINDOW.MAIN || window === WINDOW.END) && game && what.spell && isCreature(what.card) && targetedEntryTriggers(what.card).length) {
       entryTarget = entryGain(game, me, action) >= ETB_GAIN;
-      if (!entryTarget && targetsMayCome(state, me)) continue;
+      if (!entryTarget && worthWaiting(state, me, what.card)) continue;
     }
     switch (window) {
       case WINDOW.MAIN: {
