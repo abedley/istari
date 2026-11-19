@@ -237,6 +237,23 @@ export const EMBLEMS = deepFreeze({
     }],
   },
   // Sacrifice a Treasure (a cost, as Merry's Food) for a Nazgûl: a token with the card's characteristics and abilities.
+  // A passive power that adds cards to the library as the game starts (`shufflesIn`, as Gildor's), and one to activate.
+  glorfindel: {
+    id: 'glorfindel',
+    name: 'The Ring of the Golden Flower',
+    ring: true,
+    passive: true,
+    power: 'The Ford of Bruinen',
+    text: 'At the start of the game, shuffle a Forest, a Rivendell and a Horses of the Bruinen into your library.',
+    shufflesIn: ['forest', 'rivendell', 'horsesOfTheBruinen'],
+    activationsPerTurn: 1,
+    abilities: [{
+      id: 'power', name: 'Light of the Eldar', text: '0: Target creature you control gains first strike until end of turn. Scry 1. Activate only as a sorcery.',
+      cost: {}, target: TARGET.CREATURE_YOU_CONTROL,
+      effects: [{ type: EFFECT.PUMP, power: 0, toughness: 0, keywords: [KEYWORD.FIRST_STRIKE] }, { type: EFFECT.SCRY, count: 1 }],
+      timing: SORCERY,
+    }],
+  },
   // Sacrifice a Food (a cost, as Merry's) to fatten a creature: a hearty meal at the Prancing Pony.
   butterbur: power('butterbur', 'The Ring of the Prancing Pony', 'A Good Dinner', {
     text: 'Sacrifice a Food: Put two +1/+1 counters on target creature. Activate only as a sorcery.',

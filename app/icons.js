@@ -90,6 +90,8 @@ const PATHS = {
   coins: 'M4 7a6 2.5 0 1 0 12 0 6 2.5 0 1 0-12 0M4 7v4c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7M8 15v2c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4c0-1.2-2-2.2-4.5-2.4',
   // A drumstick: Butterbur's good dinner.
   drumstick: 'M14 4a6 6 0 0 1 6 6c0 4-4 6-7 6l-4 4a2 2 0 1 1-3-1 2 2 0 1 1-1-3l4-4c0-3 2-8 5-8z',
+  // Waves: Glorfindel at the Ford of Bruinen.
+  waves: 'M2 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 13c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 18c2-2 4-2 6 0s4 2 6 0 4-2 6 0',
   // A hooded figure: the portrait of someone without art.
   hooded: 'M12 2C8 2 5.5 5 5.5 9.5c0 2.6.8 4.6 1.8 6L4 22h16l-3.3-6.5c1-1.4 1.8-3.4 1.8-6C18.5 5 16 2 12 2zm0 5.5c1.9 0 3.2 1.7 3.2 4 0 1.6-.7 3-1.6 3.8L12 17l-1.6-1.7c-.9-.8-1.6-2.2-1.6-3.8 0-2.3 1.3-4 3.2-4z',
 };
@@ -97,7 +99,7 @@ const PATHS = {
 /** Icons drawn with strokes rather than fills. */
 const STROKED = new Set(['firstStrike', 'reach', 'hand', 'library', 'grave', 'artifact', 'sound', 'mute', 'back', 'close',
   'cards', 'plus', 'minus', 'check', 'flag', 'zzz', 'sorcery', 'creature', 'gear', 'trample', 'menace',
-  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot', 'bow', 'lily', 'spoon', 'coins', 'drumstick']);
+  'cake', 'key', 'staff', 'leaf', 'horn', 'wind', 'horse', 'sun', 'lock', 'pan', 'willow', 'mug', 'teapot', 'bow', 'lily', 'spoon', 'coins', 'drumstick', 'waves']);
 
 /** Icons whose inner shapes are holes. */
 const EVEN_ODD = new Set(['eye', 'seedCake']);
@@ -124,6 +126,7 @@ export const POWER_ICONS = Object.freeze({
   riderInBlack: 'hooded',
   butterbur: 'drumstick',
   billFerny: 'coins',
+  glorfindel: 'waves',
   tomBombadil: 'leaf',
   goldberry: 'lily',
   sauron: 'eye',

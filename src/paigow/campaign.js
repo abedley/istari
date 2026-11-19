@@ -27,7 +27,7 @@ export const CAMPAIGN_RULES = Object.freeze({
  * buckets of opponents instead.
  */
 export const CAMPAIGN_OPPONENTS = Object.freeze([
-  'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny',
+  'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'glorfindel',
   'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
 ]);
 

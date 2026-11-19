@@ -55,11 +55,11 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, Glorfindel, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
-(`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
-Burglar Bilbo are Raiders, Saruman, Denethor, Elrond, Old Man Willow, Goldberry and Lobelia are Wardens, the rest Tricksters. The match is saved with its campaign
+(`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black,
+Burglar Bilbo and Glorfindel are Raiders, Saruman, Denethor, Elrond, Old Man Willow, Goldberry and Lobelia are Wardens, the rest Tricksters. The match is saved with its campaign
 after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
@@ -69,8 +69,8 @@ rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `lib
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option);
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring); and
 `graveyard`, cards already in its graveyard as every round begins (the Game's `startsInGraveyard` option).
-Gandalf, Old Man Willow, the Rider in Black, Lobelia, Bill Ferny and Butterbur have one. Gandalf's packs always hold *Glamdring*, and he starts
-every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Lobelia's always hold *Lobelia Sackville-Baggins* and her son *Lotho, Corrupt Shirriff* (both make Treasures, which her ring turns into an anthem). Bill Ferny's always hold two *Bill Ferny, Bree Swindler* and two *Bill the Pony* (both legendary, so two in one deck run into the legend rule). Butterbur's always hold *Butterbur, Bree Innkeeper*, who makes the Food his power needs. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
+Gandalf, Old Man Willow, the Rider in Black, Lobelia, Bill Ferny, Butterbur and Glorfindel have one. Gandalf's packs always hold *Glamdring*, and he starts
+every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Lobelia's always hold *Lobelia Sackville-Baggins* and her son *Lotho, Corrupt Shirriff* (both make Treasures, which her ring turns into an anthem). Bill Ferny's always hold two *Bill Ferny, Bree Swindler* and two *Bill the Pony* (both legendary, so two in one deck run into the legend rule). Butterbur's always hold *Butterbur, Bree Innkeeper*, who makes the Food his power needs. Glorfindel's always hold *Glorfindel, Dauntless Rescuer*. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
 with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
 power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 
@@ -105,6 +105,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
 | Butterbur | The Ring of the Prancing Pony *(made up)* | A Good Dinner | Sacrifice a Food: Put two +1/+1 counters on target creature. Sorcery speed. |
 | Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed, any number of times a turn. |
+| Glorfindel | The Ring of the Golden Flower *(made up)* | The Ford of Bruinen; Light of the Eldar | (passive) At the start of the game, shuffle a Forest, a Rivendell and a Horses of the Bruinen into your library. And a second power: 0: Target creature you control gains first strike until end of turn. Scry 1. Sorcery speed. |
 | Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
@@ -125,7 +126,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Butterbur, Bill Ferny,
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Butterbur, Bill Ferny, Glorfindel,
 Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
@@ -1254,7 +1255,7 @@ the time; the search AI's evaluation, given its best scale, 76.6%.
 **Personalities** (`profiles.js`): a profile is a few numbers. `aggression`, `caution` and
 `patience` scale what its own clock, the opponent's clock and its cards in hand count for in the
 evaluation; `foresight` is how many guesses it makes of the hidden hand; `tastes` are for building
-decks. Raiders (Sauron, Théoden, the Rider in Black, Burglar Bilbo) race, Wardens (Saruman,
+decks. Raiders (Sauron, Théoden, the Rider in Black, Burglar Bilbo, Glorfindel) race, Wardens (Saruman,
 Denethor, Elrond, Old Man Willow, Goldberry, Lobelia) hold on and imagine what you might have, Tricksters (the rest)
 sit between. Each deck also has a plan (`deckPlan`: race, grind or tempo, from what's in it) that
 shifts the profile for that round, so a Warden handed a racing deck races a little more.

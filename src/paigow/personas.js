@@ -169,6 +169,22 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['A ring, eh? There\'s Riders who\'d pay well to hear of it.', 'Shiny. I know someone who\'d like to see that.'],
     },
   },
+  glorfindel: {
+    name: 'Glorfindel', color: 'blue', emblem: 'glorfindel', ai: strategist(),
+    // His own card in every pack.
+    setup: { pack: ['glorfindelDauntlessRescuer'] },
+    portrait: portrait('b/a/baf7a546-8a8b-4396-ab64-9a5b9abffe79.jpg?1783916266', 50, 10, 300, 'Glorfindel, Dauntless Rescuer', 'Viko Menezes'),
+    banter: {
+      start: ['Ai na vedui! Well met at last. Let us play, and quickly: the Riders are near.', 'Elrond sent me to find you. He did not say I could not test you first.', 'Sit, but keep your feet ready. We may have to ride.'],
+      win: ['Swift and sure. That is how the Eldar ride.', 'Rest now. You are safe, if beaten.'],
+      lose: ['Well ridden! You would have made the Ford before me.', 'You have more in you than the Riders guessed.'],
+      comeback: ['The light is not so easily put out.', 'Noro lim! Now we ride.'],
+      collapse: ['The shadow is stronger than I thought.', 'Even a lord of the Eldar can be outrun.'],
+      kill: ['He met the light, and could not bear it.', 'Back into the shadow with him.'],
+      loss: ['A brave heart, gone into the dark. I grieve.', 'He held the road for me. I will not forget it.'],
+      ring: ['That ring is a burden I would not carry, even to the Ford.', 'Keep it hidden. The Nine can feel it on you.'],
+    },
+  },
   goldberry: {
     name: 'Goldberry', color: 'green', emblem: 'goldberry', ai: strategist(),
     portrait: portrait('b/f/bf4f0a7c-620e-4ed8-8da3-fa6564e8a0cd.jpg?1783916317', 56, 12, 300, 'Goldberry, River-Daughter', 'Marie Magny'),
