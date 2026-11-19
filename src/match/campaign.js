@@ -53,7 +53,8 @@ export const CAMPAIGN_BOOKS = Object.freeze([
 
 /**
  * A book's road: `draw` of its pool at random (`random`: a function like Math.random), in road order, then its boss.
- * With `heroId`, the opponent who bears that hero's ring (Merry, for Merry) is left out: you never meet yourself.
+ * With `heroId`, the opponent who bears that hero's ring (Merry, for Merry) is left out: you never meet yourself, but for
+ * the boss (the Ringwraiths face themselves at the end of Book I).
  */
 export function drawBookOpponents(book, random = Math.random, heroId = null) {
   const order = (id) => CAMPAIGN_OPPONENTS.indexOf(id);

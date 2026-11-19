@@ -12,7 +12,7 @@ import { playerLife, BOOSTER } from '../../src/match/match.js';
 import { opponentById, heroById, currentHeroId } from '../../src/match/personas.js';
 import { placeOf, withArt, JOURNEYS_END } from '../../src/match/places.js';
 import { recordRing, recordCampaignBegun, recordCampaignProgress } from '../../src/match/book.js';
-import { unlocksOf } from '../../src/match/unlocks.js';
+import { unlocksOf, heroToUnlock } from '../../src/match/unlocks.js';
 import { updateBook, loadBook, heroLook } from '../book.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
@@ -183,11 +183,11 @@ function offerView(app, campaign) {
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
   const hero = heroLook(app, heroById(campaign.heroId), campaign.heroId);
-  // The end goes in the Red Book (once): a campaign won may open the hero's second portrait.
+  // The end goes in the Red Book (once): a campaign won opens a new hero, and maybe the hero's second portrait.
+  // Told once: a reload finds the book already counted.
   const before = unlocksOf(loadBook(app));
-  const book = updateBook(app, (b) => recordCampaignProgress(b, campaign, { won, unlocksOf }));
-  const opened = won ? unlocksOf(book).filter((name) => name === `A new portrait for ${hero.name}`) : [];
-  const news = opened.filter((name) => !before.includes(name));
+  const book = updateBook(app, (b) => recordCampaignProgress(b, campaign, { won, unlocksOf, pickUnlock: heroToUnlock }));
+  const news = won ? unlocksOf(book).filter((name) => !before.includes(name)) : [];
   const again = () => {
     saveCampaign(app, null);
     app.go('heroes');

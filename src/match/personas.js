@@ -363,7 +363,16 @@ export const OPPONENTS = deepFreeze({
   },
 });
 
-/** The player's characters: one is chosen for the whole match. `blurb` is a line for the picker. */
+/** An opponent as one of the player's characters: their name, ring and portrait, and a `blurb` for the picker. */
+const fromOpponent = (id, blurb) => {
+  const { name, emblem, portrait: face } = OPPONENTS[id];
+  return { name, color: 'gold', emblem, blurb, portrait: face };
+};
+
+/**
+ * The player's characters: one is chosen for the whole match. `blurb` is a line for the picker. Only Frodo is
+ * open at first; the rest open one at a time, as campaigns are won (src/match/unlocks.js).
+ */
 export const HEROES = deepFreeze({
   frodo: {
     name: 'Frodo', color: 'gold', emblem: 'frodo',
@@ -412,6 +421,27 @@ export const HEROES = deepFreeze({
     // A second portrait, opened by winning a campaign with them (src/match/unlocks.js).
     altPortrait: portrait('0/8/08b7a4d8-1183-430e-8ea4-016844f33200.jpg?1783916249', 59, 10, 400, 'Pippin, Guard of the Citadel', 'Bartłomiej Gaweł'),
   },
+  // Every opponent may be played too, with their own portrait and Ring of Power (their id is their ring's id);
+  // their `setup` stays theirs, for when they're the opponent.
+  birthdayBilbo: fromOpponent('birthdayBilbo', 'Eleventy-one today, and with a party trick or two up his sleeve.'),
+  burglarBilbo: fromOpponent('burglarBilbo', 'A hobbit hired for his quiet hands, with something in his pocket.'),
+  lobelia: fromOpponent('lobelia', 'A Sackville-Baggins with an umbrella and a long memory for spoons.'),
+  gandalf: fromOpponent('gandalf', 'A grey wanderer with fireworks in his cart and fire in his staff.'),
+  oldManWillow: fromOpponent('oldManWillow', 'The heart of the Old Forest, slow and deep-rooted and hungry.'),
+  goldberry: fromOpponent('goldberry', 'The River-daughter, whose house is safe from the night.'),
+  tomBombadil: fromOpponent('tomBombadil', 'Eldest, and master of wood, water and hill. The Ring has no hold on him.'),
+  gildor: fromOpponent('gildor', 'An Elf of the House of Finrod, wandering under the stars with his kin.'),
+  riderInBlack: fromOpponent('riderInBlack', 'One of the Nine, hunting the Shire for a name and a ring.'),
+  butterbur: fromOpponent('butterbur', 'Keeper of the Prancing Pony, with a full larder and a short memory.'),
+  billFerny: fromOpponent('billFerny', 'A swindler of Bree, who sells to whoever pays best.'),
+  ringwraiths: fromOpponent('ringwraiths', 'The Nine, riding together. Cold blades and colder hearts.'),
+  glorfindel: fromOpponent('glorfindel', 'A lord of the Eldar, sent from Rivendell to ride against the Nine.'),
+  elrond: fromOpponent('elrond', 'The Lord of Rivendell, who has watched long ages pass.'),
+  galadriel: fromOpponent('galadriel', 'The Lady of the Golden Wood, who sees into every heart.'),
+  theoden: fromOpponent('theoden', 'The King of Rohan, who rides at the head of every charge.'),
+  saruman: fromOpponent('saruman', 'The White Wizard of Orthanc, who has studied every card in the game.'),
+  denethor: fromOpponent('denethor', 'The Steward of Gondor, proud and grim and certain of the end.'),
+  sauron: fromOpponent('sauron', 'The Dark Lord himself. All the rings are his.'),
 });
 
 /** The hero a match starts with when none is chosen. */

@@ -6,7 +6,7 @@ import { playout } from '../src/ai/simulate.js';
 import {
   createMatch, setDecks, recordRound, roundSetup, outcome, decidingRound, PLAYER_ID, CPU_ID, ROUND_RESULT, MATCH_OUTCOME,
 } from '../src/match/match.js';
-import { createCampaign, CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { createCampaign } from '../src/match/campaign.js';
 import { HEROES, OPPONENTS } from '../src/match/personas.js';
 import { CARDS } from '../src/cards/cards.js';
 import { RoundStats, matchStats, emptyStats } from '../src/match/roundStats.js';
@@ -15,7 +15,7 @@ import {
   catchUp, recap, knows,
 } from '../src/match/book.js';
 import {
-  HERO_UNLOCKS, heroOpen, heroNeeds, portraitOpen, unlocksOf,
+  STARTING_HERO, heroToUnlock, heroOpen, heroNeeds, portraitOpen, unlocksOf,
 } from '../src/match/unlocks.js';
 
 const ready = (options = {}) => {
@@ -124,28 +124,32 @@ test('the Red Book counts a match once, however often it is recorded', () => {
 
 test('heroes and portraits open on the road', () => {
   let book = emptyBook();
-  assert.deepEqual(Object.keys(HERO_UNLOCKS).sort(), Object.keys(HEROES).sort());
-  for (const beat of Object.values(HERO_UNLOCKS)) if (beat) assert.ok(CAMPAIGN_OPPONENTS.includes(beat), beat);
-  assert.deepEqual(Object.keys(HEROES).filter((id) => heroOpen(book, id)).sort(), ['frodo', 'legolas', 'merry', 'samwise']);
+  // Only Frodo at first; a match won opens nobody.
+  assert.deepEqual(Object.keys(HEROES).filter((id) => heroOpen(book, id)), [STARTING_HERO]);
   assert.equal(heroNeeds('frodo'), null);
-  assert.match(heroNeeds('pippin'), /Beat Birthday Bilbo/);
+  assert.match(heroNeeds('pippin'), /Win a campaign/);
   assert.deepEqual(unlocksOf(book), []);
-  // Beating Birthday Bilbo opens Pippin, and the match's recap says so.
+  for (const id of Object.keys(OPPONENTS)) assert.ok(HEROES[id], `${id} can be played`);
   let match = ready({ opponentId: 'birthdayBilbo' });
   match = recordRound(recordRound(match, ROUND_RESULT.WON), ROUND_RESULT.WON);
-  const lost = recordMatchEnd(book, { ...match, seed: 1 }, MATCH_OUTCOME.LOST, { unlocksOf });
-  assert.equal(heroOpen(lost, 'pippin'), false);
   book = recordMatchEnd(book, match, MATCH_OUTCOME.WON, { unlocksOf });
-  assert.equal(heroOpen(book, 'pippin'), true);
-  assert.deepEqual(recap(book, match).unlocks, ['Pippin']);
+  assert.equal(heroOpen(book, 'birthdayBilbo'), false);
+  assert.deepEqual(recap(book, match).unlocks, []);
+  // A hero already set out with stays open.
+  assert.equal(heroOpen({ ...book, heroes: { samwise: { begun: 1, won: 0, furthest: 0 } } }, 'samwise'), true);
   // A campaign won with Frodo opens his second portrait; Radagast has none to open.
   assert.equal(portraitOpen(book, 'frodo'), false);
   const begun = createCampaign({ heroId: 'frodo', seed: 4 });
   const campaign = { ...begun, stage: begun.opponents.length };
-  book = recordCampaignProgress(recordCampaignProgress(book, campaign, { won: true, unlocksOf }), campaign, { won: true, unlocksOf });
+  const won = (b) => recordCampaignProgress(b, campaign, { won: true, unlocksOf, pickUnlock: heroToUnlock });
+  book = won(won(book));
   assert.deepEqual(book.heroes.frodo, { begun: 1, won: 1, furthest: begun.opponents.length });
   assert.equal(portraitOpen(book, 'frodo'), true);
   assert.ok(book.fresh.unlocks.includes('A new portrait for Frodo'));
+  // It opens one hero, once: here, with no matches in its history, any hero still closed.
+  assert.equal(book.unlocked.length, 1);
+  assert.ok(HEROES[book.unlocked[0]] && book.unlocked[0] !== 'frodo');
+  assert.ok(book.fresh.unlocks.includes(HEROES[book.unlocked[0]].name));
   assert.equal(portraitOpen({ ...book, heroes: { radagast: { begun: 1, won: 1, furthest: 13 } } }, 'radagast'), false);
   for (const [id, hero] of Object.entries(HEROES)) {
     if (hero.altPortrait) {
@@ -166,9 +170,38 @@ test('a campaign from before the book is caught up with, once', () => {
   assert.equal(book.totals.matches, 3);
   assert.deepEqual(book.rings, ['birthdayBilbo']);
   assert.deepEqual(book.heroes.samwise, { begun: 1, won: 0, furthest: 2 });
-  assert.equal(heroOpen(book, 'pippin'), true);
+  assert.equal(heroOpen(book, 'samwise'), true);
+  assert.equal(heroOpen(book, 'pippin'), false);
   assert.equal(catchUp(book, null), book);
   book = recordRing(recordRing(book, 'gandalf'), 'gandalf');
   assert.deepEqual(book.rings, ['birthdayBilbo', 'gandalf']);
   assert.equal(recordCampaignBegun(book, campaign), book, 'already begun');
+});
+
+test('a campaign won opens one of the opponents beaten on its road, at random, or else any hero', () => {
+  const won = (opponentId) => ({ opponentId, outcome: 'won' });
+  const campaign = {
+    ...createCampaign({ heroId: 'frodo', seed: 12 }),
+    history: [won('gandalf'), { opponentId: 'lobelia', outcome: 'lost' }, won('lobelia'), won('strider'), won('ringwraiths')],
+  };
+  const book = emptyBook();
+  const picked = heroToUnlock(book, campaign);
+  assert.ok(['gandalf', 'lobelia', 'strider', 'ringwraiths'].includes(picked));
+  assert.equal(heroToUnlock(book, campaign), picked, 'the same for the same campaign');
+  // Over many campaigns, each beaten opponent comes up.
+  const seen = new Set();
+  for (let seed = 1; seed <= 100; seed += 1) seen.add(heroToUnlock(book, { ...campaign, seed }));
+  assert.deepEqual([...seen].sort(), ['gandalf', 'lobelia', 'ringwraiths', 'strider']);
+  // Those already open are passed over.
+  assert.equal(heroToUnlock({ ...book, unlocked: ['gandalf', 'lobelia', 'strider'] }, campaign), 'ringwraiths');
+  // All of them open: any hero still closed, beaten or not.
+  const all = { ...book, unlocked: ['gandalf', 'lobelia', 'strider', 'ringwraiths'] };
+  const other = heroToUnlock(all, campaign);
+  assert.ok(HEROES[other] && !heroOpen(all, other));
+  // Every hero open: nobody.
+  assert.equal(heroToUnlock({ ...book, unlocked: Object.keys(HEROES) }, campaign), null);
+  // Recorded in the book, and told in the recap.
+  const after = recordCampaignProgress(book, { ...campaign, stage: campaign.opponents.length }, { won: true, unlocksOf, pickUnlock: heroToUnlock });
+  assert.deepEqual(after.unlocked, [picked]);
+  assert.ok(after.fresh.unlocks.includes(HEROES[picked].name));
 });

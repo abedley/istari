@@ -4,7 +4,7 @@
  *
  * - `cards`: cards opened in your boosters, by id, with how many times; `seen`: cards met in opponents' decks.
  * - `people`: by opponent id, `{ won, lost, tied }` matches.
- * - `rings`: Rings of Power borne (emblem ids). `heroes`: by hero id, `{ begun, won, furthest }` campaigns
+ * - `rings`: Rings of Power borne (emblem ids). `unlocked`: heroes opened by campaigns won (src/match/unlocks.js). `heroes`: by hero id, `{ begun, won, furthest }` campaigns
  *   (`furthest`: the most opponents beaten in one).
  * - `totals`: matches (and how they went), rounds, damage dealt, creatures felled; `blow`: the hardest blow ever
  *   (`{ name, amount }`); `mostDamage`: the most damage dealt in a round.
@@ -27,6 +27,7 @@ export const emptyBook = () => ({
   people: {},
   rings: [],
   heroes: {},
+  unlocked: [],
   totals: { matches: 0, won: 0, lost: 0, tied: 0, rounds: 0, damage: 0, felled: 0 },
   blow: null,
   mostDamage: 0,
@@ -41,6 +42,7 @@ export function readBook(value) {
   return {
     ...blank, ...value, totals: { ...blank.totals, ...value.totals },
     counted: Array.isArray(value.counted) ? value.counted : [], rings: Array.isArray(value.rings) ? value.rings : [],
+    unlocked: Array.isArray(value.unlocked) ? value.unlocked : [],
   };
 }
 
@@ -127,15 +129,24 @@ export function recordCampaignBegun(book, campaign) {
   });
 }
 
-/** How far a campaign has got (its `stage`: opponents beaten), and, once it's `won`, that it was. `unlocksOf`: as for recordMatchEnd. */
-export function recordCampaignProgress(book, campaign, { won = false, unlocksOf = () => [] } = {}) {
+/**
+ * How far a campaign has got (its `stage`: opponents beaten), and, once it's `won`, that it was. `unlocksOf`: as for
+ * recordMatchEnd. `pickUnlock(book, campaign)`: the hero a won campaign opens (heroToUnlock in src/match/unlocks.js), or null.
+ */
+export function recordCampaignProgress(book, campaign, { won = false, unlocksOf = () => [], pickUnlock = () => null } = {}) {
   const begun = recordCampaignBegun(book, campaign);
   const hero = heroOf(begun, campaign.heroId);
   const further = { ...begun, heroes: { ...begun.heroes, [campaign.heroId]: { ...hero, furthest: Math.max(hero.furthest, campaign.stage) } } };
   if (!won) return further;
   return once(further, `won:${campaign.seed}`, (b) => {
     const h = heroOf(b, campaign.heroId);
-    const next = { ...b, heroes: { ...b.heroes, [campaign.heroId]: { ...h, won: h.won + 1 } } };
+    const opened = pickUnlock(b, campaign);
+    const unlocked = b.unlocked ?? [];
+    const next = {
+      ...b,
+      heroes: { ...b.heroes, [campaign.heroId]: { ...h, won: h.won + 1 } },
+      unlocked: opened && !unlocked.includes(opened) ? [...unlocked, opened] : unlocked,
+    };
     const had = new Set(unlocksOf(b));
     const fresh = b.fresh ?? { seed: null, cards: [], firstWin: false, unlocks: [] };
     return { ...next, fresh: { ...fresh, unlocks: [...fresh.unlocks, ...unlocksOf(next).filter((name) => !had.has(name) && !fresh.unlocks.includes(name))] } };

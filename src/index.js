@@ -40,7 +40,7 @@ export { OPPONENTS, opponentById } from './match/personas.js';
 export { PLACES, JOURNEYS_END, AMBIENCE, placeOf } from './match/places.js';
 export { RoundStats, matchStats } from './match/roundStats.js';
 export { emptyBook, readBook, recap } from './match/book.js';
-export { HERO_UNLOCKS, heroOpen, portraitOpen, unlocksOf } from './match/unlocks.js';
+export { STARTING_HERO, heroOpen, heroToUnlock, portraitOpen, unlocksOf } from './match/unlocks.js';
 export { outOfActions, canFastForward, planFastForward } from './match/fastForward.js';
 export { CARD_PRESENTATION } from './cards/importedCards.js';
 export { TOKEN_PRESENTATION } from './cards/tokenArt.js';

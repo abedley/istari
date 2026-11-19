@@ -62,11 +62,11 @@ function usePower(game, targetOf = null) {
 test('every hero and opponent has a power of their own, once a turn, but for Bill Ferny’s', () => {
   const people = [...Object.values(HEROES), ...Object.values(OPPONENTS)];
   const emblems = people.map((p) => p.emblem);
-  // Heroes have a ring each, and so do opponents; Merry, Pippin and Strider bear the same as opponents as heroes.
+  // Heroes have a ring each, and so do opponents; every opponent can be played as a hero, with the same ring.
   assert.equal(new Set(Object.values(HEROES).map((p) => p.emblem)).size, Object.keys(HEROES).length);
   assert.equal(new Set(Object.values(OPPONENTS).map((p) => p.emblem)).size, Object.keys(OPPONENTS).length);
   const shared = Object.keys(OPPONENTS).filter((id) => Object.values(HEROES).some((hero) => hero.emblem === OPPONENTS[id].emblem));
-  assert.deepEqual(shared.sort(), ['merry', 'pippin', 'strider']);
+  assert.deepEqual(shared.sort(), Object.keys(OPPONENTS).sort());
   for (const id of shared) assert.equal(HEROES[id].emblem, OPPONENTS[id].emblem);
   assert.equal(new Set(emblems).size, people.length - shared.length);
   for (const person of people) {
@@ -98,8 +98,9 @@ test('every hero and opponent has a power of their own, once a turn, but for Bil
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Legolas', 'Pippin']);
-  for (const hero of Object.values(HEROES)) {
+  assert.deepEqual(Object.values(HEROES).map((h) => h.name).slice(0, 7), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Legolas', 'Pippin']);
+  for (const id of Object.keys(OPPONENTS)) assert.equal(HEROES[id].emblem, id);
+  for (const hero of Object.values(HEROES).filter((h) => !h.portrait.set)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
 });
@@ -107,7 +108,10 @@ test('every hero and opponent has a power of their own, once a turn, but for Bil
 test('a round gives each side its power', () => {
   for (const heroId of Object.keys(HEROES)) {
     const match = createMatch({ seed: 5, heroId });
-    const ready = setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5)));
+    // A locked first deck (Tom Bombadil's ring) comes first, then the rest.
+    const locked = match.lockedDeck ?? [];
+    const order = [...locked, ...match.cards.keys()].filter((n, i, all) => all.indexOf(n) === i).map((n) => match.cards[n]);
+    const ready = setDecks(match, [0, 1, 2].map((i) => order.slice(i * 5, i * 5 + 5)));
     const { game } = roundSetup(ready);
     assert.deepEqual(game.emblems, { [PLAYER_ID]: [heroId], [CPU_ID]: [OPPONENTS[match.opponentId].emblem] });
     const started = new Game({ ...game, cards: CARDS });

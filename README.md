@@ -25,8 +25,9 @@ A match against the CPU in `src/match/match.js` (pure functions over a plain mat
 its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/match.js` (deck builder,
 scoreboard) and `app/screens/battle.js` (a round). Every match is a campaign's (see *The campaign*: *Begin* or
 *Continue* on the title screen):
-0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry, Legolas or Pippin (`HEROES` in `src/match/personas.js`), each
-   with a Ring of Power of their own (see *Rings of Power*). Four are open at first and three are met on the road (see *Unlocks*). The app remembers the last one.
+0. You choose your hero (`HEROES` in `src/match/personas.js`): Frodo, Strider, Samwise, Radagast, Merry, Legolas or Pippin,
+   or any of the opponents, each with a Ring of Power of their own (see *Rings of Power*). Only Frodo is open at first;
+   each campaign won opens another (see *Unlocks*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
@@ -180,10 +181,12 @@ blow you struck. `recordRound` keeps a round's stats with its result, and the fi
 the road that decided it (`decidingRound`), the hardest blow, the totals, and what it added to the Red Book (new
 cards, a first win against that opponent, anything unlocked).
 
-**Unlocks** (`src/match/unlocks.js`, worked out from the Red Book): Frodo, Samwise, Merry and Legolas are open from the
-start; Pippin joins once you've beaten Birthday Bilbo, Radagast once you've beaten Old Man Willow, and Strider once
-you've beaten the Rider in Black. Until then the heroes screen shows them
-hooded, with what it takes. Winning a campaign with a hero opens their second portrait (`altPortrait` in
+**Unlocks** (`src/match/unlocks.js`, worked out from the Red Book): only Frodo is open from the start. Every
+campaign won opens one more hero (`heroToUnlock`, kept in the book's `unlocked`): one of the opponents beaten on that
+road, at random, or, once all of those are open, any hero still closed (Samwise, Radagast and Legolas are never met on
+the road, so they come this way). A hero played as an opponent brings only their ring, not their opponent `setup`;
+the Ringwraiths face themselves at the end of Book I. Heroes already set out with stay open. Until then the heroes
+screen shows them hooded, with what it takes. Winning a campaign with a hero opens their second portrait (`altPortrait` in
 `src/match/personas.js`, from another of their cards; Radagast has only the one), swapped on the heroes screen and
 remembered in `istari.portraits`. A campaign going on keeps its hero whatever the book says.
 
