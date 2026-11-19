@@ -1,12 +1,12 @@
 /**
- * Rates every card for Pai Gow by self-play, and writes src/paigow/cardRatings.js.
+ * Rates every card for Istari by self-play, and writes src/match/cardRatings.js.
  *
  *   node tools/rate-cards.js [--games 40000] [--jobs 4]
  *
  * Each game deals both seats five cards out of a booster of their own, gives nobody a ring, and lets
  * the basic AI play both. A logistic regression then explains who won from what was in each deck:
  * a rating per card, a bonus for how many creatures a deck holds, and what going first is worth
- * (5 life against 8). Mana costs don't come into it: mana is free in Pai Gow.
+ * (5 life against 8). Mana costs don't come into it: mana is free in Istari.
  */
 import { fork } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { Game, GAME_STATUS, GAME_LIMITS } from '../src/engine/Game.js';
 import { seededRandom, shuffle } from '../src/engine/random.js';
 import { CARDS, isCreature } from '../src/cards/cards.js';
-import { openBooster, PAIGOW_POOL, PAIGOW_RULES } from '../src/paigow/paigow.js';
+import { openBooster, CARD_POOL, MATCH_RULES } from '../src/match/match.js';
 import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { playout } from '../src/ai/simulate.js';
 
@@ -29,9 +29,9 @@ function playGame(seed) {
   const first = random() < 0.5 ? 'a' : 'b';
   const game = new Game({
     players: [{ id: 'a' }, { id: 'b' }], startingPlayerId: first, seed, decks, emblems: { a: [], b: [] },
-    startingLife: { a: first === 'a' ? PAIGOW_RULES.startingLife : PAIGOW_RULES.secondPlayerLife, b: first === 'b' ? PAIGOW_RULES.startingLife : PAIGOW_RULES.secondPlayerLife },
+    startingLife: { a: first === 'a' ? MATCH_RULES.startingLife : MATCH_RULES.secondPlayerLife, b: first === 'b' ? MATCH_RULES.startingLife : MATCH_RULES.secondPlayerLife },
     limits: { ...GAME_LIMITS }, mulligans: false, openingHandSize: 5, deckingLoss: false, infiniteMana: true, stallDraw: true,
-    turnLimit: PAIGOW_RULES.turnLimit, silent: true,
+    turnLimit: MATCH_RULES.turnLimit, silent: true,
   });
   game.start();
   const ais = { a: new BasicAIController({ game: null, playerId: 'a' }), b: new BasicAIController({ game: null, playerId: 'b' }) };
@@ -64,8 +64,8 @@ if (args.worker) {
   console.log(`${games.length} games; first player's score ${(games.reduce((s, g) => s + (g.first === 'a' ? g.result : 1 - g.result), 0) / games.length).toFixed(3)}`);
 
   // P(a wins) = sigmoid(sum of a's ratings - sum of b's + creature-count bonuses + first-player bias).
-  const index = Object.fromEntries(PAIGOW_POOL.map((id, i) => [id, i]));
-  const n = PAIGOW_POOL.length;
+  const index = Object.fromEntries(CARD_POOL.map((id, i) => [id, i]));
+  const n = CARD_POOL.length;
   const FIRST = n + 6;
   const weights = new Float64Array(n + 7);
   const creatures = (deck) => deck.filter((id) => isCreature(CARDS[id])).length;
@@ -91,7 +91,7 @@ if (args.worker) {
     }
   }
   const round = (v) => Math.round(v * 1000) / 1000;
-  const ratings = Object.fromEntries(PAIGOW_POOL.map((id) => [id, round(weights[index[id]])]));
+  const ratings = Object.fromEntries(CARD_POOL.map((id) => [id, round(weights[index[id]])]));
   const bonus = Array.from({ length: 6 }, (_, k) => round(weights[n + k]));
   // What a deck dealt at random scores: the field a deck is measured against.
   const random = seededRandom(7);
@@ -105,7 +105,7 @@ if (args.worker) {
   console.log('worst:', sorted.slice(-12).map(([id, r]) => `${id} ${r}`).join(', '));
   console.log('creatures bonus:', bonus, 'first:', round(weights[FIRST]));
   const file = `/**
- * Card ratings for Pai Gow, fitted by tools/rate-cards.js from ${games.length} self-played rounds.
+ * Card ratings for Istari, fitted by tools/rate-cards.js from ${games.length} self-played rounds.
  * Generated: don't edit by hand (run \`node tools/rate-cards.js\`).
  *
  * A deck's score is the sum of its cards' ratings plus CREATURE_COUNT_BONUS[its number of creatures];
@@ -124,6 +124,6 @@ export const FIRST_PLAYER_EDGE = ${round(weights[FIRST])};
 /** The scores of decks dealt at random, as 41 quantiles: the field a deck is measured against. */
 export const FIELD_SCORES = Object.freeze(${JSON.stringify(quantiles)});
 `;
-  writeFileSync(new URL('../src/paigow/cardRatings.js', import.meta.url), file);
-  console.log('wrote src/paigow/cardRatings.js');
+  writeFileSync(new URL('../src/match/cardRatings.js', import.meta.url), file);
+  console.log('wrote src/match/cardRatings.js');
 }

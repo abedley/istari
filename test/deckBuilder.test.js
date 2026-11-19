@@ -1,20 +1,20 @@
-// How the CPU splits its cards into three decks (src/paigow/deckBuilder.js).
+// How the CPU splits its cards into three decks (src/match/deckBuilder.js).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { seededRandom } from '../src/engine/random.js';
 import { CARDS, isCreature } from '../src/cards/cards.js';
 import {
-  openBooster, arrangeCpuDecks, createMatch, PAIGOW_POOL, PAIGOW_RULES,
-} from '../src/paigow/paigow.js';
+  openBooster, arrangeCpuDecks, createMatch, CARD_POOL, MATCH_RULES,
+} from '../src/match/match.js';
 import {
   buildDecks, deckScore, winChance, matchChance, deckPlan, cardTags,
-} from '../src/paigow/deckBuilder.js';
-import { CARD_RATINGS, CREATURE_COUNT_BONUS, FIELD_SCORES } from '../src/paigow/cardRatings.js';
+} from '../src/match/deckBuilder.js';
+import { CARD_RATINGS, CREATURE_COUNT_BONUS, FIELD_SCORES } from '../src/match/cardRatings.js';
 
 const chanceOf = (decks) => matchChance(...decks.map((deck) => winChance(deckScore(deck))));
 
 test('every card in the pool has a rating, and creatures are what decks need', () => {
-  for (const id of PAIGOW_POOL) assert.equal(typeof CARD_RATINGS[id], 'number', id);
+  for (const id of CARD_POOL) assert.equal(typeof CARD_RATINGS[id], 'number', id);
   assert.equal(CREATURE_COUNT_BONUS.length, 6);
   assert.ok(CREATURE_COUNT_BONUS[0] < CREATURE_COUNT_BONUS[3], 'no creatures is worse than three');
   assert.ok(FIELD_SCORES.every((score, i) => i === 0 || score >= FIELD_SCORES[i - 1]), 'quantiles in order');
@@ -24,8 +24,8 @@ test('a split uses each of the fifteen cards once, in three decks of five', () =
   for (let seed = 1; seed <= 20; seed++) {
     const cards = openBooster(seededRandom(seed));
     const decks = buildDecks(cards, seededRandom(seed), { persona: 'sauron' });
-    assert.equal(decks.length, PAIGOW_RULES.decks);
-    assert.ok(decks.every((deck) => deck.length === PAIGOW_RULES.deckSize));
+    assert.equal(decks.length, MATCH_RULES.decks);
+    assert.ok(decks.every((deck) => deck.length === MATCH_RULES.deckSize));
     assert.deepEqual(decks.flat().sort(), [...cards].sort());
   }
 });
@@ -77,11 +77,11 @@ test('building is quick', () => {
 });
 
 test('a deck has a plan, and cards have tags', () => {
-  const creatures = PAIGOW_POOL.filter((id) => isCreature(CARDS[id]));
+  const creatures = CARD_POOL.filter((id) => isCreature(CARDS[id]));
   assert.ok(['race', 'grind', 'tempo'].includes(deckPlan(creatures.slice(0, 5))));
-  assert.ok(PAIGOW_POOL.some((id) => cardTags(id).includes('removal')));
-  assert.ok(PAIGOW_POOL.some((id) => cardTags(id).includes('evasion')));
-  assert.ok(PAIGOW_POOL.some((id) => cardTags(id).includes('tricks')));
+  assert.ok(CARD_POOL.some((id) => cardTags(id).includes('removal')));
+  assert.ok(CARD_POOL.some((id) => cardTags(id).includes('evasion')));
+  assert.ok(CARD_POOL.some((id) => cardTags(id).includes('tricks')));
 });
 
 test('a match\'s CPU decks come from the builder, whatever the opponent, and the match is the same for the same seed', () => {

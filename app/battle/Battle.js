@@ -20,7 +20,7 @@ import {
 import { h, wait } from '../dom.js';
 import { icon } from '../icons.js';
 import { coach, coached } from '../coach.js';
-import { RoundStats } from '../../src/paigow/roundStats.js';
+import { RoundStats } from '../../src/match/roundStats.js';
 import { crest, preloadImages } from '../art.js';
 import { BoardView } from './BoardView.js';
 import {
@@ -39,7 +39,7 @@ import {
   isLand, GRAVEYARD_TARGETS, targetKindOf,
 } from '../../src/cards/cards.js';
 import { formatMana } from '../../src/engine/mana.js';
-import { canFastForward, planFastForward } from '../../src/paigow/fastForward.js';
+import { canFastForward, planFastForward } from '../../src/match/fastForward.js';
 
 const LONG_PRESS_MS = 430;
 
@@ -100,7 +100,7 @@ export class Battle {
   #history = new PlayHistory();
   #oppName;
   #greeted = false;
-  /** Pai Gow's fast forward: its button (when offered at all), and whether it's playing out. */
+  /** Istari's fast forward: its button (when offered at all), and whether it's playing out. */
   #fastForwardBtn = null;
   #fastForwarding = false;
   #resultText;
@@ -111,8 +111,8 @@ export class Battle {
    * (`power`: `{ name, text }`, a Ring of Power, that is a planeswalker power, shown on the intro;
    * `powers`: several, for a campaign's player, shown by name when there's more than one).
    * `onEnd({ won, drawn, turns })` is called after the final banner (`drawn`: nobody won, as when a
-   * Pai Gow round stalls). With `fastForward`, a button plays the game out at once when a player is out
-   * of actions (src/paigow/fastForward.js). `resultText({ won, drawn })`: the result banner's text, when
+   * Istari round stalls). With `fastForward`, a button plays the game out at once when a player is out
+   * of actions (src/match/fastForward.js). `resultText({ won, drawn })`: the result banner's text, when
    * not Victory, Defeat or Draw (null keeps those).
    */
   constructor(app, {
@@ -127,7 +127,7 @@ export class Battle {
     this.#game = new Game(setup.game);
     this.#view = new BoardView(app, { me: this.#me, opp: this.#opp, meInfo, oppInfo });
     this.el = this.#view.el;
-    // Where the round is fought (src/paigow/places.js): its picture behind the board, dimmed (app.css, "place").
+    // Where the round is fought (src/match/places.js): its picture behind the board, dimmed (app.css, "place").
     if (place?.art) {
       this.el.classList.add('placed');
       this.el.style.setProperty('--place-art', `url("${place.art}")`);
@@ -1426,7 +1426,7 @@ export class Battle {
     if (card.types.includes('Land')) return state.activePlayerId !== this.#me ? 'Play lands on your turn' : 'One land per turn';
     const sorcerySpeed = !castsAtInstantSpeedFor(state, this.#me, card);
     if (sorcerySpeed && (state.activePlayerId !== this.#me || state.stack.length)) return 'Cast on your main phase';
-    // With unlimited mana (Pai Gow) it's never the mana: no legal target, or another cost it can't pay.
+    // With unlimited mana (Istari) it's never the mana: no legal target, or another cost it can't pay.
     return state.infiniteMana ? 'No legal target, or a cost you can\'t pay' : 'Not enough mana';
   }
 

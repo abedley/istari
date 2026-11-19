@@ -2,10 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION, PHASE, TOKEN, EFFECT } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
-import { createMatch } from '../src/paigow/paigow.js';
-import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { placeOf } from '../src/paigow/places.js';
+import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
+import { createMatch } from '../src/match/match.js';
+import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { placeOf } from '../src/match/places.js';
 import {
   setup, state, ok, cast, advanceTo, byCard, named,
 } from './helpers/ltrGame.js';
@@ -20,7 +20,7 @@ const resolve = (game) => {
 };
 
 test('Butterbur is an opponent whose power sacrifices a Food for two +1/+1 counters on a creature, as a sorcery, once a turn', () => {
-  assert.equal(PAIGOW_OPPONENTS.butterbur.emblem, 'butterbur');
+  assert.equal(OPPONENTS.butterbur.emblem, 'butterbur');
   assert.ok(CAMPAIGN_OPPONENTS.includes('butterbur'));
   assert.equal(placeOf('butterbur').card, 'Butterbur, Bree Innkeeper');
   assert.equal(EMBLEMS.butterbur.abilities[0].timing, 'sorcery');

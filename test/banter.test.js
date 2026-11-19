@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Game, PAIGOW_OPPONENTS } from '../src/index.js';
+import { Game, OPPONENTS } from '../src/index.js';
 import { REAL_CARDS, REAL_DECKS } from './fixtures/realCards.js';
 import {
   BANTER, BANTER_KINDS, SwingWatch, outlook, pickLine, banterProblems,
@@ -8,7 +8,7 @@ import {
 
 test('every opponent has its own lines for every kind of banter', () => {
   const seen = new Map();
-  for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
+  for (const [id, opponent] of Object.entries(OPPONENTS)) {
     assert.deepEqual(banterProblems(id, opponent.banter), []);
     for (const kind of BANTER_KINDS) {
       assert.ok(opponent.banter?.[kind]?.length >= 2, `${id}: ${kind}`);
@@ -107,7 +107,7 @@ test('MomentWatch: a death or a taken ring gets a word, but not twice in two tur
 
 test('MomentWatch reads a real game: the state has what it looks for', async () => {
   const { MomentWatch } = await import('../src/ai/banter.js');
-  const { createMatch, setDecks, roundSetup, PLAYER_ID, CPU_ID } = await import('../src/paigow/paigow.js');
+  const { createMatch, setDecks, roundSetup, PLAYER_ID, CPU_ID } = await import('../src/match/match.js');
   // Tom Bombadil's ring, taken on the road: "Untap target creature you control", so it needs a creature.
   let match = createMatch({ seed: 3, heroId: 'frodo', opponentId: 'oldManWillow', rings: ['galadriel'] });
   match = setDecks(match, [match.cards.slice(0, 5), match.cards.slice(5, 10), match.cards.slice(10, 15)]);

@@ -5,29 +5,28 @@ import { header, personInfo } from './common.js';
 import { icon } from '../icons.js';
 import {
   setDecks, score, outcome, nextRound, playerStartsRound, playerLife, spreadDecks,
-  decidingRound, PAIGOW_RULES, ROUND_RESULT, MATCH_OUTCOME,
-} from '../../src/paigow/paigow.js';
-import { paigowOpponent, paigowHero, currentHeroId, DEFAULT_HERO } from '../../src/paigow/personas.js';
+  decidingRound, MATCH_RULES, ROUND_RESULT, MATCH_OUTCOME,
+} from '../../src/match/match.js';
+import { opponentById, heroById, currentHeroId, DEFAULT_HERO } from '../../src/match/personas.js';
 import { powerBlock, ringBlock } from './heroes.js';
 import { loadCampaign, saveCampaignMatch, finishCampaignMatch, livesLeft } from './campaign.js';
 import { coach } from '../coach.js';
-import { placeOf } from '../../src/paigow/places.js';
-import { recordBooster, recordMatchEnd, recordCampaignProgress, recap } from '../../src/paigow/book.js';
-import { unlocksOf } from '../../src/paigow/unlocks.js';
-import { dayLabel, shareText } from '../../src/paigow/daily.js';
-import { loadBook, updateBook, saveDaily, heroLook } from '../book.js';
+import { placeOf } from '../../src/match/places.js';
+import { recordBooster, recordMatchEnd, recordCampaignProgress, recap } from '../../src/match/book.js';
+import { unlocksOf } from '../../src/match/unlocks.js';
+import { loadBook, updateBook, heroLook } from '../book.js';
 
 const RESULT_LABEL = { [ROUND_RESULT.WON]: 'Won', [ROUND_RESULT.LOST]: 'Lost', [ROUND_RESULT.DRAWN]: 'Draw' };
 
 /**
- * Pai Gow (src/paigow/paigow.js): split 15 cards (or more, with a campaign's extra commons, leaving the
+ * Istari (src/match/match.js): split 15 cards (or more, with a campaign's extra commons, leaving the
  * spare ones out) into three decks of five, then a best of three against
  * the CPU. `view`: 'build' (the decks), 'scoreboard' (between rounds) or 'final'. Every match is a campaign's
  * (see the campaign screen): it's saved after each round, and its outcome recorded in the campaign. Without a
  * `match`, the campaign's current one is shown, and with none going on, the campaign screen. `played`: the round
  * just played (0-based), whose cards the scoreboard turns over.
  */
-export function paigowScreen(app, { match: given = null, view = null, played = null } = {}) {
+export function matchScreen(app, { match: given = null, view = null, played = null } = {}) {
   const match = given ?? loadCampaign(app)?.match ?? null;
   if (!match) {
     queueMicrotask(() => app.go('campaign'));
@@ -53,23 +52,23 @@ function miniCard(app, cardId, { onTap = null, full = false } = {}) {
 }
 
 /** The match's hero, or the default for a match from before heroes. */
-export const heroOf = (match) => paigowHero(match.heroId ?? DEFAULT_HERO);
+export const heroOf = (match) => heroById(match.heroId ?? DEFAULT_HERO);
 
 /** The match's hero as they're to be shown (with their second portrait, when they wear it). */
 const lookOf = (app, match) => heroLook(app, heroOf(match), currentHeroId(match.heroId ?? DEFAULT_HERO));
 
-/** Where Back goes: the campaign, or for today's road (a match with `daily`) the title. Either way the match is saved. */
-const backTo = (app, match) => app.go(match.daily ? 'title' : 'campaign');
+/** Where Back goes: the campaign. The match is saved. */
+const backTo = (app) => app.go('campaign');
 
 /** The opponent, for the header: their portrait and name. Tap to read the Rings of Power. */
 const opponentBadge = (app, match) => {
-  const opponent = paigowOpponent(match.opponentId);
+  const opponent = opponentById(match.opponentId);
   return h('button.pg-head-opp', { type: 'button', onclick: () => showPowers(app, match) }, h('span', opponent.name), crest(personInfo(opponent), { size: 'sm' }));
 };
 
 /** Both sides' Rings of Power (planeswalker powers), on a sheet: yours are your hero's and any taken in a campaign. */
 function showPowers(app, match) {
-  const opponent = paigowOpponent(match.opponentId);
+  const opponent = opponentById(match.opponentId);
   const hero = lookOf(app, match);
   const side = (person, extra = []) => h('div.power-side', crest(personInfo(person), { size: 'sm' }),
     h('div.power-list', h('div.hero-name', person.name), powerBlock(person), extra.map((id) => ringBlock(id))));
@@ -330,7 +329,7 @@ function fireworksIn(canvas, rect) {
 }
 
 function buildView(app, match) {
-  const { decks: count, deckSize } = PAIGOW_RULES;
+  const { decks: count, deckSize } = MATCH_RULES;
   // The booster's cards go in the Red Book (once for a match).
   updateBook(app, (book) => recordBooster(book, match));
   saveDaily(app, match);
@@ -472,7 +471,7 @@ function buildView(app, match) {
   render();
 
   const el = h('div',
-    header({ title: 'Build your decks', onBack: () => backTo(app, match), right: opponentBadge(app, match) }),
+    header({ title: 'Build your decks', onBack: () => backTo(app), right: opponentBadge(app, match) }),
     h('div.pg-builder', board, h('section.pg-tray-wrap', h('div.pg-tray-head', trayTitle, h('div.pg-zooms', clear, zoom.zoomOut, zoom.zoomIn)), tray)),
     h('div.cta.pg-build-cta', h('div.row', autoFill, start)));
   // The booster, still wrapped, covers the screen from the start.
@@ -495,14 +494,13 @@ function scoreView(app, match, final, justPlayed = null) {
   const { won, lost, drawn } = score(match);
   const round = nextRound(match);
   const result = outcome(match);
-  const opponent = paigowOpponent(match.opponentId);
+  const opponent = opponentById(match.opponentId);
   const hero = lookOf(app, match);
   const life = playerLife(match);
-  // Saved as it goes, and its outcome counted once it's over: in the campaign (unless it's today's road), and in the Red Book.
+  // Saved as it goes, and its outcome counted once it's over: in the campaign, and in the Red Book.
   // The book first catches up with the campaign as it was (loadBook), so this match isn't counted from its history too.
   loadBook(app);
-  const campaign = match.daily ? null : final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
-  saveDaily(app, match, final ? result : null);
+  const campaign = final ? finishCampaignMatch(app, match, result) : (saveCampaignMatch(app, match), null);
   const book = final ? updateBook(app, (b) => {
     const ended = recordMatchEnd(b, match, result, { unlocksOf });
     return campaign ? recordCampaignProgress(ended, campaign) : ended;
@@ -535,9 +533,9 @@ function scoreView(app, match, final, justPlayed = null) {
     ? h(`div.result-title.${{ [MATCH_OUTCOME.WON]: 'victory', [MATCH_OUTCOME.LOST]: 'defeat' }[result] ?? 'tie'}`,
       { [MATCH_OUTCOME.WON]: 'Victory', [MATCH_OUTCOME.LOST]: 'Defeat' }[result] ?? 'Tie')
     : null;
-  const leave = () => backTo(app, match);
+  const leave = () => backTo(app);
   const el = h('div',
-    header({ title: match.daily ? `Today's road · ${dayLabel(match.daily)}` : '', onBack: leave }),
+    header({ title: '', onBack: leave }),
     h('div.pg-body',
       title,
       h('div.pg-score',
@@ -545,16 +543,12 @@ function scoreView(app, match, final, justPlayed = null) {
         h('div.pg-score-num', `${won} – ${lost}`, drawn ? h('small', `${drawn} ${drawn === 1 ? 'draw' : 'draws'}`) : null),
         h('button.pg-score-side', { type: 'button', onclick: () => showPowers(app, match) }, crest(personInfo(opponent), { size: 'sm' }), h('span', opponent.name))),
       round !== null ? h('p.pg-help', playerStartsRound(match, round)
-        ? `You go first, on ${life.first} life; ${opponent.name} starts on ${PAIGOW_RULES.secondPlayerLife}.`
-        : `${opponent.name} goes first, on ${PAIGOW_RULES.startingLife} life; you start on ${life.second}.`) : null,
+        ? `You go first, on ${life.first} life; ${opponent.name} starts on ${MATCH_RULES.secondPlayerLife}.`
+        : `${opponent.name} goes first, on ${MATCH_RULES.startingLife} life; you start on ${life.second}.`) : null,
       final && campaign ? h('p.pg-help', campaignNote(result, campaign)) : null,
-      final && match.daily ? h('p.pg-help', 'One road a day. A new one tomorrow.') : null,
       book ? recapBlock(match, recap(book, match), opponent) : null,
       roundRows),
-    h('div.cta', final && match.daily
-      ? [h('button.btn.primary.big', { onclick: (event) => share(app, shareText(match), event.currentTarget) }, 'Share'),
-        h('button.btn.ghost', { onclick: () => app.go('title') }, 'Back to the title')]
-      : final
+    h('div.cta', final
       ? h('button.btn.primary.big', { onclick: () => app.go('campaign') }, 'Continue')
       : h('button.btn.primary.big', { onclick: () => app.go('battle', { match }) }, `Play round ${round + 1}`)));
 
@@ -607,27 +601,6 @@ function recapBlock(match, { stats, newCards, firstWin, unlocks }, opponent) {
   return h('section.recap', h('h4', 'The tale of the match'),
     h('ul', lines.map((line) => h('li', line))),
     unlocks.map((name) => h('p.recap-unlock', `Unlocked: ${name}`)));
-}
-
-/** Shares a line of text: the system's share sheet where there is one, otherwise the clipboard. `button` says what happened. */
-async function share(app, text, button) {
-  const say = (label) => {
-    const was = 'Share';
-    button.textContent = label;
-    setTimeout(() => { if (button.isConnected) button.textContent = was; }, 1800);
-  };
-  try {
-    if (navigator.share) {
-      await navigator.share({ text });
-      return;
-    }
-    await navigator.clipboard.writeText(text);
-    say('Copied');
-  } catch (error) {
-    // Closing the share sheet isn't a failure; anything else, show the text to copy by hand.
-    if (error?.name === 'AbortError') return;
-    app.overlays.sheet({ title: 'Share', text, options: [], cancel: 'Close' });
-  }
 }
 
 /** What a campaign match's outcome meant for the campaign. */

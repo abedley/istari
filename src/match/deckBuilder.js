@@ -2,7 +2,7 @@
  * How the CPU splits its cards into three decks of five.
  *
  * It never sees the player's cards. Each possible deck (3,003 of them from 15 cards) gets a score:
- * its cards' ratings for Pai Gow (cardRatings.js, fitted from self-play) plus a bonus for how many
+ * its cards' ratings for Istari (cardRatings.js, fitted from self-play) plus a bonus for how many
  * creatures it holds, and from that score a chance of beating a deck dealt at random (FIELD_SCORES).
  * Then every way of splitting the cards into three decks (126,126) is tried, and the one most likely
  * to win two rounds of three is kept. That settles by itself whether three even decks or two strong

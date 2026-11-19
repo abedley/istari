@@ -2,10 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION, PHASE, TOKEN, EFFECT } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
-import { createMatch, PAIGOW_RULES } from '../src/paigow/paigow.js';
-import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { placeOf } from '../src/paigow/places.js';
+import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
+import { createMatch, MATCH_RULES } from '../src/match/match.js';
+import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { placeOf } from '../src/match/places.js';
 import {
   setup, state, ok, cast, advanceTo, byCard, named,
 } from './helpers/ltrGame.js';
@@ -21,8 +21,8 @@ const resolve = (game) => {
 };
 
 test('Lobelia is an opponent whose ring makes her creatures +1/+1 for each Treasure she controls', () => {
-  assert.equal(PAIGOW_OPPONENTS.lobelia.emblem, 'lobelia');
-  assert.equal(PAIGOW_OPPONENTS.lobelia.name, 'Lobelia Sackville-Baggins');
+  assert.equal(OPPONENTS.lobelia.emblem, 'lobelia');
+  assert.equal(OPPONENTS.lobelia.name, 'Lobelia Sackville-Baggins');
   assert.ok(EMBLEMS.lobelia.passive);
   assert.ok(CAMPAIGN_OPPONENTS.includes('lobelia'));
   assert.equal(placeOf('lobelia').card, 'Lobelia Sackville-Baggins');
@@ -65,6 +65,6 @@ test('Lobelia’s packs always hold her own card and Lotho, Corrupt Shirriff', (
     const cards = createMatch({ seed, opponentId: 'lobelia' }).cpuDecks.flat();
     assert.ok(cards.includes('lobeliaSackvilleBaggins'), `seed ${seed}`);
     assert.ok(cards.includes('lothoCorruptShirriff'), `seed ${seed}`);
-    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+    assert.equal(cards.length, MATCH_RULES.cardsDealt);
   }
 });

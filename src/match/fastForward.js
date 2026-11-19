@@ -1,5 +1,5 @@
 /**
- * Pai Gow's fast forward: once a player has nothing left to do, the round's result depends only on
+ * Istari's fast forward: once a player has nothing left to do, the round's result depends only on
  * the other player, so it can be played out at once, with good play from the side that still has
  * actions.
  */

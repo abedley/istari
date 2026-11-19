@@ -4,7 +4,7 @@ import {
   ACTION, DECISION, PHASE, passPriority, toggleAttacker, confirmAttackers, setBlocker, confirmBlockers,
 } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { OPPONENTS } from '../src/match/personas.js';
 import {
   setup, state, ok, cast, advanceTo, byCard, actionFor,
 } from './helpers/ltrGame.js';
@@ -28,7 +28,7 @@ function shield(game) {
 }
 
 test('Goldberry is an opponent whose power puts a shield counter on a creature of hers, once a game, as a sorcery', () => {
-  assert.equal(PAIGOW_OPPONENTS.goldberry.emblem, 'goldberry');
+  assert.equal(OPPONENTS.goldberry.emblem, 'goldberry');
   const ring = EMBLEMS.goldberry;
   assert.equal(ring.activationsPerGame, 1);
   assert.equal(ring.abilities[0].timing, 'sorcery');

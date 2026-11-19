@@ -7,14 +7,14 @@
  *
  * The hidden cards are guessed (`sampleWorld`): each is drawn from what a booster holds (every card
  * of the pool, weighted by its rarity slot), and what the opponent did narrows it. Mana is free in
- * Pai Gow, so a card held through its owner's own turn is seldom a plain creature, and more often
+ * Istari, so a card held through its owner's own turn is seldom a plain creature, and more often
  * an instant, a trick, removal or a creature with flash.
  */
 import { Game } from '../../engine/Game.js';
 import { CARDS, isCreature, isInstant, isLand, isAura, isSorcery, hasKeyword, KEYWORD } from '../../cards/cards.js';
 import { determinize } from '../determinize.js';
 
-/** The cards a hidden card may be: LTR's, but for the basic lands (as PAIGOW_POOL; kept here so the AI needs no Pai Gow code). */
+/** The cards a hidden card may be: LTR's, but for the basic lands (as CARD_POOL; kept here so the AI needs no Istari code). */
 const POOL = Object.keys(CARDS).filter((id) => CARDS[id].set === 'ltr' && !(CARDS[id].supertypes ?? []).includes('Basic')).sort();
 
 /** How often each card turns up in a booster's 15: 10 commons, 3 uncommons, a rare or mythic, and any card at all. */

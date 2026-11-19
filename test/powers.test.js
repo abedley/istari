@@ -5,18 +5,18 @@ import { ACTION, passPriority } from '../src/engine/actions.js';
 import { CARDS } from '../src/cards/cards.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
 import { POWER_ICONS, hasIcon } from '../app/icons.js';
-import { PAIGOW_OPPONENTS, PAIGOW_HEROES } from '../src/paigow/personas.js';
+import { OPPONENTS, HEROES } from '../src/match/personas.js';
 import {
   createMatch, setDecks, roundSetup, PLAYER_ID, CPU_ID,
-} from '../src/paigow/paigow.js';
-import { outOfActions } from '../src/paigow/fastForward.js';
+} from '../src/match/match.js';
+import { outOfActions } from '../src/match/fastForward.js';
 import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { SHOCK } from './helpers/ltrGame.js';
 
 const BEAR = { id: 'bear', name: 'Bear', manaCost: { generic: 1 }, types: ['Creature'], power: 2, toughness: 2 };
 const players = [{ id: 'p1' }, { id: 'p2' }];
 
-/** A Pai Gow-like game with these powers, in p1's first main phase once each side has cast up to two bears. */
+/** A game like Istari's with these powers, in p1's first main phase once each side has cast up to two bears. */
 function powerGame(mine, theirs, { p1 = ['bear', 'bear'], p2 = ['bear', 'bear'] } = {}) {
   const game = new Game({
     players, decks: { p1, p2 }, cards: { bear: BEAR, glorfindelDauntlessRescuer: CARDS.glorfindelDauntlessRescuer }, shuffleLibraries: false, openingHandSize: 5,
@@ -60,7 +60,7 @@ function usePower(game, targetOf = null) {
 }
 
 test('every hero and opponent has a power of their own, once a turn, but for Bill Ferny’s', () => {
-  const people = [...Object.values(PAIGOW_HEROES), ...Object.values(PAIGOW_OPPONENTS)];
+  const people = [...Object.values(HEROES), ...Object.values(OPPONENTS)];
   const emblems = people.map((p) => p.emblem);
   assert.equal(new Set(emblems).size, people.length);
   for (const person of people) {
@@ -92,18 +92,18 @@ test('every hero and opponent has a power of their own, once a turn, but for Bil
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');
   assert.equal(EMBLEMS.frodo.name, 'The One Ring');
-  assert.deepEqual(Object.values(PAIGOW_HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Legolas', 'Pippin']);
-  for (const hero of Object.values(PAIGOW_HEROES)) {
+  assert.deepEqual(Object.values(HEROES).map((h) => h.name), ['Frodo', 'Strider', 'Samwise', 'Radagast', 'Merry', 'Legolas', 'Pippin']);
+  for (const hero of Object.values(HEROES)) {
     assert.ok(Object.values(CARDS).some((c) => c.name === hero.portrait.card), `${hero.name}'s portrait card`);
   }
 });
 
 test('a round gives each side its power', () => {
-  for (const heroId of Object.keys(PAIGOW_HEROES)) {
+  for (const heroId of Object.keys(HEROES)) {
     const match = createMatch({ seed: 5, heroId });
     const ready = setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5)));
     const { game } = roundSetup(ready);
-    assert.deepEqual(game.emblems, { [PLAYER_ID]: [heroId], [CPU_ID]: [PAIGOW_OPPONENTS[match.opponentId].emblem] });
+    assert.deepEqual(game.emblems, { [PLAYER_ID]: [heroId], [CPU_ID]: [OPPONENTS[match.opponentId].emblem] });
     const started = new Game({ ...game, cards: CARDS });
     started.start();
     assert.equal(started.getState().players[0].emblems[0].emblemId, heroId);
@@ -215,13 +215,13 @@ test('fast forward ignores powers that could do nothing more', () => {
 });
 
 test('two basic AIs play rounds with every pair of powers', () => {
-  const heroes = Object.keys(PAIGOW_HEROES);
-  const opponents = Object.keys(PAIGOW_OPPONENTS);
+  const heroes = Object.keys(HEROES);
+  const opponents = Object.keys(OPPONENTS);
   for (const [i, opponentId] of opponents.entries()) {
     const game = new Game({
       players, decks: { p1: ['bear', 'bear', 'bear'], p2: ['bear', 'bear', 'bear'] }, cards: { bear: BEAR }, shuffleLibraries: false,
       openingHandSize: 3, deckingLoss: false, infiniteMana: true, stallDraw: true, turnLimit: 40,
-      emblems: { p1: [PAIGOW_HEROES[heroes[i % heroes.length]].emblem], p2: [PAIGOW_OPPONENTS[opponentId].emblem] },
+      emblems: { p1: [HEROES[heroes[i % heroes.length]].emblem], p2: [OPPONENTS[opponentId].emblem] },
     });
     game.start();
     const ais = { p1: new BasicAIController({ game: null, playerId: 'p1' }), p2: new BasicAIController({ game: null, playerId: 'p2' }) };

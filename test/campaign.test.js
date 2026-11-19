@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import {
   createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
   CAMPAIGN_RULES, CAMPAIGN_OPPONENTS, CAMPAIGN_STATUS, CAMPAIGN_BOOKS, drawBookOpponents,
-} from '../src/paigow/campaign.js';
+} from '../src/match/campaign.js';
 import {
-  roundSetup, setDecks, validDecks, playerLife, MATCH_OUTCOME, PAIGOW_RULES, PLAYER_ID,
-} from '../src/paigow/paigow.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+  roundSetup, setDecks, validDecks, playerLife, MATCH_OUTCOME, MATCH_RULES, PLAYER_ID,
+} from '../src/match/match.js';
+import { OPPONENTS } from '../src/match/personas.js';
 import { CARDS } from '../src/cards/cards.js';
 
 const { WON, LOST, TIE } = MATCH_OUTCOME;
@@ -20,7 +20,7 @@ test('the road holds every opponent, in order, Sauron last', () => {
     'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'ringwraiths', 'glorfindel',
     'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
   ]);
-  assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(PAIGOW_OPPONENTS).sort(), 'no opponent is left out');
+  assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(OPPONENTS).sort(), 'no opponent is left out');
 });
 
 test('a campaign walks Book I: four opponents drawn at random, in road order, then the Ringwraiths, with three lives', () => {
@@ -90,10 +90,10 @@ test('a win moves on and offers the beaten opponent’s ring; beating the Ringwr
   assert.equal(campaign.offer, first);
   assert.throws(() => startMatch(campaign), /reward/);
   campaign = takeRing(campaign);
-  assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS[first].emblem]);
+  assert.deepEqual(campaign.rings, [OPPONENTS[first].emblem]);
   assert.equal(campaign.offer, null);
   campaign = takeCommon(play(campaign, WON));
-  assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS[first].emblem]);
+  assert.deepEqual(campaign.rings, [OPPONENTS[first].emblem]);
   while (currentOpponent(campaign) !== 'ringwraiths') campaign = takeCommon(play(campaign, WON));
   campaign = play(campaign, WON);
   // No ring is offered after the boss: there's no one left to use it on.
@@ -104,7 +104,7 @@ test('a win moves on and offers the beaten opponent’s ring; beating the Ringwr
 
 test('the other reward: a common more in every booster after, and the spare cards left out of the decks', () => {
   let campaign = createCampaign({ seed: 6 });
-  assert.equal(startMatch(campaign).match.cards.length, PAIGOW_RULES.cardsDealt);
+  assert.equal(startMatch(campaign).match.cards.length, MATCH_RULES.cardsDealt);
   campaign = takeCommon(play(campaign, WON));
   assert.equal(campaign.extraCommons, 1);
   assert.deepEqual(campaign.rings, []);
@@ -112,11 +112,11 @@ test('the other reward: a common more in every booster after, and the spare card
   assert.throws(() => takeCommon(campaign), /reward/);
   campaign = takeCommon(play(campaign, WON));
   const { match } = startMatch(campaign);
-  assert.equal(match.cards.length, PAIGOW_RULES.cardsDealt + 2);
+  assert.equal(match.cards.length, MATCH_RULES.cardsDealt + 2);
   assert.equal(new Set(match.cards.slice(0, 12)).size, 12);
   assert.ok(match.cards.slice(0, 12).every((id) => CARDS[id].rarity === 'common'));
   // The CPU's booster is as ever.
-  assert.equal(match.cpuDecks.flat().length, PAIGOW_RULES.cardsDealt);
+  assert.equal(match.cpuDecks.flat().length, MATCH_RULES.cardsDealt);
   // Any 15 of the cards make three decks; the other two are left out.
   const decks = [0, 1, 2].map((i) => match.cards.slice(2 + i * 5, 2 + i * 5 + 5));
   assert.equal(validDecks(match, decks), true);
@@ -124,7 +124,7 @@ test('the other reward: a common more in every booster after, and the spare card
   assert.equal(validDecks(match, [decks[0], decks[1], [...decks[2].slice(0, 4), decks[0][0]]]), false, 'a card used twice');
   // A campaign saved before this reward existed has none.
   const { extraCommons, ...old } = createCampaign({ seed: 7 });
-  assert.equal(startMatch(old).match.cards.length, PAIGOW_RULES.cardsDealt);
+  assert.equal(startMatch(old).match.cards.length, MATCH_RULES.cardsDealt);
 });
 
 test('a match is counted once', () => {
@@ -148,6 +148,6 @@ test('each ring taken costs a life at the start of every round, four rings at mo
   const { game } = roundSetup(ready);
   assert.deepEqual(game.emblems[PLAYER_ID], ['frodo', 'birthdayBilbo', 'burglarBilbo', 'gandalf', 'sauron']);
   const life = playerLife(ready);
-  assert.deepEqual(life, { first: PAIGOW_RULES.startingLife - 4, second: PAIGOW_RULES.secondPlayerLife - 4 });
+  assert.deepEqual(life, { first: MATCH_RULES.startingLife - 4, second: MATCH_RULES.secondPlayerLife - 4 });
   assert.ok([life.first, life.second].includes(game.startingLife[PLAYER_ID]));
 });

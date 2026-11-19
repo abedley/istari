@@ -1,5 +1,5 @@
 /**
- * Fits the Strategist's evaluation to Pai Gow, and writes src/ai/strategist/evalWeights.js.
+ * Fits the Strategist's evaluation to Istari, and writes src/ai/strategist/evalWeights.js.
  *
  *   node tools/tune-eval.js [--games 20000] [--jobs 4]
  *
@@ -17,7 +17,7 @@ import { Game, GAME_STATUS, GAME_LIMITS } from '../src/engine/Game.js';
 import { PHASE } from '../src/engine/turnStructure.js';
 import { seededRandom, shuffle } from '../src/engine/random.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { openBooster, PAIGOW_RULES } from '../src/paigow/paigow.js';
+import { openBooster, MATCH_RULES } from '../src/match/match.js';
 import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { actingPlayerId } from '../src/ai/simulate.js';
 import { evaluate as searchEvaluate, weightsFor } from '../src/ai/evaluate.js';
@@ -37,9 +37,9 @@ function playGame(seed) {
   const ring = () => [RINGS[Math.floor(random() * RINGS.length)]];
   const game = new Game({
     players: [{ id: 'a' }, { id: 'b' }], startingPlayerId: first, seed, decks, emblems: { a: ring(), b: ring() },
-    startingLife: { a: first === 'a' ? PAIGOW_RULES.startingLife : PAIGOW_RULES.secondPlayerLife, b: first === 'b' ? PAIGOW_RULES.startingLife : PAIGOW_RULES.secondPlayerLife },
+    startingLife: { a: first === 'a' ? MATCH_RULES.startingLife : MATCH_RULES.secondPlayerLife, b: first === 'b' ? MATCH_RULES.startingLife : MATCH_RULES.secondPlayerLife },
     limits: { ...GAME_LIMITS }, mulligans: false, openingHandSize: 5, deckingLoss: false, infiniteMana: true, stallDraw: true,
-    turnLimit: PAIGOW_RULES.turnLimit, silent: true,
+    turnLimit: MATCH_RULES.turnLimit, silent: true,
   });
   game.start();
   const ais = { a: new BasicAIController({ game: null, playerId: 'a' }), b: new BasicAIController({ game: null, playerId: 'b' }) };
@@ -122,7 +122,7 @@ if (args.worker) {
   console.log(weights);
   writeFileSync(new URL('../src/ai/strategist/evalWeights.js', import.meta.url), `/**
  * The Strategist's evaluation weights (see evaluate.js), fitted by tools/tune-eval.js to ${train.length}
- * positions from ${games.length} self-played rounds of Pai Gow.
+ * positions from ${games.length} self-played rounds of Istari.
  * Generated: don't edit by hand (run \`node tools/tune-eval.js\`).
  */
 export const EVAL_WEIGHTS = Object.freeze(${JSON.stringify(weights, null, 2)});

@@ -1,6 +1,6 @@
 # Istari
 
-**Pai Gow** with the cards of *The Lord of the Rings: Tales of Middle-earth* (LTR): open a
+A card game with the cards of *The Lord of the Rings: Tales of Middle-earth* (LTR): open a
 booster, split its 15 cards into three decks of five, and play a best of three against one of the
 Wise of Middle-earth. It runs on a subset of the Magic: The Gathering rules, written in plain
 JavaScript (ES modules, no build step) and hosted on GitHub Pages.
@@ -12,32 +12,32 @@ tuning tools stay there.
 
 - `index.html` + `app/`: **the game**, a single-page app for phones held upright (see *The app*)
 - `src/engine/`: the rules engine; `src/cards/`: card definitions; `src/ai/`: the CPU players
-- `src/paigow/`: Pai Gow's rules, opponents and fast forward
+- `src/match/`: Istari's rules, opponents and fast forward
 - `tools/`: the Scryfall card and token importers, and the CPU's arena and fitting tools (see *The Strategist*); all Node only, the site never loads them. `tools/title/make-layers.py`
   cuts the title screen's picture (`tools/title/source.jpg`) into the depth layers in `app/title/` for its
   parallax zoom (Python, with Pillow, numpy and OpenCV)
 - `test/`: `npm test`; `test/fixtures/` has the made-up sample cards and the few non-LTR cards
   (with three 40-card decks of them) that engine and AI tests play with
 
-## How Pai Gow plays
+## How to play
 
-A match against the CPU in `src/paigow/paigow.js` (pure functions over a plain match object), with
-its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/paigow.js` (deck builder,
-scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see *The campaign*: *Begin* or
-*Continue* on the title screen) or the day's one match (see *Today's road*):
-0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry, Legolas or Pippin (`PAIGOW_HEROES` in `src/paigow/personas.js`), each
+A match against the CPU in `src/match/match.js` (pure functions over a plain match object), with
+its screens in `app/screens/heroes.js` (choosing your hero), `app/screens/match.js` (deck builder,
+scoreboard) and `app/screens/battle.js` (a round). Every match is a campaign's (see *The campaign*: *Begin* or
+*Continue* on the title screen):
+0. You choose your hero, Frodo, Strider, Samwise, Radagast, Merry, Legolas or Pippin (`HEROES` in `src/match/personas.js`), each
    with a Ring of Power of their own (see *Rings of Power*). Four are open at first and three are met on the road (see *Unlocks*). The app remembers the last one.
 1. Each side opens an LTR booster (`openBooster`), as the set's Draft Booster (LTR came before
    Play Boosters): 10 different commons, 3 different uncommons, a rare or mythic (each rare twice
    as likely as each mythic, so about one pack in seven has a mythic), and, in place of the basic
    land, any LTR card at all, each equally likely (it can repeat a card already in the pack).
-   The pool (`PAIGOW_POOL`) is every LTR card in the game but the basic lands, the set's few
+   The pool (`CARD_POOL`) is every LTR card in the game but the basic lands, the set's few
    nonbasic lands included; the 8 left out of the game can't be opened. No foils or special editions.
 2. You split yours into three decks of five (in a campaign you may have more cards than that, and
    leave the spare ones out; tap a card to put it in the highlighted round,
    hold it to read it, or Auto-fill; pinch the booster's cards, ⌘/Ctrl + scroll, or tap −/+ to show 1 to 5
    in a row, 3 at first, kept in the settings as `trayColumns`). The CPU builds its three decks without a look at your cards
-   (`buildDecks` in `src/paigow/deckBuilder.js`, see *The Strategist*), then shuffles their order.
+   (`buildDecks` in `src/match/deckBuilder.js`, see *The Strategist*), then shuffles their order.
 3. Round N is your deck N against the CPU's deck N. Both players start with all five cards in
    hand, infinite mana and their character's Ring of Power, and can't lose by drawing from an empty library. The player
    who goes first starts at 5 life, the other at 8.
@@ -45,7 +45,7 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    backstop. Who goes first is a coin flip in round 1; after that, the loser of the
    last round goes first (after a draw, whoever went second in it).
 4. **Fast forward:** once a player is out of actions (no cards in hand, no creatures, and no
-   abilities but mana abilities, `outOfActions` in `src/paigow/fastForward.js`), a *Fast forward*
+   abilities but mana abilities, `outOfActions` in `src/match/fastForward.js`), a *Fast forward*
    button plays the round out at once. `planFastForward` tries a few basic-AI lines for both sides
    on copies of the game (lookahead or basic attacks, swarming or not), keeps the one best for the
    side that still has actions (a win, then a draw, then a loss; sooner is better), and replays
@@ -54,7 +54,7 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
 5. The first to win two rounds takes the match. If three rounds pass without that, more round
    wins takes it, and otherwise it's a tie.
 
-The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
+The CPU is one of Istari's own opponents (`OPPONENTS` in `src/match/personas.js`),
 picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, the Ringwraiths, Glorfindel, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
@@ -63,9 +63,9 @@ Burglar Bilbo, Glorfindel and the Ringwraiths are Raiders, Saruman, Denethor, El
 after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
-**An opponent's own setup:** an opponent may have a `setup` in `src/paigow/personas.js` (read with
+**An opponent's own setup:** an opponent may have a `setup` in `src/match/personas.js` (read with
 `opponentSetup`): `pack`, cards its booster always holds (each takes the place of the last card of its
-rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `library`, cards shuffled into
+rarity, so the pack stays 15 cards: `withCards` in `src/match/match.js`); `library`, cards shuffled into
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option);
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring); and
 `graveyard`, cards already in its graveyard as every round begins (the Game's `startsInGraveyard` option).
@@ -76,7 +76,7 @@ power and toughness are the lands he controls, starts at 5/5 and grows with each
 
 **Rings of Power:** every hero and every opponent has one planeswalker power, shown in the app as
 a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by their `emblem` in
-`src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
+`src/match/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
 `power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
 and the One Ring under its names: *the magic ring* of The Hobbit, Gollum's *birthday
 present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Goldberry's only once a game, Bill Ferny's as often as he has Treasures, the Ringwraiths' each power on its own), uses the stack,
@@ -125,8 +125,8 @@ targets your own creature, or one that can do nothing more (no creature of their
 theirs bigger than Strider's 4 to shrink, no cards for them to discard, the Ring at its last level, fewer than
 six cards for Legolas to mill or no creature of his own for the card it gives him), doesn't count as an action.
 
-**The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
-the title screen): you choose a hero, then play a Pai Gow match against each opponent on your road in
+**The campaign** (`src/match/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
+the title screen): you choose a hero, then play a match against each opponent on your road in
 turn. The campaign is split into six books (`CAMPAIGN_BOOKS`), each ending with a boss; only Book I is built
 so far. Book I draws 4 opponents at random (`drawBookOpponents`, seeded by the campaign's seed) from Birthday
 Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the
@@ -135,7 +135,7 @@ opponent from Birthday Bilbo to Sauron), then ends with its boss, the Ringwraith
 exist, beating the Ringwraiths wins the campaign. You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
 choose a reward: take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of
-starting every round with 1 less life (`playerLife` in `src/paigow/paigow.js`: 5 and 8, less one per
+starting every round with 1 less life (`playerLife` in `src/match/match.js`: 5 and 8, less one per
 ring, at least 1), up to 4 rings; or add a common to every booster you open after (`takeCommon`; the
 campaign's `extraCommons`, passed to `createMatch` and `openBooster`), so you have more than 15 cards
 and leave the spare ones out of your three decks of five (Auto-fill places the strongest first, by
@@ -143,7 +143,7 @@ and leave the spare ones out of your three decks of five (Auto-fill places the s
 is saved in `localStorage` (`istari.campaign`) after every step, its current match with it after each
 round, so a reload picks it up where it was (a round in progress starts over).
 
-**Places** (`src/paigow/places.js`): each opponent is met at a place on the road from Bag End to Barad-dûr
+**Places** (`src/match/places.js`): each opponent is met at a place on the road from Bag End to Barad-dûr
 (`PLACES`, by opponent id): a name, a line that sets the scene, a picture, and a kind of ambience. The picture is
 always a card's art (`cardId`, with the point to keep in view), so there is no art of the game's own: The Party
 Field is *The Shire*, The Bridge of Khazad-dûm *Mines of Moria*, The Hornburg *Rally at the Hornburg*, and so on;
@@ -163,37 +163,29 @@ from a round, the scoreboard turns the opponent's cards for that round over one 
 when the match ends, the cards of a round that wasn't played are turned over too. The present, the parting and
 the turning are skipped when the system asks for reduced motion.
 
-**The Red Book** (`src/paigow/book.js`, pure functions over a plain object; `app/book.js` keeps it in
+**The Red Book** (`src/match/book.js`, pure functions over a plain object; `app/book.js` keeps it in
 `localStorage` as `istari.book`; its screen is `app/screens/book.js`, from the title): what you've done across every
-campaign and daily match. *Cards*: every card that can be opened, by rarity, the found ones with their art (opened
+campaign. *Cards*: every card that can be opened, by rarity, the found ones with their art (opened
 in a booster of yours, or *Met* in an opponent's deck) and the rest blank, with no picture fetched. *People*: each
 opponent at their place with your record against them, a stranger until you've played them. *Rings*: the Rings of
-Power you've borne. *Tale*: the totals, the hardest blow, today's road, and each hero's campaigns. It's written to
+Power you've borne. *Tale*: the totals, the hardest blow, and each hero's campaigns. It's written to
 when a booster is opened, a round ends, a match ends, a ring is taken and a campaign ends, each counted once
 (`counted` holds the keys, so a reload that shows the same screen again adds nothing). A campaign saved before the
 book existed is caught up with (`catchUp`: its matches, rings and how far it got). *Erase the Red Book* is in the
 settings.
 
 **The tale of a match:** each round is counted from the game's events (`RoundStats` in
-`src/paigow/roundStats.js`): damage dealt and taken, creatures felled and lost, spells cast, turns, and the hardest
+`src/match/roundStats.js`): damage dealt and taken, creatures felled and lost, spells cast, turns, and the hardest
 blow you struck. `recordRound` keeps a round's stats with its result, and the final scoreboard tells the match:
 the road that decided it (`decidingRound`), the hardest blow, the totals, and what it added to the Red Book (new
 cards, a first win against that opponent, anything unlocked).
 
-**Unlocks** (`src/paigow/unlocks.js`, worked out from the Red Book): Frodo, Samwise, Merry and Legolas are open from the
+**Unlocks** (`src/match/unlocks.js`, worked out from the Red Book): Frodo, Samwise, Merry and Legolas are open from the
 start; Pippin joins once you've beaten Birthday Bilbo, Radagast once you've beaten Old Man Willow, and Strider once
-you've beaten the Rider in Black (in any match, a daily one included). Until then the heroes screen shows them
+you've beaten the Rider in Black. Until then the heroes screen shows them
 hooded, with what it takes. Winning a campaign with a hero opens their second portrait (`altPortrait` in
-`src/paigow/personas.js`, from another of their cards; Radagast has only the one), swapped on the heroes screen and
+`src/match/personas.js`, from another of their cards; Radagast has only the one), swapped on the heroes screen and
 remembered in `istari.portraits`. A campaign going on keeps its hero whatever the book says.
-
-**Today's road** (`src/paigow/daily.js`, from the title): one match a day, the same for everyone who plays that
-day. The day (the player's own calendar date) seeds the hero you're given (any of the seven, open to you or not), the
-opponent, both boosters and the opponent's decks (`dailyMatch`). It's saved as it goes (`istari.daily`), so a
-reload goes on with it; once it's over the title shows the score until the next day. Nothing of the campaign is at
-stake in it, but it counts in the Red Book, with a streak of days played. Its last screen has *Share*: a line such
-as `Istari · 14 Nov · Saruman at Orthanc · ✅❌✅ 2–1` (`shareText`, which gives away no cards), through the system's
-share sheet where there is one and the clipboard otherwise.
 
 **Banter:** each opponent talks, in its own voice, in a speech bubble under its portrait.
 Its `banter` lists lines (one picked at random, none repeated until all are said) for each
@@ -301,7 +293,7 @@ Orcs and amass), each with a few rares (`LTR_DECKS`, `src/cards/ltrDecks.js`), a
 tests.
 
 **Where this engine differs from Magic:** players can have innate planeswalker-style
-abilities, granted by **emblems** in the command zone (see *Emblems*). Pai Gow gives nobody any.
+abilities, granted by **emblems** in the command zone (see *Emblems*). Istari gives nobody any.
 
 The combat keywords **haste, first strike, double strike, trample, menace, deathtouch, flying,
 reach, lifelink, defender and vigilance** are implemented. The tests also use a
@@ -326,26 +318,26 @@ Add it to the home screen to play full screen; the service worker (`sw.js`) cach
 card images, so it then works offline. It's registered only when not on localhost, so local
 edits show up on reload.
 
-**Screens:** title → choosing your hero → Pai Gow's deck builder (your 15 cards and three decks) → a round (the
+**Screens:** title → choosing your hero → Istari's deck builder (your 15 cards and three decks) → a round (the
 battle) → the scoreboard → … → the final score, inside a campaign. The title has a settings sheet (see
 *Settings*). The match is saved with its campaign after each round.
 
 **Teaching the format** (`app/coach.js`): the first time you reach the deck builder, and the first time you can
 act in a round, a few coach marks ring something on the screen and say what it does (a tap moves on; *Skip*
 ends them). They're shown once, remembered in `localStorage` (`istari.seen`); *Show tips again* in the settings
-forgets that. *How Pai Gow plays*, on the title screen and in the settings, is a sheet with the format's rules
-(taken from `PAIGOW_RULES` and `CAMPAIGN_RULES`), the campaign's, and the gestures. They teach Pai Gow and the
+forgets that. *How to play*, on the title screen and in the settings, is a sheet with the format's rules
+(taken from `MATCH_RULES` and `CAMPAIGN_RULES`), the campaign's, and the gestures. They teach Istari and the
 app, not Magic: Magic's terms, costs and card frames are the game's own and stay as printed.
 
 **The deck builder:** tap a booster card to put it in the highlighted deck. A placed card shows its mana cost
 and power/toughness; tap it to pick it up, then tap another deck to move it, a card in another deck to swap the
 two, or the card again to send it back to the booster. *Undo* takes back one change at a time (*Clear* and
-*Auto-fill* included). *Auto-fill* (`spreadDecks` in `src/paigow/paigow.js`) deals the loose cards strongest
+*Auto-fill* included). *Auto-fill* (`spreadDecks` in `src/match/match.js`) deals the loose cards strongest
 first, each to the deck with room that is weakest so far, so the three come out about even. The start button
 says how many cards are still to place.
 
 **Settings:** sound and music-and-ambience (a switch each) and volume, vibration (where the phone has it), animation speed, auto-pass
-priority (off is full control), *How Pai Gow plays*, *Show tips again* and *Credits* (the cards, each portrait's
+priority (off is full control), *How to play*, *Show tips again* and *Credits* (the cards, each portrait's
 card and artist, the fonts). Sheets are dialogs to assistive technology, close on Escape, and hand the focus back.
 
 **Sound** is all synthesized (Web Audio, no files): the effects; a quiet ambient bed for each kind of place
@@ -420,7 +412,7 @@ when inspecting). Tokens use the art of a matching printed Scryfall token (see *
 art*). Cards without art, such as the samples, get generated art: a gradient in their color with
 their type's emblem, and their name on the board. Opponents have a `portrait`:
 a printed card's Scryfall art crop, framed on the face (`x`, `y`, `zoom`), with the card and
-artist it comes from (see `src/paigow/personas.js`), and so do the heroes.
+artist it comes from (see `src/match/personas.js`), and so do the heroes.
 
 **Fonts** stand in for the ones printed on cards: Faustina for Beleren (names, type lines and the
 interface) and Crimson Pro for MPlantin (rules text), both SIL OFL and vendored in `app/vendor/`
@@ -486,7 +478,7 @@ color) are drawn with the open-source [Mana](https://mana.andrewgioia.com) and
 
 **Code:**
 - `app/main.js`: the router and settings
-- `app/screens/`: the title, heroes, Pai Gow (deck builder and scoreboard) and battle screens
+- `app/screens/`: the title, heroes, match (deck builder and scoreboard) and battle screens
 - `app/battle/`:
   - `Battle.js`: the game, input and the animation queue
   - `BoardView.js`: rendering and FLIP
@@ -497,8 +489,8 @@ color) are drawn with the open-source [Mana](https://mana.andrewgioia.com) and
 - `app/fit.js`: text that shrinks to fit its box
 - `app/overlays.js`: sheets, inspect, deck viewer and settings
 - `app/audio.js`: synthesized sound (effects, an ambient bed per kind of place, the theme)
-- `app/book.js`: the Red Book, today's road and portrait choice in storage; `app/screens/book.js`: the Red Book to read
-- `app/coach.js`: coach marks and *How Pai Gow plays*; `app/screens/roadMap.js`: the campaign's map
+- `app/book.js`: the Red Book and portrait choice in storage; `app/screens/book.js`: the Red Book to read
+- `app/coach.js`: coach marks and *How to play*; `app/screens/roadMap.js`: the campaign's map
 
 `play.js` and `autopass.js` are plain logic and are tested in Node (`test/app.test.js`).
 `tools/make-icons.js` renders the home-screen icons from `app/icons/icon.svg`.
@@ -841,7 +833,7 @@ Every payload carries a `seq` number that increases for each event the game emit
 
 ### Emblems (this game's planeswalker abilities)
 
-Emblems are defined in `src/cards/emblems.js` (Pai Gow's heroes and opponents have one each, see *Planeswalker
+Emblems are defined in `src/cards/emblems.js` (Istari's heroes and opponents have one each, see *Planeswalker
 powers*) and given to players with the `emblems` option
 (default: `DEFAULT_EMBLEMS`, i.e. `['planeswalker']` for everyone). Each emblem appears in
 `state.players[].emblems` with its abilities, `activationsPerTurn` and `activationsThisTurn`.
@@ -865,7 +857,7 @@ powers*) and given to players with the `emblems` option
 ### Limits (this game's screen-size rules)
 
 So that a whole board fits on a phone screen, a game can impose limits (the `limits` option;
-`GAME_LIMITS` is `{ hand: 10, creatures: 10, permanents: 8 }`, and Pai Gow uses it). A game
+`GAME_LIMITS` is `{ hand: 10, creatures: 10, permanents: 8 }`, and Istari uses it). A game
 has none unless asked:
 - **Hand:** a card drawn into a full hand, or returned to one, is **burned**: it goes to the
   graveyard, with a `cardBurned { playerId, cardId, cardName, reason: 'draw' | 'returnToHand' }`
@@ -878,9 +870,9 @@ has none unless asked:
 
 Limits survive `serialize()`, `clone()` and `getPlayerView()`, so the AI's simulations obey them.
 
-### Variant rules (Pai Gow)
+### Variant rules (Istari)
 
-Options that change the rules, all off unless asked (Pai Gow uses them all):
+Options that change the rules, all off unless asked (Istari uses them all):
 - `openingHandSize`: cards in an opening hand (default 7).
 - `deckingLoss: false`: drawing from an empty library doesn't lose the game (the
   `drawFromEmptyLibrary` event still happens).
@@ -920,7 +912,7 @@ stall coming. The variant survives `serialize()` and `clone()`.
 - The player who goes first skips the draw step of turn 1 (103.8a).
 - Declare blockers and combat damage are skipped when no creatures attack (508.8).
 - Setup: each player shuffles (103.3) and draws an opening hand of 7 (103.5).
-- Mulligans (103.5, the London mulligan), when the game is created with `mulligans: true` (Pai Gow
+- Mulligans (103.5, the London mulligan), when the game is created with `mulligans: true` (Istari
   rounds aren't: every card starts in hand):
   - Each player in turn order, the starting player first, keeps the hand or mulligans.
   - A mulligan shuffles the hand into the library and draws a new 7.
@@ -1206,12 +1198,12 @@ phase records whether players get priority and can provide a `skip` rule.
 
 There are three computer players, all in `src/ai/` (`createCpuController` in `src/ai/cpu.js` makes
 one from an opponent's `ai`). Each listens to the game's `state` events and
-emits `action` events. Pai Gow's opponents all use the Strategist; the search AI is kept to compare
-it with, and the basic AI plays out both of their simulations, and Pai Gow's fast forward.
+emits `action` events. Istari's opponents all use the Strategist; the search AI is kept to compare
+it with, and the basic AI plays out both of their simulations, and Istari's fast forward.
 
 ### The Strategist (`src/ai/strategist/`)
 
-Pai Gow's CPU. It was written for Pai Gow's tiny games (five cards each, free mana, 5 or 8 life),
+Istari's CPU. It was written for Istari's tiny games (five cards each, free mana, 5 or 8 life),
 where the search AI below was written for 40-card Magic.
 
 **What it knows** (`beliefs.js`): only what a person across the table would. `blindView(game, me)`
@@ -1264,7 +1256,7 @@ Denethor, Elrond, Old Man Willow, Goldberry, Lobelia) hold on and imagine what y
 sit between. Each deck also has a plan (`deckPlan`: race, grind or tempo, from what's in it) that
 shifts the profile for that round, so a Warden handed a racing deck races a little more.
 
-**Decks** (`src/paigow/deckBuilder.js`): `tools/rate-cards.js` rates every card for Pai Gow from
+**Decks** (`src/match/deckBuilder.js`): `tools/rate-cards.js` rates every card for Istari from
 60,000 self-played rounds (a logistic regression on what was in each deck, with a bonus for the
 number of creatures; mana costs don't come into it, since mana is free). `buildDecks` scores each
 of the 3,003 possible decks, turns the score into a chance of beating a deck dealt at random, and
@@ -1575,8 +1567,8 @@ deck cares about cards and life. `weightsFor(profile)` (`evaluate.js`) picks a d
 3. **The defaults.**
 
 Pass the profile to the search AI: `new SearchAIController({ game, playerId, weights: 'aggro' })`,
-or a deck name, or a weights object. Pai Gow's opponents use an archetype or the defaults
-(`src/paigow/personas.js`).
+or a deck name, or a weights object. Istari's opponents use an archetype or the defaults
+(`src/match/personas.js`).
 
 The weights in `src/ai/weights.js` were fitted, and the results below measured, with
 Planeswalker's AI arena and tuning tools (`tools/ai-arena.js` and `tools/tune-ai.js` there), on

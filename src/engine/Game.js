@@ -247,7 +247,7 @@ export class Game extends EventEmitter {
   #random;
   #shuffleLibraries;
   #mulligans = false;
-  /** Variant rules (Pai Gow): see the constructor. */
+  /** Variant rules (Istari): see the constructor. */
   #variant = { openingHandSize: OPENING_HAND_SIZE, deckingLoss: true, infiniteMana: false, stallDraw: false, turnLimit: Infinity };
   /** With `stallDraw`: a fingerprint of the lasting state at the end of each turn, the last few. */
   #stallPrints = [];
@@ -311,7 +311,7 @@ export class Game extends EventEmitter {
    * @param {boolean} [options.silent] Emit no events at all, for fast simulations (AI search).
    * @param {boolean} [options.mulligans] Let players mulligan their opening hands (103.5, the
    *   London mulligan): otherwise everyone keeps the seven cards they draw.
-   * Variant rules (Pai Gow mode), all off by default:
+   * Variant rules (Istari mode), all off by default:
    * @param {number} [options.openingHandSize] Cards in an opening hand (default OPENING_HAND_SIZE).
    * @param {boolean} [options.deckingLoss] Set false so drawing from an empty library doesn't lose the game.
    * @param {boolean} [options.infiniteMana] Every player can pay any mana cost, any number of times
@@ -1701,7 +1701,7 @@ export class Game extends EventEmitter {
 
   #startFirstTurn() {
     for (const { id } of this.#players) {
-      // What the player's setup starts them with (a Pai Gow opponent's own, see src/paigow/personas.js).
+      // What the player's setup starts them with (an Istari opponent's own, see src/match/personas.js).
       this.#startWith(id, this.#setup.startsWith[id] ?? [], null, 'setup');
       this.#shuffleIn(id, this.#setup.shufflesIn[id] ?? [], null, 'setup');
       this.#startInGraveyard(id, this.#setup.startsInGraveyard[id] ?? []);

@@ -1,10 +1,10 @@
 /**
  * Teaching the format: first-run coach marks (a few steps, each pointing at something on the screen), and the
- * "How Pai Gow plays" sheet. They teach Pai Gow and this app's gestures, not Magic.
+ * "How to play" sheet. They teach Istari and this app's gestures, not Magic.
  */
 import { h } from './dom.js';
-import { PAIGOW_RULES } from '../src/paigow/paigow.js';
-import { CAMPAIGN_RULES } from '../src/paigow/campaign.js';
+import { MATCH_RULES } from '../src/match/match.js';
+import { CAMPAIGN_RULES } from '../src/match/campaign.js';
 
 const SEEN_KEY = 'istari.seen';
 
@@ -83,7 +83,7 @@ export async function coach(app, key, steps, { root = app.root, stillValid = () 
 
 /** The format's rules and the app's gestures, on a sheet. */
 export function showHowToPlay(app) {
-  const { decks, deckSize, startingLife, secondPlayerLife } = PAIGOW_RULES;
+  const { decks, deckSize, startingLife, secondPlayerLife } = MATCH_RULES;
   const section = (title, lines) => h('section.how-section', h('h4', title), h('ul', lines.map((line) => h('li', line))));
   const body = h('div.how',
     section('The match', [
@@ -103,7 +103,6 @@ export function showHowToPlay(app) {
       `Beat an opponent and you may take their Ring of Power (up to ${CAMPAIGN_RULES.maxRings}), for 1 less starting life each round, or add a common to every booster you open.`,
     ]),
     section('Beside the campaign', [
-      'Today\'s road is one match a day: the same hero, opponent and boosters for everyone who plays that day. Nothing of your campaign is at stake in it, and you can share how it went.',
       'The Red Book keeps the cards you\'ve found, your record against everyone you\'ve met, and the rings you\'ve borne.',
       'Three heroes are met on the road: each joins you once you\'ve beaten the opponent named. Win a campaign with a hero and they get a second portrait.',
     ]),
@@ -114,5 +113,5 @@ export function showHowToPlay(app) {
       'Tap your graveyard, exile or library count to see the cards there, and play the ones you can.',
       'Fast forward appears when a player has nothing left to do, and plays the round out.',
     ]));
-  app.overlays.sheet({ title: 'How Pai Gow plays', body, options: [], cancel: 'Close' });
+  app.overlays.sheet({ title: 'How to play', body, options: [], cancel: 'Close' });
 }

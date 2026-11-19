@@ -2,10 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION, PHASE, TOKEN, EFFECT, KEYWORD } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
-import { createMatch, PAIGOW_RULES } from '../src/paigow/paigow.js';
-import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { placeOf } from '../src/paigow/places.js';
+import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
+import { createMatch, MATCH_RULES } from '../src/match/match.js';
+import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { placeOf } from '../src/match/places.js';
 import { TOKEN_PRESENTATION } from '../src/cards/tokenArt.js';
 import {
   setup, state, ok, cast, advanceTo, named,
@@ -21,7 +21,7 @@ const resolve = (game) => {
 };
 
 test('Bill Ferny is an opponent whose power sacrifices a Treasure for a Nazgûl', () => {
-  assert.equal(PAIGOW_OPPONENTS.billFerny.emblem, 'billFerny');
+  assert.equal(OPPONENTS.billFerny.emblem, 'billFerny');
   assert.ok(CAMPAIGN_OPPONENTS.includes('billFerny'));
   assert.equal(placeOf('billFerny').card, 'Bill Ferny, Bree Swindler');
   assert.equal(EMBLEMS.billFerny.abilities[0].timing, 'sorcery');
@@ -59,6 +59,6 @@ test('Bill Ferny’s packs always hold two of himself and two Bill the Ponys', (
     const cards = createMatch({ seed, opponentId: 'billFerny' }).cpuDecks.flat();
     assert.equal(cards.filter((id) => id === 'billFernyBreeSwindler').length, 2, `seed ${seed}`);
     assert.equal(cards.filter((id) => id === 'billThePony').length, 2, `seed ${seed}`);
-    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+    assert.equal(cards.length, MATCH_RULES.cardsDealt);
   }
 });

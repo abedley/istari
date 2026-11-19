@@ -1,5 +1,5 @@
 /**
- * The Strategist's evaluation, for Pai Gow (no lands, no library): the chance that `me` wins from a
+ * The Strategist's evaluation, for Istari (no lands, no library): the chance that `me` wins from a
  * position at the start of its own turn, between 0 and 1.
  *
  * It's a logistic model over a few features (positionFeatures), fitted to who went on to win in

@@ -9,8 +9,8 @@ import { candidates, probe } from '../src/ai/strategist/moves.js';
 import { decide, strategistPolicy } from '../src/ai/strategist/policy.js';
 import { profileFor, TEMPERAMENTS, PERSONA_TEMPERAMENT } from '../src/ai/strategist/profiles.js';
 import { StrategistAIController } from '../src/ai/strategist/StrategistAIController.js';
-import { createMatch, setDecks, roundSetup, arrangeCpuDecks, PLAYER_ID, CPU_ID } from '../src/paigow/paigow.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { createMatch, setDecks, roundSetup, arrangeCpuDecks, PLAYER_ID, CPU_ID } from '../src/match/match.js';
+import { OPPONENTS } from '../src/match/personas.js';
 import { createCpuController, AI_KIND } from '../src/ai/cpu.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
@@ -57,7 +57,7 @@ function cast(game, playerId, cardId, targetName = null) {
 }
 
 /**
- * A Pai Gow-like game (infinite mana, no libraries) where p2 goes first: each side's `board` is cast in
+ * A game like Istari's (infinite mana, no libraries) where p2 goes first: each side's `board` is cast in
  * its first main phase, and it's then p1's main phase on turn 4, with `hand` still in each hand.
  */
 function position({ p1 = {}, p2 = {} }) {
@@ -102,7 +102,7 @@ const named = (game, id) => game.peekState().battlefield.find((p) => p.id === id
 // ---------------------------------------------------------------------------
 // What it knows
 
-function paigowRound(seed, { silent = true } = {}) {
+function matchRound(seed, { silent = true } = {}) {
   let match = createMatch({ seed });
   match = setDecks(match, arrangeCpuDecks(match.cards, seededRandom(seed + 1)));
   const game = new Game({ ...roundSetup(match).game, silent });
@@ -111,7 +111,7 @@ function paigowRound(seed, { silent = true } = {}) {
 }
 
 test('a blind view holds nothing of the other player\'s hidden cards', () => {
-  const { game } = paigowRound(11);
+  const { game } = matchRound(11);
   const view = blindView(game, CPU_ID);
   assert.deepEqual(view.unknownCards[PLAYER_ID], []);
   assert.deepEqual(view.zones[PLAYER_ID].hand, []);
@@ -125,7 +125,7 @@ test('a blind view holds nothing of the other player\'s hidden cards', () => {
 });
 
 test('a guessed world deals the opponent as many cards as they hold, from the booster\'s cards', () => {
-  const { game } = paigowRound(12);
+  const { game } = matchRound(12);
   const world = Game.deserialize(sampleWorld(blindView(game, CPU_ID), seededRandom(4)), { silent: true }).peekState();
   const theirs = world.players.find((p) => p.id === PLAYER_ID).hand;
   assert.equal(theirs.length, 5);
@@ -137,7 +137,7 @@ test('a guessed world deals the opponent as many cards as they hold, from the bo
 test('its choices don\'t change when the other player\'s hidden cards do', () => {
   let checked = 0;
   for (const seed of [21, 22, 23]) {
-    const { game } = paigowRound(seed);
+    const { game } = matchRound(seed);
     // Other cards for the player's hand, as the engine makes them, under the same ids.
     const others = new Game({ ...roundSetup(setDecks(createMatch({ seed: seed + 100 }), arrangeCpuDecks(createMatch({ seed: seed + 100 }).cards, seededRandom(1)))).game, silent: true });
     others.start();
@@ -290,7 +290,7 @@ test('a probe tells what an action changes', () => {
 // Personalities and the controller
 
 test('every opponent has a temperament, and plays with the Strategist', () => {
-  for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
+  for (const [id, opponent] of Object.entries(OPPONENTS)) {
     assert.equal(opponent.ai.kind, AI_KIND.STRATEGIST, id);
     assert.ok(TEMPERAMENTS[PERSONA_TEMPERAMENT[id]], `${id}'s temperament`);
     assert.equal(profileFor(id).temperament, PERSONA_TEMPERAMENT[id]);
@@ -307,7 +307,7 @@ test('every opponent has a temperament, and plays with the Strategist', () => {
 });
 
 test('the controller plays a whole round through the game\'s events, and is seen thinking', async () => {
-  const { game, match } = paigowRound(31, { silent: false });
+  const { game, match } = matchRound(31, { silent: false });
   const setup = roundSetup(match);
   assert.equal(setup.cpu.ai.kind, AI_KIND.STRATEGIST);
   assert.equal(setup.cpu.ai.persona, match.opponentId);
@@ -348,7 +348,7 @@ test('the controller plays a whole round through the game\'s events, and is seen
 });
 
 test('createCpuController makes a Strategist for an opponent', () => {
-  const { game, match } = paigowRound(32, { silent: false });
+  const { game, match } = matchRound(32, { silent: false });
   const cpu = createCpuController(game, roundSetup(match).cpu, { seed: 1 });
   assert.ok(cpu instanceof StrategistAIController);
   cpu.detach();

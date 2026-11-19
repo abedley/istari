@@ -32,16 +32,15 @@ export {
 } from './ai/evaluate.js';
 export { AI_KIND, createCpuController } from './ai/cpu.js';
 export {
-  PAIGOW_RULES, PAIGOW_POOL, POOL_BY_RARITY, BOOSTER, PLAYER_ID, CPU_ID, ROUND_RESULT, MATCH_OUTCOME,
+  MATCH_RULES, CARD_POOL, POOL_BY_RARITY, BOOSTER, PLAYER_ID, CPU_ID, ROUND_RESULT, MATCH_OUTCOME,
   cardStrength, spreadDecks, openBooster, openRareBooster, matchRules, arrangeCpuDecks, createMatch, validDecks, setDecks, score, outcome, nextRound,
   playerStartsRound, recordRound, roundSetup,
-} from './paigow/paigow.js';
-export { PAIGOW_OPPONENTS, paigowOpponent } from './paigow/personas.js';
-export { PLACES, JOURNEYS_END, AMBIENCE, placeOf } from './paigow/places.js';
-export { RoundStats, matchStats } from './paigow/roundStats.js';
-export { emptyBook, readBook, recap } from './paigow/book.js';
-export { HERO_UNLOCKS, heroOpen, portraitOpen, unlocksOf } from './paigow/unlocks.js';
-export { dayOf, dailyMatch, shareText } from './paigow/daily.js';
-export { outOfActions, canFastForward, planFastForward } from './paigow/fastForward.js';
+} from './match/match.js';
+export { OPPONENTS, opponentById } from './match/personas.js';
+export { PLACES, JOURNEYS_END, AMBIENCE, placeOf } from './match/places.js';
+export { RoundStats, matchStats } from './match/roundStats.js';
+export { emptyBook, readBook, recap } from './match/book.js';
+export { HERO_UNLOCKS, heroOpen, portraitOpen, unlocksOf } from './match/unlocks.js';
+export { outOfActions, canFastForward, planFastForward } from './match/fastForward.js';
 export { CARD_PRESENTATION } from './cards/importedCards.js';
 export { TOKEN_PRESENTATION } from './cards/tokenArt.js';

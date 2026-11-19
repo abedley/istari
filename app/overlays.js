@@ -11,8 +11,8 @@ import { fit } from './fit.js';
 import { setVolume } from './audio.js';
 import { showHowToPlay, resetCoach } from './coach.js';
 import { eraseBook } from './book.js';
-import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
-import { PLACES, JOURNEYS_END, withArt } from '../src/paigow/places.js';
+import { HEROES, OPPONENTS } from '../src/match/personas.js';
+import { PLACES, JOURNEYS_END, withArt } from '../src/match/places.js';
 
 export function createOverlays(app) {
   let open = null;
@@ -160,7 +160,7 @@ export function createOverlays(app) {
 
   /** Who made what: the fonts, the symbols, the cards, and the art each portrait comes from. */
   function credits() {
-    const people = [...Object.values(PAIGOW_HEROES), ...Object.values(PAIGOW_OPPONENTS)].filter((person) => person.portrait?.artist);
+    const people = [...Object.values(HEROES), ...Object.values(OPPONENTS)].filter((person) => person.portrait?.artist);
     const body = h('div.how',
       h('section.how-section', h('h4', 'Cards'),
         h('p', 'The cards are from Magic: The Gathering\'s The Lord of the Rings: Tales of Middle-earth, © Wizards of the Coast. Their images come from Scryfall. Hold a card to see it in full, with its artist.')),
@@ -218,7 +218,7 @@ export function createOverlays(app) {
       switchRow('Auto-pass priority', 'autoPass', 'Off is full control: you stop at every step.'),
       extra.map((e) => h('button.btn', { class: e.danger ? 'danger' : '', onclick: () => { close(); e.onPick(); } }, e.label)),
       h('div.row.settings-links',
-        h('button.btn.small', { onclick: () => showHowToPlay(app) }, 'How Pai Gow plays'),
+        h('button.btn.small', { onclick: () => showHowToPlay(app) }, 'How to play'),
         h('button.btn.small', { onclick: () => { resetCoach(app); close(); } }, 'Show tips again'),
         h('button.btn.small', { onclick: credits }, 'Credits'),
         h('button.btn.small', { onclick: async () => {

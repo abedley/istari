@@ -5,21 +5,18 @@ import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { playout } from '../src/ai/simulate.js';
 import {
   createMatch, setDecks, recordRound, roundSetup, outcome, decidingRound, PLAYER_ID, CPU_ID, ROUND_RESULT, MATCH_OUTCOME,
-} from '../src/paigow/paigow.js';
-import { createCampaign, CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+} from '../src/match/match.js';
+import { createCampaign, CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { HEROES, OPPONENTS } from '../src/match/personas.js';
 import { CARDS } from '../src/cards/cards.js';
-import { RoundStats, matchStats, emptyStats } from '../src/paigow/roundStats.js';
+import { RoundStats, matchStats, emptyStats } from '../src/match/roundStats.js';
 import {
   emptyBook, readBook, recordBooster, recordRoundPlayed, recordMatchEnd, recordRing, recordCampaignBegun, recordCampaignProgress,
-  catchUp, recap, dayBefore, knows,
-} from '../src/paigow/book.js';
+  catchUp, recap, knows,
+} from '../src/match/book.js';
 import {
   HERO_UNLOCKS, heroOpen, heroNeeds, portraitOpen, unlocksOf,
-} from '../src/paigow/unlocks.js';
-import {
-  dayOf, daySeed, dailyMatch, dayLabel, shareText,
-} from '../src/paigow/daily.js';
+} from '../src/match/unlocks.js';
 
 const ready = (options = {}) => {
   const match = createMatch({ seed: 9, heroId: 'frodo', opponentId: 'gandalf', ...options });
@@ -127,9 +124,9 @@ test('the Red Book counts a match once, however often it is recorded', () => {
 
 test('heroes and portraits open on the road', () => {
   let book = emptyBook();
-  assert.deepEqual(Object.keys(HERO_UNLOCKS).sort(), Object.keys(PAIGOW_HEROES).sort());
+  assert.deepEqual(Object.keys(HERO_UNLOCKS).sort(), Object.keys(HEROES).sort());
   for (const beat of Object.values(HERO_UNLOCKS)) if (beat) assert.ok(CAMPAIGN_OPPONENTS.includes(beat), beat);
-  assert.deepEqual(Object.keys(PAIGOW_HEROES).filter((id) => heroOpen(book, id)).sort(), ['frodo', 'legolas', 'merry', 'samwise']);
+  assert.deepEqual(Object.keys(HEROES).filter((id) => heroOpen(book, id)).sort(), ['frodo', 'legolas', 'merry', 'samwise']);
   assert.equal(heroNeeds('frodo'), null);
   assert.match(heroNeeds('pippin'), /Beat Birthday Bilbo/);
   assert.deepEqual(unlocksOf(book), []);
@@ -150,7 +147,7 @@ test('heroes and portraits open on the road', () => {
   assert.equal(portraitOpen(book, 'frodo'), true);
   assert.ok(book.fresh.unlocks.includes('A new portrait for Frodo'));
   assert.equal(portraitOpen({ ...book, heroes: { radagast: { begun: 1, won: 1, furthest: 13 } } }, 'radagast'), false);
-  for (const [id, hero] of Object.entries(PAIGOW_HEROES)) {
+  for (const [id, hero] of Object.entries(HEROES)) {
     if (hero.altPortrait) {
       assert.match(hero.altPortrait.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
       assert.ok(Object.values(CARDS).some((c) => c.name === hero.altPortrait.card), `${id}: ${hero.altPortrait.card}`);
@@ -174,39 +171,4 @@ test('a campaign from before the book is caught up with, once', () => {
   book = recordRing(recordRing(book, 'gandalf'), 'gandalf');
   assert.deepEqual(book.rings, ['birthdayBilbo', 'gandalf']);
   assert.equal(recordCampaignBegun(book, campaign), book, 'already begun');
-});
-
-test('today\'s road: the same match for the same day, another the next, and a streak of days', () => {
-  assert.equal(dayOf(new Date(2026, 10, 14, 23, 59)), '2026-11-14');
-  assert.equal(dayOf(new Date(2026, 0, 5)), '2026-01-05');
-  assert.equal(dayLabel('2026-11-14'), '14 Nov');
-  assert.equal(dayBefore('2026-03-01'), '2026-02-28');
-  assert.equal(dayBefore('2026-01-01'), '2025-12-31');
-  const a = dailyMatch('2026-11-14');
-  assert.deepEqual(dailyMatch('2026-11-14'), a);
-  assert.equal(a.daily, '2026-11-14');
-  assert.ok(PAIGOW_HEROES[a.heroId] && PAIGOW_OPPONENTS[a.opponentId]);
-  assert.equal(a.cards.length, 15);
-  assert.ok(!a.campaign);
-  const b = dailyMatch('2026-11-15');
-  assert.notEqual(daySeed('2026-11-14'), daySeed('2026-11-15'));
-  assert.notDeepEqual(b.cards, a.cards);
-  // Over a month, more than one hero and several opponents turn up.
-  const month = Array.from({ length: 30 }, (_, i) => dailyMatch(`2026-11-${String(i + 1).padStart(2, '0')}`));
-  assert.ok(new Set(month.map((m) => m.heroId)).size >= 4);
-  assert.ok(new Set(month.map((m) => m.opponentId)).size >= 8);
-  // Played, and shared.
-  let match = setDecks(a, [a.cards.slice(0, 5), a.cards.slice(5, 10), a.cards.slice(10, 15)]);
-  match = [ROUND_RESULT.WON, ROUND_RESULT.LOST, ROUND_RESULT.WON].reduce((m, r) => recordRound(m, r), match);
-  const text = shareText(match);
-  assert.match(text, /^Istari · 14 Nov · .+ at .+ · ✅❌✅ 2–1$/);
-  assert.ok(text.includes(PAIGOW_OPPONENTS[a.opponentId].name));
-  // The streak: two days running, then a day missed.
-  const day = (d, seed) => ({ ...match, daily: d, seed });
-  let book = recordMatchEnd(emptyBook(), day('2026-11-14', 1), MATCH_OUTCOME.WON);
-  book = recordMatchEnd(book, day('2026-11-14', 1), MATCH_OUTCOME.WON);
-  book = recordMatchEnd(book, day('2026-11-15', 2), MATCH_OUTCOME.LOST);
-  assert.deepEqual(book.daily, { played: 2, won: 1, streak: 2, best: 2, last: '2026-11-15' });
-  book = recordMatchEnd(book, day('2026-11-17', 3), MATCH_OUTCOME.WON);
-  assert.deepEqual(book.daily, { played: 3, won: 2, streak: 1, best: 2, last: '2026-11-17' });
 });
