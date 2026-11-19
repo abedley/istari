@@ -14,6 +14,7 @@ const place = (name, line, cardId, x, y, ambience) => Object.freeze({ name, line
 export const PLACES = Object.freeze({
   birthdayBilbo: place('The Party Field', 'Lanterns in the tree, and a hundred and forty-four guests.', 'theShire', 50, 40, AMBIENCE.SHIRE),
   burglarBilbo: place('Bag End', 'A round green door, and a hobbit who has been there and back again.', 'shireTerrace', 30, 35, AMBIENCE.SHIRE),
+  lobelia: place('Sackville', 'A smart hole across the Water, and a drawer full of other people\'s spoons.', 'lobeliaSackvilleBaggins', 50, 30, AMBIENCE.SHIRE),
   gandalf: place('The Bridge of Khazad-dûm', 'Deep under the mountains, where the drums have stopped.', 'minesOfMoria', 55, 45, AMBIENCE.HALL),
   oldManWillow: place('The Old Forest', 'The trees do not like strangers, and the paths move.', 'oldManWillow', 60, 50, AMBIENCE.FOREST),
   goldberry: place('The House of Tom Bombadil', 'Water-lilies in bowls, candles on the table, and a song like a river.', 'goldberryRiverDaughter', 56, 25, AMBIENCE.FOREST),

@@ -58,6 +58,22 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['You did not come by that ring honestly. I approve.', 'Pocketed a ring, have you? We are two of a kind.'],
     },
   },
+  lobelia: {
+    name: 'Lobelia Sackville-Baggins', color: 'black', emblem: 'lobelia', ai: strategist(),
+    // Her own card and her son's in every pack.
+    setup: { pack: ['lobeliaSackvilleBaggins', 'lothoCorruptShirriff'] },
+    portrait: portrait('8/7/87500b92-3d68-42f3-afa9-f8206b2ebcbb.jpg?1783916303', 50, 10, 300, 'Lobelia Sackville-Baggins', 'Hristo D. Chukov'),
+    banter: {
+      start: ['Bag End should have been mine, you know. Sit down, and mind the spoons.', 'A game? Very well. What are the stakes? Silver, I hope.', 'Lotho says I am to play nicely. Lotho says a great many things.'],
+      win: ['Mine! And I shall count it twice.', 'There. Put it on the table, and step away from the silver.'],
+      lose: ['Thief! Robber! I shall have the Shirriffs on you!', 'Hmph. Beginner\'s luck. The Bagginses always had it.'],
+      comeback: ['Every coin counts, and I count every coin.', 'You thought me finished? I have an umbrella yet.'],
+      collapse: ['My spoons! Somebody has had my spoons!', 'Lotho! Lotho, where are you when I need you?'],
+      kill: ['Out you go, and good riddance.', 'Off with him! And leave the silver behind.'],
+      loss: ['That was a perfectly good hobbit, and you have broken him.', 'Well! I shall be sending you the bill for that.'],
+      ring: ['A ring? Gold, is it? Hand it here and I shall keep it safe.', 'That ring was a Baggins heirloom. Rightfully mine, then.'],
+    },
+  },
   gandalf: {
     name: 'Gandalf', color: 'blue', emblem: 'gandalf', ai: strategist(),
     // His sword in every pack, and his spells already spent: five Gandalf's Sanctions in his graveyard each round.

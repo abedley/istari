@@ -1188,8 +1188,10 @@ export class Game extends EventEmitter {
    * must first choose a target for a triggered ability.
    */
   #givePriority(playerId) {
-    // Characteristics that count cards in graveyards (Glamdring) are brought up to date.
-    if (this.#battlefield.some((p) => this.#cardDefinitions[p.cardId].staticAbilities?.some((e) => e.per))) this.#applyContinuousEffects();
+    // Characteristics that count cards in graveyards (Glamdring), or Treasures (Lobelia's ring), are brought up to date.
+    const counts = (definition) => definition?.staticAbilities?.some((e) => e.per);
+    if (this.#battlefield.some((p) => counts(this.#cardDefinitions[p.cardId]))
+      || [...this.#zones.values()].some((zone) => zone.emblems.some((e) => counts(this.#emblemDefinitions[e.emblemId])))) this.#applyContinuousEffects();
     // 117.5 / 704.3: state-based actions are checked before a player receives priority,
     // then triggered abilities are put on the stack (603.3).
     if (this.#checkStateBasedActions()) return false;

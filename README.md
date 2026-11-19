@@ -55,11 +55,11 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Gildor, the Rider in Black, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
 Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black and
-Burglar Bilbo are Raiders, Saruman, Denethor, Elrond, Old Man Willow and Goldberry are Wardens, the rest Tricksters. The match is saved with its campaign
+Burglar Bilbo are Raiders, Saruman, Denethor, Elrond, Old Man Willow, Goldberry and Lobelia are Wardens, the rest Tricksters. The match is saved with its campaign
 after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
@@ -69,8 +69,8 @@ rarity, so the pack stays 15 cards: `withCards` in `src/paigow/paigow.js`); `lib
 its library at the start of every round, after its hand of five (the Game's `shufflesIn` option);
 `battlefield`, permanents it starts every round with (the Game's `startsWith` option, like Samwise's ring); and
 `graveyard`, cards already in its graveyard as every round begins (the Game's `startsInGraveyard` option).
-Gandalf, Old Man Willow and the Rider in Black have one. Gandalf's packs always hold *Glamdring*, and he starts
-every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
+Gandalf, Old Man Willow, the Rider in Black and Lobelia have one. Gandalf's packs always hold *Glamdring*, and he starts
+every round with 5 *Gandalf's Sanction* in his graveyard. The Rider's packs always hold three *Nazgûl*. Lobelia's always hold *Lobelia Sackville-Baggins* and her son *Lotho, Corrupt Shirriff* (both make Treasures, which her ring turns into an anthem). Old Man Willow's pack always holds *Old Man Willow*, and he starts every round
 with 5 Forests on the battlefield and 5 more in his library, so he draws one each turn (and his card, whose
 power and toughness are the lands he controls, starts at 5/5 and grows with each he plays).
 
@@ -98,6 +98,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Pippin | The Ring of the Tooks *(made up)* | Second Breakfast | 0: Create a Morsel token (a Food artifact with "{T}, Sacrifice this artifact: You gain 1 life"). Sorcery speed. |
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
+| Lobelia Sackville-Baggins | The Sackville Ring *(made up)* | Spoons and Silver | (passive) Creatures you control get +1/+1 for each Treasure you control. |
 | Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
@@ -122,7 +123,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black,
+`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black,
 Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
 drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
@@ -1252,7 +1253,7 @@ the time; the search AI's evaluation, given its best scale, 76.6%.
 `patience` scale what its own clock, the opponent's clock and its cards in hand count for in the
 evaluation; `foresight` is how many guesses it makes of the hidden hand; `tastes` are for building
 decks. Raiders (Sauron, Théoden, the Rider in Black, Burglar Bilbo) race, Wardens (Saruman,
-Denethor, Elrond, Old Man Willow, Goldberry) hold on and imagine what you might have, Tricksters (the rest)
+Denethor, Elrond, Old Man Willow, Goldberry, Lobelia) hold on and imagine what you might have, Tricksters (the rest)
 sit between. Each deck also has a plan (`deckPlan`: race, grind or tempo, from what's in it) that
 shifts the profile for that round, so a Warden handed a racing deck races a little more.
 

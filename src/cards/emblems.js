@@ -216,6 +216,20 @@ export const EMBLEMS = deepFreeze({
     abilities: [],
     match: { rareBooster: true, lockedFirstDeck: true },
   },
+  // A passive anthem that counts (`per`, as a card's: see Game's #applyContinuousEffects).
+  lobelia: {
+    id: 'lobelia',
+    name: 'The Sackville Ring',
+    ring: true,
+    passive: true,
+    power: 'Spoons and Silver',
+    text: 'Creatures you control get +1/+1 for each Treasure you control.',
+    abilities: [],
+    staticAbilities: [{
+      affected: AFFECTED.EACH_CREATURE_YOU_CONTROL, power: 1, toughness: 1,
+      per: { of: 'permanents', filter: { subtypes: ['Treasure'] } },
+    }],
+  },
   // "Once per game": `activationsPerGame` (see Game's #canActivate).
   goldberry: {
     ...power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {
