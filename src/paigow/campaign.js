@@ -30,8 +30,8 @@ export const CAMPAIGN_RULES = Object.freeze({
  * those drawn are faced in this order.
  */
 export const CAMPAIGN_OPPONENTS = Object.freeze([
-  'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'ringwraiths', 'glorfindel',
-  'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
+  'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'pippin', 'merry', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'strider',
+  'ringwraiths', 'glorfindel', 'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
 ]);
 
 /**
@@ -43,17 +43,23 @@ export const CAMPAIGN_BOOKS = Object.freeze([
     id: 'book1',
     name: 'Book I',
     pool: Object.freeze([
-      'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'glorfindel',
+      'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'pippin', 'merry', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'strider',
+      'glorfindel',
     ]),
     draw: 4,
     boss: 'ringwraiths',
   }),
 ]);
 
-/** A book's road: `draw` of its pool at random (`random`: a function like Math.random), in road order, then its boss. */
-export function drawBookOpponents(book, random = Math.random) {
+/**
+ * A book's road: `draw` of its pool at random (`random`: a function like Math.random), in road order, then its boss.
+ * With `heroId`, the opponent who bears that hero's ring (Merry, for Merry) is left out: you never meet yourself.
+ */
+export function drawBookOpponents(book, random = Math.random, heroId = null) {
   const order = (id) => CAMPAIGN_OPPONENTS.indexOf(id);
-  const picked = shuffle([...book.pool], random).slice(0, book.draw).sort((a, b) => order(a) - order(b));
+  const own = PAIGOW_HEROES[heroId]?.emblem;
+  const pool = book.pool.filter((id) => PAIGOW_OPPONENTS[id].emblem !== own);
+  const picked = shuffle(pool, random).slice(0, book.draw).sort((a, b) => order(a) - order(b));
   return [...picked, book.boss];
 }
 
@@ -63,7 +69,7 @@ export const CAMPAIGN_STATUS = Object.freeze({ PLAYING: 'playing', WON: 'won', L
 export function createCampaign({ heroId = DEFAULT_HERO, seed = Math.floor(Math.random() * 2 ** 32), opponents = null } = {}) {
   if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
   // The road: Book I's draw (the same for the same seed), unless one is given.
-  opponents ??= drawBookOpponents(CAMPAIGN_BOOKS[0], seededRandom(seed));
+  opponents ??= drawBookOpponents(CAMPAIGN_BOOKS[0], seededRandom(seed), heroId);
   for (const id of opponents) if (!PAIGOW_OPPONENTS[id]) throw new Error(`Unknown opponent: ${id}`);
   return {
     seed,

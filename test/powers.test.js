@@ -62,7 +62,13 @@ function usePower(game, targetOf = null) {
 test('every hero and opponent has a power of their own, once a turn, but for Bill Ferny’s', () => {
   const people = [...Object.values(PAIGOW_HEROES), ...Object.values(PAIGOW_OPPONENTS)];
   const emblems = people.map((p) => p.emblem);
-  assert.equal(new Set(emblems).size, people.length);
+  // Heroes have a ring each, and so do opponents; Merry, Pippin and Strider bear the same as opponents as heroes.
+  assert.equal(new Set(Object.values(PAIGOW_HEROES).map((p) => p.emblem)).size, Object.keys(PAIGOW_HEROES).length);
+  assert.equal(new Set(Object.values(PAIGOW_OPPONENTS).map((p) => p.emblem)).size, Object.keys(PAIGOW_OPPONENTS).length);
+  const shared = Object.keys(PAIGOW_OPPONENTS).filter((id) => Object.values(PAIGOW_HEROES).some((hero) => hero.emblem === PAIGOW_OPPONENTS[id].emblem));
+  assert.deepEqual(shared.sort(), ['merry', 'pippin', 'strider']);
+  for (const id of shared) assert.equal(PAIGOW_HEROES[id].emblem, PAIGOW_OPPONENTS[id].emblem);
+  assert.equal(new Set(emblems).size, people.length - shared.length);
   for (const person of people) {
     const emblem = EMBLEMS[person.emblem];
     assert.ok(emblem, `${person.name}'s power`);
@@ -87,7 +93,7 @@ test('every hero and opponent has a power of their own, once a turn, but for Bil
     // Each is a Ring of Power, with a name of its own and a name for what it does.
     assert.ok(emblem.power);
   }
-  assert.equal(new Set(emblems.map((id) => EMBLEMS[id].name)).size, people.length);
+  assert.equal(new Set(emblems.map((id) => EMBLEMS[id].name)).size, people.length - shared.length);
   assert.equal(EMBLEMS.gandalf.name, 'Narya');
   assert.equal(EMBLEMS.elrond.name, 'Vilya');
   assert.equal(EMBLEMS.galadriel.name, 'Nenya');

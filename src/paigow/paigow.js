@@ -202,7 +202,8 @@ export function createMatch({
   let cpuCards = openBooster(random);
   // The order of the CPU's decks, then its opponent (the random draws come in the order they always did).
   const order = shuffle([...Array(PAIGOW_RULES.decks).keys()], random);
-  const candidates = Object.keys(PAIGOW_OPPONENTS);
+  // Never yourself: not the opponent who bears your hero's ring.
+  const candidates = Object.keys(PAIGOW_OPPONENTS).filter((id) => PAIGOW_OPPONENTS[id].emblem !== PAIGOW_HEROES[heroId].emblem);
   const drawn = candidates[Math.floor(random() * candidates.length)];
   const opponentId = chosen ?? drawn;
   // Rings that change the match (Tom Bombadil's): drawn from a random of their own, so other matches stay as they were.

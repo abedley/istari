@@ -55,11 +55,11 @@ scoreboard) and `app/screens/battle.js` (a round). A match is a campaign's (see 
    wins takes it, and otherwise it's a tie.
 
 The CPU is one of Pai Gow's own opponents (`PAIGOW_OPPONENTS` in `src/paigow/personas.js`),
-picked at random: Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, the Ringwraiths, Glorfindel, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
+picked at random (never the one who is your own hero): Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Gildor, the Rider in Black, Butterbur, Bill Ferny, the Ringwraiths, Glorfindel, Merry, Pippin, Strider, Goldberry, Tom Bombadil, Sauron, Saruman, Théoden, Denethor, Elrond and
 Galadriel. Each has a portrait from a card's art (their LTR card's, but for the Bilbos: *Bilbo, Birthday
-Celebrant* from the LTR Commander decks and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
+Celebrant* from the LTR Commander decks; Merry, Pippin and Strider are heroes too, and as opponents bear their heroes' rings and portraits, with their own card in every pack, and *Bilbo Baggins, Burglar* from The Hobbit, and for Gildor, who has no card: *Chance-Met Elves*, his company), their own lines, and the Strategist
 (`src/ai/strategist/`, see *The Strategist*) with their own temperament: Sauron, Théoden, the Rider in Black,
-Burglar Bilbo, Glorfindel and the Ringwraiths are Raiders, Saruman, Denethor, Elrond, Old Man Willow, Goldberry and Lobelia are Wardens, the rest Tricksters. The match is saved with its campaign
+Burglar Bilbo, Glorfindel, Strider and the Ringwraiths are Raiders, Saruman, Denethor, Elrond, Old Man Willow, Goldberry, Lobelia and Merry are Wardens, the rest Tricksters. The match is saved with its campaign
 after each round. **The CPU knows nothing about your decks or your hand:** it sees your cards when you play
 or reveal them, how many you hold, and what you did, as a person across the table would.
 
@@ -129,8 +129,8 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 the title screen): you choose a hero, then play a Pai Gow match against each opponent on your road in
 turn. The campaign is split into six books (`CAMPAIGN_BOOKS`), each ending with a boss; only Book I is built
 so far. Book I draws 4 opponents at random (`drawBookOpponents`, seeded by the campaign's seed) from Birthday
-Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the
-Rider in Black, Butterbur, Bill Ferny and Glorfindel, faces them in road order (`CAMPAIGN_OPPONENTS`, every
+Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Pippin, Merry, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the
+Rider in Black, Butterbur, Bill Ferny, Strider and Glorfindel (never your own hero), faces them in road order (`CAMPAIGN_OPPONENTS`, every
 opponent from Birthday Bilbo to Sauron), then ends with its boss, the Ringwraiths; until Books II to VI
 exist, beating the Ringwraiths wins the campaign. You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you

@@ -30,7 +30,8 @@ export function dailyMatch(day) {
   const random = seededRandom(seed);
   const pick = (ids) => ids[Math.floor(random() * ids.length)];
   const heroId = pick(Object.keys(PAIGOW_HEROES));
-  const opponentId = pick(Object.keys(PAIGOW_OPPONENTS));
+  // Never yourself: not the opponent who bears your hero's ring.
+  const opponentId = pick(Object.keys(PAIGOW_OPPONENTS).filter((id) => PAIGOW_OPPONENTS[id].emblem !== PAIGOW_HEROES[heroId].emblem));
   return { ...createMatch({ seed, heroId, opponentId }), daily: day };
 }
 

@@ -21,9 +21,9 @@ export const TEMPERAMENTS = Object.freeze({
 
 /** Each Pai Gow opponent's temperament (PAIGOW_OPPONENTS in src/paigow/personas.js). */
 export const PERSONA_TEMPERAMENT = Object.freeze({
-  sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider', glorfindel: 'raider', ringwraiths: 'raider',
-  saruman: 'warden', denethor: 'warden', elrond: 'warden', oldManWillow: 'warden', goldberry: 'warden', lobelia: 'warden',
-  gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster', billFerny: 'trickster', butterbur: 'trickster',
+  sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider', glorfindel: 'raider', strider: 'raider', ringwraiths: 'raider',
+  saruman: 'warden', denethor: 'warden', elrond: 'warden', oldManWillow: 'warden', goldberry: 'warden', lobelia: 'warden', merry: 'warden',
+  gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster', billFerny: 'trickster', butterbur: 'trickster', pippin: 'trickster',
 });
 
 /** How a deck's plan (deckPlan in src/paigow/deckBuilder.js) shifts the way it's played, whoever plays it. */

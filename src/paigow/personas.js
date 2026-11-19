@@ -201,6 +201,54 @@ export const PAIGOW_OPPONENTS = deepFreeze({
       ring: ['That ring is a burden I would not carry, even to the Ford.', 'Keep it hidden. The Nine can feel it on you.'],
     },
   },
+  merry: {
+    name: 'Merry', color: 'gold', emblem: 'merry', ai: strategist(),
+    // His own card in every pack.
+    setup: { pack: ['meriadocBrandybuck'] },
+    portrait: portrait('8/8/885a3277-ef10-4dcf-ac63-eb8971cd627c.jpg?1783916264', 44, 18, 300, 'Meriadoc Brandybuck', 'Marie Magny'),
+    banter: {
+      start: ['Over the Brandywine, then, and no dawdling. I packed for both of us.', 'A game before the ferry? Go on. I have provisions enough for a long one.', 'You cannot keep a secret from a Brandybuck. Let us see your hand.'],
+      win: ['Packed, planned, and won. That is how we do things in Buckland.', 'There. Now help me load the ponies.'],
+      lose: ['Well! I did not plan for that.', 'You are a deeper one than you let on. Well played.'],
+      comeback: ['Never mind. There is more where that came from.', 'Hold on! The Brandybucks are not done.'],
+      collapse: ['That was not in the plan at all.', 'Oh, bother the ferry. We are sunk.'],
+      kill: ['Into the river with him!', 'Sorry about that. Nothing personal.'],
+      loss: ['Not him! He was carrying half the bacon.', 'That is a gap in the line I shall feel.'],
+      ring: ['We all knew about that ring, you know. Ever so long.', 'Careful with that. I have seen what it does to a fellow.'],
+    },
+  },
+  pippin: {
+    name: 'Pippin', color: 'gold', emblem: 'pippin', ai: strategist(),
+    // His own card in every pack.
+    setup: { pack: ['peregrinTook'] },
+    portrait: portrait('f/5/f5baee8d-88e7-4468-94a9-66ca8e2caf15.jpg?1783916263', 48, 18, 300, 'Peregrin Took', 'Campbell White'),
+    banter: {
+      start: ['A game? Lovely. Have you had second breakfast? I have. Twice.', 'Quick, before Farmer Maggot sees us! Deal.', 'I am not very good at this. Probably. We shall see.'],
+      win: ['I won? I won! Somebody write that down.', 'A fool of a Took, they said. Ha!'],
+      lose: ['Oh. Well, I was only half trying. The other half was thinking about mushrooms.', 'Fair enough. You did that very well.'],
+      comeback: ['Wait, wait, I have just had an idea!', 'Not done yet! A Took never is.'],
+      collapse: ['Oops. I may have touched something I should not have.', 'That was a mistake. Rather a large one.'],
+      kill: ['Sorry! It was an accident. Mostly.', 'Oh dear, did I do that?'],
+      loss: ['Hey! I liked that one!', 'Now who is going to share my mushrooms?'],
+      ring: ['Ooh, a ring. Can I hold it? No? Fair.', 'Put that thing away before something smells it.'],
+    },
+  },
+  strider: {
+    name: 'Strider', color: 'green', emblem: 'strider', ai: strategist(),
+    // His own card in every pack.
+    setup: { pack: ['striderRangerOfTheNorth'] },
+    portrait: portrait('5/4/54461d61-a745-467f-9fbe-b5e7a8edbdbf.jpg?1783916244', 5, 39, 300, 'Strider, Ranger of the North', 'Jarel Threat'),
+    banter: {
+      start: ['You can call me Strider. Sit, and keep your voice down.', 'If you would cross the Wild, you must be harder than this. Show me.', 'I have watched your road since Bree. Now let us see your cards.'],
+      win: ['You will need more than that where we are going.', 'Learn from it. The Enemy will not be so gentle.'],
+      lose: ['Good. You are stronger than you look.', 'You may yet reach Rivendell.'],
+      comeback: ['A ranger is never so lost as he seems.', 'The road turns. So does the game.'],
+      collapse: ['The marshes take their toll on all of us.', 'I was too slow. It will not happen twice.'],
+      kill: ['He should not have stood against the Dúnedain.', 'Swift, and silent. As it must be.'],
+      loss: ['A good companion lost. The Wild is cruel.', 'I could not shield him. I am sorry.'],
+      ring: ['Hide that ring. You do not know who is watching.', 'I could take it from you, if I wished. I do not.'],
+    },
+  },
   goldberry: {
     name: 'Goldberry', color: 'green', emblem: 'goldberry', ai: strategist(),
     portrait: portrait('b/f/bf4f0a7c-620e-4ed8-8da3-fa6564e8a0cd.jpg?1783916317', 56, 12, 300, 'Goldberry, River-Daughter', 'Marie Magny'),

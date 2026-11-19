@@ -351,7 +351,7 @@ test('fast forward with nothing on either side is a draw', () => {
 
 test('Pai Gow has its own opponents, each with a portrait, banter and the Strategist', () => {
   const names = Object.values(PAIGOW_OPPONENTS).map((o) => o.name);
-  assert.deepEqual(names, ['Birthday Bilbo', 'Burglar Bilbo', 'Lobelia Sackville-Baggins', 'Gandalf', 'Old Man Willow', 'Gildor', 'Rider in Black', 'Butterbur', 'Bill Ferny', 'Ringwraiths', 'Glorfindel', 'Goldberry', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
+  assert.deepEqual(names, ['Birthday Bilbo', 'Burglar Bilbo', 'Lobelia Sackville-Baggins', 'Gandalf', 'Old Man Willow', 'Gildor', 'Rider in Black', 'Butterbur', 'Bill Ferny', 'Ringwraiths', 'Glorfindel', 'Merry', 'Pippin', 'Strider', 'Goldberry', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
   for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
     assert.match(opponent.portrait.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
     // A portrait from another set's card (the Bilbos) names its set; the rest are LTR cards in the game.

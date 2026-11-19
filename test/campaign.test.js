@@ -17,8 +17,8 @@ const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
 test('the road holds every opponent, in order, Sauron last', () => {
   assert.deepEqual(CAMPAIGN_OPPONENTS, [
-    'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'ringwraiths', 'glorfindel',
-    'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
+    'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'pippin', 'merry', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'strider',
+    'ringwraiths', 'glorfindel', 'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
   ]);
   assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(PAIGOW_OPPONENTS).sort(), 'no opponent is left out');
 });
@@ -59,6 +59,15 @@ test('a campaign walks Book I: four opponents drawn at random, in road order, th
   assert.equal(started.match.campaign, true);
   assert.equal(startMatch(started), started, 'a match in progress carries on');
   assert.throws(() => createCampaign({ heroId: 'gollum' }));
+});
+
+test('you never meet your own hero on the road: Merry, Pippin and Strider are left out of their own campaigns', () => {
+  for (const heroId of ['merry', 'pippin', 'strider']) {
+    const met = new Set();
+    for (let seed = 1; seed <= 200; seed++) createCampaign({ heroId, seed }).opponents.forEach((id) => met.add(id));
+    assert.ok(!met.has(heroId), heroId);
+    for (const other of ['merry', 'pippin', 'strider']) if (other !== heroId) assert.ok(met.has(other), `${heroId} meets ${other}`);
+  }
 });
 
 test('losing a match costs a life and the same opponent again; a tie costs nothing', () => {
