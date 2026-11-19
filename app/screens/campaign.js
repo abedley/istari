@@ -6,7 +6,7 @@ import { roadMap } from './roadMap.js';
 import { ringBlock } from './heroes.js';
 import {
   createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
-  CAMPAIGN_RULES, CAMPAIGN_STATUS,
+  CAMPAIGN_RULES, CAMPAIGN_STATUS, CAMPAIGN_BOOKS,
 } from '../../src/paigow/campaign.js';
 import { playerLife, BOOSTER } from '../../src/paigow/paigow.js';
 import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
@@ -48,6 +48,9 @@ export function finishCampaignMatch(app, match, outcome) {
   const campaign = loadCampaign(app);
   return campaign ? saveCampaign(app, recordMatch(campaign, outcome, match)) : null;
 }
+
+/** The book a campaign is walking, or null for one begun before there were books. */
+const bookOf = (campaign) => (Number.isInteger(campaign.book) ? CAMPAIGN_BOOKS[campaign.book] ?? null : null);
 
 /**
  * Your lives, drawn as seed-cakes for the road: whole ones left, crumbs where one was eaten. A lost match costs one.
@@ -131,7 +134,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
 
   const map = roadMap(campaign, { hero, onStop: showStop, walkFrom });
   const el = h('div',
-    header({ title: 'The Road', onBack: () => app.go('title'), right: cakes(campaign.lives) }),
+    header({ title: bookOf(campaign)?.name ?? 'The Road', onBack: () => app.go('title'), right: cakes(campaign.lives) }),
     map.el,
     h('button.cp-ringsbar', { type: 'button', onclick: showRings },
       h('span.cp-ringsbar-icons', rings.map((id) => powerIcon(id, 'power-sym') ?? h('span.ring-mark'))),
@@ -176,7 +179,7 @@ function offerView(app, campaign) {
   return { el, ambience: onward?.ambience };
 }
 
-/** The campaign won (at the Grey Havens) or lost (at the place where the last life was lost). */
+/** The campaign won (where the book's boss fell, or at the Grey Havens for a road begun before books) or lost (at the place where the last life was lost). */
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
   const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
@@ -195,14 +198,17 @@ function overView(app, campaign) {
   };
   const wins = campaign.history.filter((m) => m.outcome === 'won').length;
   const fell = placeOf(campaign.opponents[Math.min(campaign.stage, campaign.opponents.length - 1)]);
-  const spot = won ? withArt(JOURNEYS_END) : fell;
+  // A book won ends where its boss was beaten; the whole road, at the Grey Havens.
+  const spot = won ? (bookOf(campaign) ? placeOf(bookOf(campaign).boss) : withArt(JOURNEYS_END)) : fell;
   const el = h('div.cp-over',
     header({ title: '' }),
     h('div.cp-body.cp-offer',
       h('div.cp-over-place', spot.name),
       h(`div.result-title.${won ? 'victory' : 'defeat'}`, won ? 'Victory' : 'Defeat'),
       crest(personInfo(hero), { size: 'lg' }),
-      h('p.cp-offer-lead', won
+      h('p.cp-offer-lead', won && bookOf(campaign)
+        ? `${hero.name} has beaten ${paigowOpponent(bookOf(campaign).boss).name} and finished ${bookOf(campaign).name}, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
+        : won
         ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
         : `The last life is lost at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),
       news.map((name) => h('p.recap-unlock', `Unlocked: ${name}. Choose it when you next set out.`)),

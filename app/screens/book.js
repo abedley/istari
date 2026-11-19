@@ -8,7 +8,7 @@ import { header, personInfo } from './common.js';
 import { ringBlock } from './heroes.js';
 import { loadBook, heroLook } from '../book.js';
 import { PAIGOW_POOL } from '../../src/paigow/paigow.js';
-import { CAMPAIGN_OPPONENTS } from '../../src/paigow/campaign.js';
+import { CAMPAIGN_OPPONENTS, CAMPAIGN_BOOKS } from '../../src/paigow/campaign.js';
 import { PAIGOW_HEROES, PAIGOW_OPPONENTS } from '../../src/paigow/personas.js';
 import { placeOf } from '../../src/paigow/places.js';
 import { heroOpen, heroNeeds } from '../../src/paigow/unlocks.js';
@@ -74,7 +74,7 @@ function ringsTab(app, book) {
 function taleTab(app, book) {
   const { totals, daily } = book;
   const stat = (label, value) => h('div.bk-stat', h('b', String(value)), h('span', label));
-  const stops = CAMPAIGN_OPPONENTS.length;
+  const stops = CAMPAIGN_BOOKS[0].draw + 1;
   return h('div.bk-tab',
     h('div.bk-stats',
       stat('Matches won', totals.won), stat('Matches lost', totals.lost), stat('Rounds played', totals.rounds),

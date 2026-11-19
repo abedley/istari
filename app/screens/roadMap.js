@@ -50,10 +50,12 @@ export function roadMap(campaign, { hero, onStop, walkFrom = null }) {
     const spot = placeOf(id);
     const person = paigowOpponent(id);
     const state = i < campaign.stage ? 'beaten' : i === campaign.stage ? 'next' : 'later';
+    // A book ends with its boss: the last stop on the road.
+    const boss = Number.isInteger(campaign.book) && i === count - 1;
     const { x, y } = stopAt(i);
     const losses = campaign.history.filter((m) => m.opponentId === id && m.outcome === 'lost').length;
     const who = state === 'later' ? 'Who waits here?' : person.name;
-    return h(`button.rm-stop.${state}.${x < 50 ? 'left' : 'right'}`, {
+    return h(`button.rm-stop.${state}.${x < 50 ? 'left' : 'right'}${boss ? '.boss' : ''}`, {
       type: 'button',
       style: { left: `${x}%`, bottom: `${y}px` },
       'aria-label': `${i + 1}. ${spot.name}: ${state === 'later' ? 'not reached' : `${person.name}, ${state === 'beaten' ? 'beaten' : 'next'}`}`,
@@ -63,6 +65,7 @@ export function roadMap(campaign, { hero, onStop, walkFrom = null }) {
       state === 'beaten' ? h('span.rm-mark', icon('check')) : null),
     state === 'next' ? h('span.rm-face', crest(personInfo(person), { size: 'sm' })) : null,
     h('span.rm-label',
+      boss ? h('span.rm-boss', 'Boss') : null,
       h('span.rm-place', spot.name),
       h('span.rm-who', who),
       state === 'next' && campaign.match ? h('span.rm-note', 'Match in progress') : null,

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
-  CAMPAIGN_RULES, CAMPAIGN_OPPONENTS, CAMPAIGN_STATUS,
+  CAMPAIGN_RULES, CAMPAIGN_OPPONENTS, CAMPAIGN_STATUS, CAMPAIGN_BOOKS, drawBookOpponents,
 } from '../src/paigow/campaign.js';
 import {
   roundSetup, setDecks, validDecks, playerLife, MATCH_OUTCOME, PAIGOW_RULES, PLAYER_ID,
@@ -15,17 +15,46 @@ const { WON, LOST, TIE } = MATCH_OUTCOME;
 /** The campaign after its next match ends with `outcome`. */
 const play = (campaign, outcome) => recordMatch(startMatch(campaign), outcome);
 
-test('a campaign faces every opponent in turn, Sauron last, with three lives', () => {
+test('the road holds every opponent, in order, Sauron last', () => {
   assert.deepEqual(CAMPAIGN_OPPONENTS, [
     'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'ringwraiths', 'glorfindel',
     'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
   ]);
   assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(PAIGOW_OPPONENTS).sort(), 'no opponent is left out');
+});
+
+test('a campaign walks Book I: four opponents drawn at random, in road order, then the Ringwraiths, with three lives', () => {
+  const [book] = CAMPAIGN_BOOKS;
+  assert.equal(book.boss, 'ringwraiths');
+  assert.equal(book.draw, 4);
+  assert.ok(!book.pool.includes(book.boss));
+  assert.deepEqual([...book.pool].sort(), CAMPAIGN_OPPONENTS.slice(0, CAMPAIGN_OPPONENTS.indexOf('elrond')).filter((id) => id !== 'ringwraiths').sort());
+  const roads = new Set();
+  const met = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    const { opponents, book: index } = createCampaign({ seed });
+    assert.equal(index, 0);
+    assert.equal(opponents.length, 5);
+    assert.equal(opponents.at(-1), 'ringwraiths');
+    const drawn = opponents.slice(0, 4);
+    assert.equal(new Set(drawn).size, 4);
+    assert.ok(drawn.every((id) => book.pool.includes(id)));
+    const order = drawn.map((id) => CAMPAIGN_OPPONENTS.indexOf(id));
+    assert.deepEqual(order, [...order].sort((a, b) => a - b), 'in road order');
+    roads.add(opponents.join());
+    drawn.forEach((id) => met.add(id));
+  }
+  assert.ok(roads.size > 50, 'roads differ from campaign to campaign');
+  assert.equal(met.size, book.pool.length, 'any of the pool may be met');
+  assert.deepEqual(createCampaign({ seed: 9 }).opponents, createCampaign({ seed: 9 }).opponents, 'the same seed, the same road');
+  assert.deepEqual(drawBookOpponents(book, () => 0.5).length, 5);
+
   const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);
-  assert.equal(currentOpponent(campaign), 'birthdayBilbo');
+  const first = campaign.opponents[0];
+  assert.equal(currentOpponent(campaign), first);
   const started = startMatch(campaign);
-  assert.equal(started.match.opponentId, 'birthdayBilbo');
+  assert.equal(started.match.opponentId, first);
   assert.equal(started.match.heroId, 'strider');
   assert.equal(started.match.campaign, true);
   assert.equal(startMatch(started), started, 'a match in progress carries on');
@@ -34,13 +63,14 @@ test('a campaign faces every opponent in turn, Sauron last, with three lives', (
 
 test('losing a match costs a life and the same opponent again; a tie costs nothing', () => {
   let campaign = createCampaign({ seed: 2 });
+  const first = currentOpponent(campaign);
   campaign = play(campaign, LOST);
   assert.equal(campaign.lives, 2);
-  assert.equal(currentOpponent(campaign), 'birthdayBilbo');
+  assert.equal(currentOpponent(campaign), first);
   const seeds = new Set();
   campaign = play(campaign, TIE);
   assert.equal(campaign.lives, 2);
-  assert.equal(currentOpponent(campaign), 'birthdayBilbo');
+  assert.equal(currentOpponent(campaign), first);
   // Every match gets a booster of its own.
   for (let i = 0; i < 2; i++) seeds.add(startMatch(campaign).match.seed);
   seeds.add(startMatch(play(campaign, TIE)).match.seed);
@@ -52,22 +82,24 @@ test('losing a match costs a life and the same opponent again; a tie costs nothi
   assert.throws(() => startMatch(campaign));
 });
 
-test('a win moves on and offers the beaten opponent’s ring; beating them all wins the campaign', () => {
-  let campaign = play(createCampaign({ seed: 3 }), WON);
-  assert.equal(currentOpponent(campaign), 'burglarBilbo');
-  assert.equal(campaign.offer, 'birthdayBilbo');
+test('a win moves on and offers the beaten opponent’s ring; beating the Ringwraiths wins the campaign', () => {
+  const start = createCampaign({ seed: 3 });
+  const [first, second] = start.opponents;
+  let campaign = play(start, WON);
+  assert.equal(currentOpponent(campaign), second);
+  assert.equal(campaign.offer, first);
   assert.throws(() => startMatch(campaign), /reward/);
   campaign = takeRing(campaign);
-  assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS.birthdayBilbo.emblem]);
+  assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS[first].emblem]);
   assert.equal(campaign.offer, null);
   campaign = takeCommon(play(campaign, WON));
-  assert.deepEqual(campaign.rings, ['birthdayBilbo']);
-  while (currentOpponent(campaign) !== CAMPAIGN_OPPONENTS.at(-1)) campaign = takeCommon(play(campaign, WON));
+  assert.deepEqual(campaign.rings, [PAIGOW_OPPONENTS[first].emblem]);
+  while (currentOpponent(campaign) !== 'ringwraiths') campaign = takeCommon(play(campaign, WON));
   campaign = play(campaign, WON);
-  // No ring is offered after the last opponent: there's no one left to use it on.
+  // No ring is offered after the boss: there's no one left to use it on.
   assert.equal(campaign.offer, null);
   assert.equal(campaignStatus(campaign), CAMPAIGN_STATUS.WON);
-  assert.deepEqual(campaign.history.map((m) => m.opponentId), CAMPAIGN_OPPONENTS);
+  assert.deepEqual(campaign.history.map((m) => m.opponentId), start.opponents);
 });
 
 test('the other reward: a common more in every booster after, and the spare cards left out of the decks', () => {

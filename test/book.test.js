@@ -143,9 +143,10 @@ test('heroes and portraits open on the road', () => {
   assert.deepEqual(recap(book, match).unlocks, ['Pippin']);
   // A campaign won with Frodo opens his second portrait; Radagast has none to open.
   assert.equal(portraitOpen(book, 'frodo'), false);
-  const campaign = { ...createCampaign({ heroId: 'frodo', seed: 4 }), stage: CAMPAIGN_OPPONENTS.length };
+  const begun = createCampaign({ heroId: 'frodo', seed: 4 });
+  const campaign = { ...begun, stage: begun.opponents.length };
   book = recordCampaignProgress(recordCampaignProgress(book, campaign, { won: true, unlocksOf }), campaign, { won: true, unlocksOf });
-  assert.deepEqual(book.heroes.frodo, { begun: 1, won: 1, furthest: CAMPAIGN_OPPONENTS.length });
+  assert.deepEqual(book.heroes.frodo, { begun: 1, won: 1, furthest: begun.opponents.length });
   assert.equal(portraitOpen(book, 'frodo'), true);
   assert.ok(book.fresh.unlocks.includes('A new portrait for Frodo'));
   assert.equal(portraitOpen({ ...book, heroes: { radagast: { begun: 1, won: 1, furthest: 13 } } }, 'radagast'), false);

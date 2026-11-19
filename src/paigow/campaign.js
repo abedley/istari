@@ -1,6 +1,8 @@
 /**
- * The campaign: Pai Gow matches (src/paigow/paigow.js) against a set line of opponents, one after
- * another, with three lives.
+ * The campaign: Pai Gow matches (src/paigow/paigow.js) against a road of opponents, one after another,
+ * with three lives. The road is split into books (CAMPAIGN_BOOKS), each ending with a boss: a book draws
+ * a few of its opponents at random (kept in road order), then its boss. For now there is only Book I,
+ * which ends with the Ringwraiths; beat them and the campaign is won.
  *
  * Losing a match costs a life and you face the same opponent again (with a new booster); a tied match
  * costs nothing, and you face them again too. Beat an opponent and you choose a reward: take their Ring
@@ -8,13 +10,14 @@
  * the cost of starting every round with one less life (see playerLife in paigow.js), four rings at most;
  * or add a common to every booster you open after (so you have more cards than your three decks of five
  * need, and pick which to leave out).
- * Beat them all and the campaign is won; lose your last life and it's lost.
+ * Beat every opponent on the road and the campaign is won; lose your last life and it's lost.
  *
  * Everything here is pure: a campaign is a plain object (it can be saved as JSON), and each function
  * returns a new one.
  */
 import { createMatch, MATCH_OUTCOME } from './paigow.js';
 import { PAIGOW_HEROES, PAIGOW_OPPONENTS, DEFAULT_HERO } from './personas.js';
+import { seededRandom, shuffle } from '../engine/random.js';
 
 export const CAMPAIGN_RULES = Object.freeze({
   lives: 3,
@@ -23,23 +26,50 @@ export const CAMPAIGN_RULES = Object.freeze({
 });
 
 /**
- * The opponents, in the order they're faced (ids in PAIGOW_OPPONENTS). Later this may be drawn from
- * buckets of opponents instead.
+ * Every opponent on the road, in road order (ids in PAIGOW_OPPONENTS): the books draw from these, and
+ * those drawn are faced in this order.
  */
 export const CAMPAIGN_OPPONENTS = Object.freeze([
   'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'ringwraiths', 'glorfindel',
   'elrond', 'galadriel', 'theoden', 'saruman', 'denethor', 'sauron',
 ]);
 
+/**
+ * The books of the campaign: each draws `draw` opponents at random from its `pool`, then ends with its
+ * `boss`. Books II to VI are still to come.
+ */
+export const CAMPAIGN_BOOKS = Object.freeze([
+  Object.freeze({
+    id: 'book1',
+    name: 'Book I',
+    pool: Object.freeze([
+      'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'glorfindel',
+    ]),
+    draw: 4,
+    boss: 'ringwraiths',
+  }),
+]);
+
+/** A book's road: `draw` of its pool at random (`random`: a function like Math.random), in road order, then its boss. */
+export function drawBookOpponents(book, random = Math.random) {
+  const order = (id) => CAMPAIGN_OPPONENTS.indexOf(id);
+  const picked = shuffle([...book.pool], random).slice(0, book.draw).sort((a, b) => order(a) - order(b));
+  return [...picked, book.boss];
+}
+
 export const CAMPAIGN_STATUS = Object.freeze({ PLAYING: 'playing', WON: 'won', LOST: 'lost' });
 
 /** A new campaign for the hero `heroId`. */
-export function createCampaign({ heroId = DEFAULT_HERO, seed = Math.floor(Math.random() * 2 ** 32), opponents = CAMPAIGN_OPPONENTS } = {}) {
+export function createCampaign({ heroId = DEFAULT_HERO, seed = Math.floor(Math.random() * 2 ** 32), opponents = null } = {}) {
   if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
+  // The road: Book I's draw (the same for the same seed), unless one is given.
+  opponents ??= drawBookOpponents(CAMPAIGN_BOOKS[0], seededRandom(seed));
   for (const id of opponents) if (!PAIGOW_OPPONENTS[id]) throw new Error(`Unknown opponent: ${id}`);
   return {
     seed,
     heroId,
+    /** The book being walked (an index in CAMPAIGN_BOOKS). */
+    book: 0,
     opponents: [...opponents],
     /** The index in `opponents` of the one to face next. */
     stage: 0,

@@ -126,17 +126,20 @@ theirs bigger than Strider's 4 to shrink, no cards for them to discard, the Ring
 six cards for Legolas to mill or no creature of his own for the card it gives him), doesn't count as an action.
 
 **The campaign** (`src/paigow/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
-the title screen): you choose a hero, then play a Pai Gow match against each opponent in
-`CAMPAIGN_OPPONENTS` in turn (for now Birthday Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the Rider in Black, Butterbur, Bill Ferny, the Ringwraiths, Glorfindel,
-Elrond, Galadriel, Théoden, Saruman, Denethor, then Sauron; later they may be
-drawn from buckets). You have 3 lives: losing a match costs one and you face the same opponent again,
+the title screen): you choose a hero, then play a Pai Gow match against each opponent on your road in
+turn. The campaign is split into six books (`CAMPAIGN_BOOKS`), each ending with a boss; only Book I is built
+so far. Book I draws 4 opponents at random (`drawBookOpponents`, seeded by the campaign's seed) from Birthday
+Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the
+Rider in Black, Butterbur, Bill Ferny and Glorfindel, faces them in road order (`CAMPAIGN_OPPONENTS`, every
+opponent from Birthday Bilbo to Sauron), then ends with its boss, the Ringwraiths; until Books II to VI
+exist, beating the Ringwraiths wins the campaign. You have 3 lives: losing a match costs one and you face the same opponent again,
 with new boosters; a tied match costs nothing, but you face them again too. Beat an opponent and you
 choose a reward: take their Ring of Power, to use alongside your hero's (the match's `rings`), at the cost of
 starting every round with 1 less life (`playerLife` in `src/paigow/paigow.js`: 5 and 8, less one per
 ring, at least 1), up to 4 rings; or add a common to every booster you open after (`takeCommon`; the
 campaign's `extraCommons`, passed to `createMatch` and `openBooster`), so you have more than 15 cards
 and leave the spare ones out of your three decks of five (Auto-fill places the strongest first, by
-`cardStrength`). Beat them all to win; run out of lives and it's lost. The campaign
+`cardStrength`). Beat the boss to win; run out of lives and it's lost. The campaign
 is saved in `localStorage` (`istari.campaign`) after every step, its current match with it after each
 round, so a reload picks it up where it was (a round in progress starts over).
 
@@ -144,7 +147,7 @@ round, so a reload picks it up where it was (a round in progress starts over).
 (`PLACES`, by opponent id): a name, a line that sets the scene, a picture, and a kind of ambience. The picture is
 always a card's art (`cardId`, with the point to keep in view), so there is no art of the game's own: The Party
 Field is *The Shire*, The Bridge of Khazad-dûm *Mines of Moria*, The Hornburg *Rally at the Hornburg*, and so on;
-a won campaign ends at *The Grey Havens* (`JOURNEYS_END`). The campaign screen draws the road as a map
+a won campaign ends where its book's boss fell (a road begun before books, at *The Grey Havens*, `JOURNEYS_END`). The campaign screen draws the road as a map
 (`app/screens/roadMap.js`): a parchment with a winding road and a stop for each opponent, the place shown but the
 opponent kept back ("Who waits here?") until you reach it, your hero standing at the next stop and walking on
 after a win; tap a stop for its place, opponent and ring. Each Ring of Power you take darkens the parchment, cools

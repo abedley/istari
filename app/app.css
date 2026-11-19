@@ -1193,6 +1193,8 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .rm-stop.next .rm-place { font-size: 17px; }
 .rm-stop.next .rm-who { font: 700 14px/1.15 var(--display); color: var(--ink); }
 .rm-stop.later .rm-place, .rm-stop.later .rm-who { color: var(--ink-soft); }
+.rm-boss { align-self: flex-start; padding: 1px 6px; border-radius: 8px; background: #2a1c06; color: var(--gold); font: 800 10px var(--ui); letter-spacing: .08em; text-transform: uppercase; }
+.rm-stop.right .rm-boss { align-self: flex-end; }
 .rm-note { font: 700 11px var(--ui); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-soft); }
 .rm-note.lost { align-self: flex-start; padding: 1px 6px; border-radius: 8px; background: #8f1f26; color: #fff; }
 .rm-stop.right .rm-note.lost { align-self: flex-end; }
