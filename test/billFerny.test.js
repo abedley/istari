@@ -25,6 +25,7 @@ test('Bill Ferny is an opponent whose power sacrifices a Treasure for a Nazgûl'
   assert.ok(CAMPAIGN_OPPONENTS.includes('billFerny'));
   assert.equal(placeOf('billFerny').card, 'Bill Ferny, Bree Swindler');
   assert.equal(EMBLEMS.billFerny.abilities[0].timing, 'sorcery');
+  assert.equal(EMBLEMS.billFerny.activationsPerTurn, undefined, 'any number of times a turn');
 
   const { game } = fernyGame();
   advanceTo(game, { turn: 1, phase: PHASE.PRECOMBAT_MAIN });
@@ -43,7 +44,12 @@ test('Bill Ferny is an opponent whose power sacrifices a Treasure for a Nazgûl'
   // It entered, so the Ring tempted him, and so it got a +1/+1 counter, as the card's would.
   assert.equal(state(game).players.find((p) => p.id === 'p1').ring.level, 1);
   assert.deepEqual([nazgul.power, nazgul.toughness], [2, 3]);
-  assert.equal(powers(game).length, 0, 'once a turn');
+  // Any number of times: the other Treasure makes a second.
+  ok(game, powers(game)[0]);
+  resolve(game);
+  assert.equal(named(game, 'Treasure').length, 0);
+  assert.equal(named(game, 'Nazgûl').length, 2);
+  assert.equal(powers(game).length, 0, 'no Treasure left');
   assert.ok(Object.keys(TOKEN_PRESENTATION).some((id) => id.startsWith('token:Nazgûl:1/2:black:deathtouch')), 'the token has art');
 });
 

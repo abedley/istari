@@ -39,6 +39,8 @@ const power = (id, ring, powerName, { text, cost = {}, effects, target, timing }
   abilities: [{ id: 'power', name: ring, text, cost, effects, ...(target ? { target } : {}), ...(timing ? { timing } : {}) }],
 });
 const SORCERY = ACTIVATION_TIMING.SORCERY;
+/** A power with no limit on how often it's used each turn. */
+const anyNumberOfTimes = ({ activationsPerTurn, ...emblem }) => emblem;
 
 export const EMBLEMS = deepFreeze({
   planeswalker: {
@@ -235,7 +237,8 @@ export const EMBLEMS = deepFreeze({
     }],
   },
   // Sacrifice a Treasure (a cost, as Merry's Food) for a Nazgûl: a token with the card's characteristics and abilities.
-  billFerny: power('billFerny', 'The Swindler\u2019s Ring', 'Sold to the Black Riders', {
+  // Any number of times a turn (no `activationsPerTurn`), as long as there's a Treasure to sacrifice.
+  billFerny: anyNumberOfTimes(power('billFerny', 'The Swindler\u2019s Ring', 'Sold to the Black Riders', {
     text: 'Sacrifice a Treasure: Create a Nazg\u00fbl creature token. (It\u2019s a 1/2 black Wraith Knight with deathtouch, "When this creature enters, the Ring tempts you" and "Whenever the Ring tempts you, put a +1/+1 counter on each Wraith you control.") Activate only as a sorcery.',
     cost: { sacrifice: { kind: TARGET.PERMANENT, filter: { subtypes: ['Treasure'] } } },
     effects: [{ type: EFFECT.CREATE_TOKEN, count: 1, token: {
@@ -245,7 +248,7 @@ export const EMBLEMS = deepFreeze({
       artScryfallId: '833936c6-9381-4c0b-a81c-4a938be95040',
     } }],
     timing: SORCERY,
-  }),
+  })),
   // "Once per game": `activationsPerGame` (see Game's #canActivate).
   goldberry: {
     ...power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {

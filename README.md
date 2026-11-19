@@ -79,7 +79,7 @@ a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by th
 `src/paigow/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
 `power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
 and the One Ring under its names: *the magic ring* of The Hobbit, Gollum's *birthday
-present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Goldberry's only once a game), uses the stack,
+present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Goldberry's only once a game, Bill Ferny's as often as he has Treasures), uses the stack,
 and costs nothing or a little life (mana means nothing here). Samwise's is passive instead: the emblem's
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
@@ -103,7 +103,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
-| Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed. |
+| Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed, any number of times a turn. |
 | Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
