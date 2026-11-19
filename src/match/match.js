@@ -1,12 +1,12 @@
 /**
- * Pai Gow: a best-of-three match against the CPU with tiny decks.
+ * Istari: a best-of-three match against the CPU with tiny decks.
  *
  * Each side opens a booster of The Lord of the Rings: Tales of Middle-earth (see openBooster) and
  * splits its 15 cards into three decks of five (a campaign's player may have a few more cards, and leave
  * the spare ones out). Round N pits deck N against deck N: both players start with all
  * five cards in hand, infinite mana (5 life for the player who goes first, 8 for the one who goes second), their
  * character's Ring of Power (a planeswalker power: an emblem, see src/cards/emblems.js), and can't lose by drawing from an empty
- * library. Some opponents have a setup of their own (opponentSetup in src/paigow/personas.js): cards their
+ * library. Some opponents have a setup of their own (opponentSetup in src/match/personas.js): cards their
  * booster always holds, a library to draw from, a board to start with. A round is won, lost or drawn (a stalled board, see Game's `stallDraw`). The first to win
  * two rounds takes the match; if three rounds pass without that, the one with more wins does, and
  * otherwise it's a tie.
@@ -18,13 +18,13 @@ import { EMBLEMS } from '../cards/emblems.js';
 import { GAME_LIMITS } from '../engine/Game.js';
 import { seededRandom, shuffle } from '../engine/random.js';
 import {
-  PAIGOW_OPPONENTS, PAIGOW_HEROES, DEFAULT_HERO, paigowOpponent, paigowHero, opponentSetup,
+  OPPONENTS, HEROES, DEFAULT_HERO, opponentById, heroById, opponentSetup,
 } from './personas.js';
 import { weightsFor } from '../ai/evaluate.js';
 import { AI_KIND } from '../ai/cpu.js';
 import { buildDecks, deckPlan } from './deckBuilder.js';
 
-export const PAIGOW_RULES = Object.freeze({
+export const MATCH_RULES = Object.freeze({
   cardsDealt: 15,
   decks: 3,
   deckSize: 5,
@@ -52,12 +52,12 @@ export const MATCH_OUTCOME = Object.freeze({ WON: 'won', LOST: 'lost', TIE: 'tie
  * Every card that can be opened: the LTR cards in the game (a few that need rules it lacks are left out),
  * but not the basic lands (a booster's land slot is a wildcard instead).
  */
-export const PAIGOW_POOL = Object.freeze(Object.keys(CARDS)
+export const CARD_POOL = Object.freeze(Object.keys(CARDS)
   .filter((id) => CARDS[id].set === 'ltr' && !(CARDS[id].supertypes ?? []).includes('Basic')).sort());
 
 /** The pool by rarity: `common`, `uncommon`, `rare`, `mythic`. */
 export const POOL_BY_RARITY = Object.freeze(Object.fromEntries(['common', 'uncommon', 'rare', 'mythic']
-  .map((rarity) => [rarity, Object.freeze(PAIGOW_POOL.filter((id) => CARDS[id].rarity === rarity))])));
+  .map((rarity) => [rarity, Object.freeze(CARD_POOL.filter((id) => CARDS[id].rarity === rarity))])));
 
 const RARITY = { common: 1, uncommon: 2, rare: 3, mythic: 4 };
 
@@ -73,7 +73,7 @@ export function cardStrength(cardId) {
  * mythic (each rare twice as likely as each mythic, as on a print sheet, so a mythic is about one
  * pack in seven), and last the wildcard, every LTR card equally likely (it may repeat one already in
  * the pack). `extraCommons`: more different commons on top of the 10 (a campaign's reward, see
- * src/paigow/campaign.js), so the booster holds more than 15 cards.
+ * src/match/campaign.js), so the booster holds more than 15 cards.
  */
 export function openBooster(random, { extraCommons = 0 } = {}) {
   const { common, uncommon, rare, mythic } = POOL_BY_RARITY;
@@ -82,7 +82,7 @@ export function openBooster(random, { extraCommons = 0 } = {}) {
     ...shuffle([...common], random).slice(0, BOOSTER.commons + extraCommons),
     ...shuffle([...uncommon], random).slice(0, BOOSTER.uncommons),
     rareSlot[Math.floor(random() * rareSlot.length)],
-    PAIGOW_POOL[Math.floor(random() * PAIGOW_POOL.length)],
+    CARD_POOL[Math.floor(random() * CARD_POOL.length)],
   ];
 }
 
@@ -90,7 +90,7 @@ export function openBooster(random, { extraCommons = 0 } = {}) {
  * A booster of only rares and mythics (Tom Bombadil's ring): `size` different cards, each rare twice as likely as
  * each mythic, as in a booster's rare slot.
  */
-export function openRareBooster(random, { size = PAIGOW_RULES.cardsDealt } = {}) {
+export function openRareBooster(random, { size = MATCH_RULES.cardsDealt } = {}) {
   const { rare, mythic } = POOL_BY_RARITY;
   let slots = [...rare, ...rare, ...mythic];
   const booster = [];
@@ -112,7 +112,7 @@ export function matchRules(emblemIds) {
 }
 
 /** Five places in `cards`, picked at random: a locked first deck. */
-const pickLocked = (cards, random) => shuffle([...cards.keys()], random).slice(0, PAIGOW_RULES.deckSize).sort((a, b) => a - b);
+const pickLocked = (cards, random) => shuffle([...cards.keys()], random).slice(0, MATCH_RULES.deckSize).sort((a, b) => a - b);
 
 /**
  * A booster with `cards` in it (an opponent's `pack`, see opponentSetup): each one not already there takes the
@@ -143,7 +143,7 @@ export function withCards(booster, cards) {
  * its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
  * each deck gets a fair share, and then the decks in a random order (so its best isn't always first).
  */
-export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = {}) {
+export function arrangeCpuDecks(cards, random, { decks = MATCH_RULES.decks } = {}) {
   const sorted = [...cards].sort((a, b) => cardStrength(b) - cardStrength(a) || (a < b ? -1 : 1));
   const result = Array.from({ length: decks }, () => []);
   sorted.forEach((cardId, i) => {
@@ -161,7 +161,7 @@ export function arrangeCpuDecks(cards, random, { decks = PAIGOW_RULES.decks } = 
  * on a tie), so the three decks come out about as strong as each other. Cards left over when the decks are full stay out.
  * Returns a new Map with every placement.
  */
-export function spreadDecks(cards, placed = new Map(), { decks = PAIGOW_RULES.decks, deckSize = PAIGOW_RULES.deckSize } = {}) {
+export function spreadDecks(cards, placed = new Map(), { decks = MATCH_RULES.decks, deckSize = MATCH_RULES.deckSize } = {}) {
   const result = new Map(placed);
   const size = Array(decks).fill(0);
   const total = Array(decks).fill(0);
@@ -184,10 +184,10 @@ export function spreadDecks(cards, placed = new Map(), { decks = PAIGOW_RULES.de
 /**
  * A new match: a booster opened for each side, the CPU's decks built (buildDecks in deckBuilder.js, to its opponent's tastes,
  * without a look at the player's cards) and put in a random order, its opponent picked from
- * PAIGOW_OPPONENTS (src/paigow/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
- * `heroId`: the player's character, from PAIGOW_HEROES. `opponentId`: the opponent, when not left to chance.
+ * OPPONENTS (src/match/personas.js), and who goes first in round 1 decided (after that, the loser of the last round goes first).
+ * `heroId`: the player's character, from HEROES. `opponentId`: the opponent, when not left to chance.
  * `rings`: Rings of Power (emblem ids) the player has besides their hero's, as a campaign's (see
- * src/paigow/campaign.js); each costs them a life at the start of every round. `extraCommons`: more
+ * src/match/campaign.js); each costs them a life at the start of every round. `extraCommons`: more
  * commons in the player's booster (a campaign's reward), so they have more cards than their decks need.
  * `campaign`: whether the match is a campaign's.
  */
@@ -195,21 +195,21 @@ export function createMatch({
   seed = Math.floor(Math.random() * 2 ** 32), heroId = DEFAULT_HERO, opponentId: chosen = null, rings = [], extraCommons = 0,
   campaign = false,
 } = {}) {
-  if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
-  if (chosen && !PAIGOW_OPPONENTS[chosen]) throw new Error(`Unknown opponent: ${chosen}`);
+  if (!HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
+  if (chosen && !OPPONENTS[chosen]) throw new Error(`Unknown opponent: ${chosen}`);
   const random = seededRandom(seed);
   let cards = openBooster(random, { extraCommons });
   let cpuCards = openBooster(random);
   // The order of the CPU's decks, then its opponent (the random draws come in the order they always did).
-  const order = shuffle([...Array(PAIGOW_RULES.decks).keys()], random);
+  const order = shuffle([...Array(MATCH_RULES.decks).keys()], random);
   // Never yourself: not the opponent who bears your hero's ring.
-  const candidates = Object.keys(PAIGOW_OPPONENTS).filter((id) => PAIGOW_OPPONENTS[id].emblem !== PAIGOW_HEROES[heroId].emblem);
+  const candidates = Object.keys(OPPONENTS).filter((id) => OPPONENTS[id].emblem !== HEROES[heroId].emblem);
   const drawn = candidates[Math.floor(random() * candidates.length)];
   const opponentId = chosen ?? drawn;
   // Rings that change the match (Tom Bombadil's): drawn from a random of their own, so other matches stay as they were.
   const extra = seededRandom((seed ^ 0x7b0b5ad1) >>> 0);
   const mine = matchRules([heroId, ...rings]);
-  const theirs = matchRules([PAIGOW_OPPONENTS[opponentId].emblem]);
+  const theirs = matchRules([OPPONENTS[opponentId].emblem]);
   if (mine.rareBooster) cards = openRareBooster(extra, { size: cards.length });
   if (theirs.rareBooster) cpuCards = openRareBooster(extra, { size: cpuCards.length });
   const lockedDeck = mine.lockedFirstDeck ? pickLocked(cards, extra) : null;
@@ -239,8 +239,8 @@ export function createMatch({
  * at most once. With 15 cards that's every card; with more (a campaign's extra commons), some are left out.
  */
 export function validDecks(match, decks) {
-  if (!Array.isArray(decks) || decks.length !== PAIGOW_RULES.decks) return false;
-  if (decks.some((deck) => !Array.isArray(deck) || deck.length !== PAIGOW_RULES.deckSize)) return false;
+  if (!Array.isArray(decks) || decks.length !== MATCH_RULES.decks) return false;
+  if (decks.some((deck) => !Array.isArray(deck) || deck.length !== MATCH_RULES.deckSize)) return false;
   const left = new Map();
   for (const id of match.cards) left.set(id, (left.get(id) ?? 0) + 1);
   for (const id of decks.flat()) {
@@ -268,8 +268,8 @@ export function setDecks(match, decks) {
 export function playerLife(match) {
   const penalty = match.rings?.length ?? 0;
   return {
-    first: Math.max(1, PAIGOW_RULES.startingLife - penalty),
-    second: Math.max(1, PAIGOW_RULES.secondPlayerLife - penalty),
+    first: Math.max(1, MATCH_RULES.startingLife - penalty),
+    second: Math.max(1, MATCH_RULES.secondPlayerLife - penalty),
   };
 }
 
@@ -282,9 +282,9 @@ export function score(match) {
 /** The match's result once it's over (`MATCH_OUTCOME`), otherwise null. */
 export function outcome(match) {
   const { won, lost } = score(match);
-  if (won >= PAIGOW_RULES.roundsToWin) return MATCH_OUTCOME.WON;
-  if (lost >= PAIGOW_RULES.roundsToWin) return MATCH_OUTCOME.LOST;
-  if (match.rounds.length < PAIGOW_RULES.decks) return null;
+  if (won >= MATCH_RULES.roundsToWin) return MATCH_OUTCOME.WON;
+  if (lost >= MATCH_RULES.roundsToWin) return MATCH_OUTCOME.LOST;
+  if (match.rounds.length < MATCH_RULES.decks) return null;
   return won > lost ? MATCH_OUTCOME.WON : lost > won ? MATCH_OUTCOME.LOST : MATCH_OUTCOME.TIE;
 }
 
@@ -308,7 +308,7 @@ export function playerStartsRound(match, round) {
   return playerFirst;
 }
 
-/** The match with the next round's result recorded: `ROUND_RESULT`. `stats`: what happened in it (src/paigow/roundStats.js), kept with it. */
+/** The match with the next round's result recorded: `ROUND_RESULT`. `stats`: what happened in it (src/match/roundStats.js), kept with it. */
 export function recordRound(match, result, stats = null) {
   const round = nextRound(match);
   if (round === null) throw new Error('No round to play.');
@@ -325,7 +325,7 @@ export function decidingRound(match) {
   const tally = { [ROUND_RESULT.WON]: 0, [ROUND_RESULT.LOST]: 0 };
   for (let i = 0; i < match.rounds.length; i += 1) {
     const { result } = match.rounds[i];
-    if (result in tally && (tally[result] += 1) >= PAIGOW_RULES.roundsToWin) return i;
+    if (result in tally && (tally[result] += 1) >= MATCH_RULES.roundsToWin) return i;
   }
   return match.rounds.length - 1;
 }
@@ -337,11 +337,11 @@ export function decidingRound(match) {
 export function roundSetup(match, { playerName = 'You' } = {}) {
   const round = nextRound(match);
   if (round === null) throw new Error('No round to play.');
-  const opponent = paigowOpponent(match.opponentId);
-  const hero = paigowHero(match.heroId ?? DEFAULT_HERO);
+  const opponent = opponentById(match.opponentId);
+  const hero = heroById(match.heroId ?? DEFAULT_HERO);
   const players = [{ id: PLAYER_ID, name: playerName }, { id: CPU_ID, name: opponent.name }];
   const playerFirst = playerStartsRound(match, round);
-  const { startingLife: first, secondPlayerLife: second } = PAIGOW_RULES;
+  const { startingLife: first, secondPlayerLife: second } = MATCH_RULES;
   const mine = playerLife(match);
   const setup = opponentSetup(match.opponentId);
   return {
@@ -358,11 +358,11 @@ export function roundSetup(match, { playerName = 'You' } = {}) {
       startingLife: { [PLAYER_ID]: playerFirst ? mine.first : mine.second, [CPU_ID]: playerFirst ? second : first },
       limits: { ...GAME_LIMITS },
       mulligans: false,
-      openingHandSize: PAIGOW_RULES.deckSize,
+      openingHandSize: MATCH_RULES.deckSize,
       deckingLoss: false,
       infiniteMana: true,
       stallDraw: true,
-      turnLimit: PAIGOW_RULES.turnLimit,
+      turnLimit: MATCH_RULES.turnLimit,
     },
     cpu: {
       playerId: CPU_ID,

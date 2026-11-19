@@ -1,6 +1,6 @@
 /**
  * What happened in a round, counted from the game's events, for the recap after a match and the Red Book
- * (src/paigow/book.js): damage dealt to the opponent and taken from them, creatures felled and lost, spells cast,
+ * (src/match/book.js): damage dealt to the opponent and taken from them, creatures felled and lost, spells cast,
  * turns, and the hardest single blow you struck (the card, and how much).
  */
 

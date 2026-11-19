@@ -19,14 +19,14 @@ export const TEMPERAMENTS = Object.freeze({
   trickster: profile('trickster', { aggression: 1, caution: 1, patience: 1.1, risk: 0.3, foresight: 0, budgetMs: 100 }, { evasion: 1.1, power: 1, removal: 1.1, toughness: 1, tricks: 1.3 }),
 });
 
-/** Each Pai Gow opponent's temperament (PAIGOW_OPPONENTS in src/paigow/personas.js). */
+/** Each Istari opponent's temperament (OPPONENTS in src/match/personas.js). */
 export const PERSONA_TEMPERAMENT = Object.freeze({
   sauron: 'raider', theoden: 'raider', riderInBlack: 'raider', burglarBilbo: 'raider', glorfindel: 'raider', strider: 'raider', ringwraiths: 'raider',
   saruman: 'warden', denethor: 'warden', elrond: 'warden', oldManWillow: 'warden', goldberry: 'warden', lobelia: 'warden', merry: 'warden',
   gandalf: 'trickster', galadriel: 'trickster', tomBombadil: 'trickster', gildor: 'trickster', birthdayBilbo: 'trickster', billFerny: 'trickster', butterbur: 'trickster', pippin: 'trickster',
 });
 
-/** How a deck's plan (deckPlan in src/paigow/deckBuilder.js) shifts the way it's played, whoever plays it. */
+/** How a deck's plan (deckPlan in src/match/deckBuilder.js) shifts the way it's played, whoever plays it. */
 const PLAN_TILT = Object.freeze({
   race: { aggression: 0.15, patience: -0.1 },
   grind: { caution: 0.15, patience: 0.1 },

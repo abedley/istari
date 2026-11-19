@@ -2,10 +2,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ACTION, PHASE } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
-import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
-import { createMatch } from '../src/paigow/paigow.js';
-import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { placeOf } from '../src/paigow/places.js';
+import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
+import { createMatch } from '../src/match/match.js';
+import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { placeOf } from '../src/match/places.js';
 import {
   setup, state, ok, cast, advanceTo, byCard, player, passRound,
 } from './helpers/ltrGame.js';
@@ -32,7 +32,7 @@ function settle(game) {
 }
 
 test('the Ringwraiths are an opponent with two Ringwraiths in every pack', () => {
-  assert.equal(PAIGOW_OPPONENTS.ringwraiths.emblem, 'ringwraiths');
+  assert.equal(OPPONENTS.ringwraiths.emblem, 'ringwraiths');
   assert.ok(CAMPAIGN_OPPONENTS.includes('ringwraiths'));
   assert.equal(placeOf('ringwraiths').name, 'Weathertop');
   assert.deepEqual(opponentSetup('ringwraiths').pack, ['ringwraiths', 'ringwraiths']);

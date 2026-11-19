@@ -2,9 +2,9 @@ import { h } from '../dom.js';
 import { crest } from '../art.js';
 import { powerIcon } from '../icons.js';
 import { header, personInfo } from './common.js';
-import { PAIGOW_HEROES, DEFAULT_HERO, currentHeroId } from '../../src/paigow/personas.js';
+import { HEROES, DEFAULT_HERO, currentHeroId } from '../../src/match/personas.js';
 import { EMBLEMS } from '../../src/cards/emblems.js';
-import { heroOpen, heroNeeds, portraitOpen } from '../../src/paigow/unlocks.js';
+import { heroOpen, heroNeeds, portraitOpen } from '../../src/match/unlocks.js';
 import { loadBook, heroLook, wearsAlt, choosePortrait } from '../book.js';
 
 const HERO_KEY = 'istari.hero';
@@ -41,15 +41,15 @@ export const ringBlock = (emblemId, { note = null } = {}) => {
 export const powerBlock = (person) => ringBlock(person?.emblem);
 
 /**
- * Choosing your character for a campaign (PAIGOW_HEROES in src/paigow/personas.js): each has a portrait and a
+ * Choosing your character for a campaign (HEROES in src/match/personas.js): each has a portrait and a
  * Ring of Power. The last one chosen is remembered.
  */
 export function heroesScreen(app) {
   const book = loadBook(app);
   const open = (id) => heroOpen(book, id);
   let chosen = currentHeroId(app.storage.getItem(HERO_KEY));
-  if (!PAIGOW_HEROES[chosen] || !open(chosen)) chosen = DEFAULT_HERO;
-  const cards = Object.entries(PAIGOW_HEROES).map(([id, hero]) => {
+  if (!HEROES[chosen] || !open(chosen)) chosen = DEFAULT_HERO;
+  const cards = Object.entries(HEROES).map(([id, hero]) => {
     if (!open(id)) {
       // Not yet met: who they are stays hidden, and what it takes is said.
       const el = h('div.hero.locked', { dataset: { hero: id }, 'aria-disabled': 'true' },

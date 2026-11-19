@@ -9,14 +9,14 @@ import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { AI_ACTIVATIONS_PER_TURN } from '../src/ai/manaPlanning.js';
 import { playout } from '../src/ai/simulate.js';
 import {
-  PAIGOW_POOL, POOL_BY_RARITY, PAIGOW_RULES, openBooster, createMatch, setDecks, validDecks, recordRound, roundSetup, nextRound, outcome, score,
+  CARD_POOL, POOL_BY_RARITY, MATCH_RULES, openBooster, createMatch, setDecks, validDecks, recordRound, roundSetup, nextRound, outcome, score,
   arrangeCpuDecks, playerStartsRound, withCards, spreadDecks, cardStrength, ROUND_RESULT, MATCH_OUTCOME, PLAYER_ID, CPU_ID,
   openRareBooster, matchRules,
-} from '../src/paigow/paigow.js';
+} from '../src/match/match.js';
 import { seededRandom } from '../src/engine/random.js';
-import { buildDecks } from '../src/paigow/deckBuilder.js';
-import { outOfActions, canFastForward, planFastForward } from '../src/paigow/fastForward.js';
-import { PAIGOW_OPPONENTS, opponentSetup } from '../src/paigow/personas.js';
+import { buildDecks } from '../src/match/deckBuilder.js';
+import { outOfActions, canFastForward, planFastForward } from '../src/match/fastForward.js';
+import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
 import { banterProblems } from '../src/ai/banter.js';
 
 const players = [{ id: 'p1' }, { id: 'p2' }];
@@ -169,9 +169,9 @@ test('the AI stops pumping after a few activations and finishes its turn', () =>
 });
 
 test('the pool is every LTR card in the game', () => {
-  assert.ok(PAIGOW_POOL.length > 240);
-  assert.ok(PAIGOW_POOL.every((id) => CARDS[id].set === 'ltr'));
-  assert.equal(Object.values(POOL_BY_RARITY).flat().length, PAIGOW_POOL.length);
+  assert.ok(CARD_POOL.length > 240);
+  assert.ok(CARD_POOL.every((id) => CARDS[id].set === 'ltr'));
+  assert.equal(Object.values(POOL_BY_RARITY).flat().length, CARD_POOL.length);
 });
 
 test('a booster: 10 different commons, 3 different uncommons, a rare or mythic, and any LTR card', () => {
@@ -190,7 +190,7 @@ test('a booster: 10 different commons, 3 different uncommons, a rare or mythic, 
     assert.equal(new Set(uncommons).size, 3);
     assert.ok(['rare', 'mythic'].includes(rarity(pack[13])));
     if (rarity(pack[13]) === 'mythic') mythics += 1;
-    assert.ok(PAIGOW_POOL.includes(pack[14]));
+    assert.ok(CARD_POOL.includes(pack[14]));
     wildcards.set(pack[14], (wildcards.get(pack[14]) ?? 0) + 1);
   }
   // Each rare twice as likely as each mythic: about one mythic in seven packs.
@@ -199,18 +199,18 @@ test('a booster: 10 different commons, 3 different uncommons, a rare or mythic, 
   assert.ok(Math.abs(mythics / packs - expected) < 0.025, `mythics ${mythics / packs} vs ${expected}`);
   // The wildcard: every card equally likely, so its rarities follow the pool's.
   const wildCommons = [...wildcards].filter(([id]) => rarity(id) === 'common').reduce((sum, [, n]) => sum + n, 0);
-  assert.ok(Math.abs(wildCommons / packs - common.length / PAIGOW_POOL.length) < 0.03);
-  assert.ok(wildcards.size > PAIGOW_POOL.length * 0.9, `${wildcards.size} different wildcards`);
+  assert.ok(Math.abs(wildCommons / packs - common.length / CARD_POOL.length) < 0.03);
+  assert.ok(wildcards.size > CARD_POOL.length * 0.9, `${wildcards.size} different wildcards`);
 });
 
 test('a match opens a booster for each side and makes three CPU decks of five', () => {
   const match = createMatch({ seed: 42 });
-  assert.equal(match.cards.length, PAIGOW_RULES.cardsDealt);
-  assert.ok(match.cards.every((id) => PAIGOW_POOL.includes(id)));
+  assert.equal(match.cards.length, MATCH_RULES.cardsDealt);
+  assert.ok(match.cards.every((id) => CARD_POOL.includes(id)));
   assert.equal(match.cpuDecks.length, 3);
   assert.ok(match.cpuDecks.every((deck) => deck.length === 5));
   assert.equal(match.cpuDecks.flat().length, 15);
-  assert.ok(PAIGOW_OPPONENTS[match.opponentId]);
+  assert.ok(OPPONENTS[match.opponentId]);
   assert.deepEqual(createMatch({ seed: 42 }), match);
 });
 
@@ -225,7 +225,7 @@ test('a booster with two of a card can still be split into decks', () => {
 });
 
 test('the CPU spreads its strongest cards across its decks', () => {
-  const cards = [...PAIGOW_POOL].slice(0, 15);
+  const cards = [...CARD_POOL].slice(0, 15);
   const decks = arrangeCpuDecks(cards, seededRandom(1));
   assert.deepEqual(decks.flat().sort(), [...cards].sort());
   assert.ok(decks.every((deck) => deck.length === 5));
@@ -349,10 +349,10 @@ test('fast forward with nothing on either side is a draw', () => {
   assert.equal(plan.endReason, 'stall');
 });
 
-test('Pai Gow has its own opponents, each with a portrait, banter and the Strategist', () => {
-  const names = Object.values(PAIGOW_OPPONENTS).map((o) => o.name);
+test('Istari has its own opponents, each with a portrait, banter and the Strategist', () => {
+  const names = Object.values(OPPONENTS).map((o) => o.name);
   assert.deepEqual(names, ['Birthday Bilbo', 'Burglar Bilbo', 'Lobelia Sackville-Baggins', 'Gandalf', 'Old Man Willow', 'Gildor', 'Rider in Black', 'Butterbur', 'Bill Ferny', 'Ringwraiths', 'Glorfindel', 'Merry', 'Pippin', 'Strider', 'Goldberry', 'Tom Bombadil', 'Sauron', 'Saruman', 'Théoden', 'Denethor', 'Elrond', 'Galadriel']);
-  for (const [id, opponent] of Object.entries(PAIGOW_OPPONENTS)) {
+  for (const [id, opponent] of Object.entries(OPPONENTS)) {
     assert.match(opponent.portrait.art, /^https:\/\/cards\.scryfall\.io\/art_crop\//);
     // A portrait from another set's card (the Bilbos) names its set; the rest are LTR cards in the game.
     if (!opponent.portrait.set) assert.ok(Object.values(CARDS).some((c) => c.name === opponent.portrait.card), `${id}'s portrait card`);
@@ -364,7 +364,7 @@ test('Pai Gow has its own opponents, each with a portrait, banter and the Strate
   const met = new Set(Array.from({ length: 200 }, (_, seed) => createMatch({ seed }).opponentId));
   assert.equal(met.size, names.length);
   const setup = roundSetup(ready());
-  assert.equal(setup.cpu.name, PAIGOW_OPPONENTS[ready().opponentId].name);
+  assert.equal(setup.cpu.name, OPPONENTS[ready().opponentId].name);
 });
 
 test('a warning when this turn could end in a draw: after a turn with no change, and on the last turn', () => {
@@ -432,7 +432,7 @@ test('Old Man Willow’s own setup: his card in every pack, and five Forests in 
   for (let seed = 1; seed <= 20; seed += 1) {
     const match = createMatch({ seed, opponentId: 'oldManWillow' });
     assert.ok(match.cpuDecks.flat().includes('oldManWillow'), `seed ${seed}`);
-    assert.equal(match.cpuDecks.flat().length, PAIGOW_RULES.cardsDealt);
+    assert.equal(match.cpuDecks.flat().length, MATCH_RULES.cardsDealt);
   }
   // Other opponents' packs are as ever.
   const other = createMatch({ seed: 5, opponentId: 'sauron' });
@@ -465,7 +465,7 @@ test('Gandalf always has Glamdring in his pack, and starts every round with five
   for (let seed = 1; seed <= 20; seed += 1) {
     const cards = createMatch({ seed, opponentId: 'gandalf' }).cpuDecks.flat();
     assert.equal(cards.filter((id) => id === 'glamdring').length >= 1, true, `seed ${seed}`);
-    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+    assert.equal(cards.length, MATCH_RULES.cardsDealt);
   }
   const match = createMatch({ seed: 3, opponentId: 'gandalf' });
   const setup = roundSetup(setDecks(match, [0, 1, 2].map((i) => match.cards.slice(i * 5, i * 5 + 5))));
@@ -487,7 +487,7 @@ const rareOrBetter = (id) => ['rare', 'mythic'].includes(CARDS[id].rarity);
 
 test('a rare booster: different rares and mythics, as many as asked', () => {
   const booster = openRareBooster(seededRandom(3));
-  assert.equal(booster.length, PAIGOW_RULES.cardsDealt);
+  assert.equal(booster.length, MATCH_RULES.cardsDealt);
   assert.equal(new Set(booster).size, booster.length);
   assert.ok(booster.every(rareOrBetter));
   assert.equal(openRareBooster(seededRandom(3), { size: 18 }).length, 18);
@@ -500,9 +500,9 @@ test('Tom Bombadil’s packs are all rares and mythics, and his first deck is fi
   for (let seed = 1; seed <= 12; seed += 1) {
     const match = createMatch({ seed, opponentId: 'tomBombadil' });
     const cards = match.cpuDecks.flat();
-    assert.equal(cards.length, PAIGOW_RULES.cardsDealt, `seed ${seed}`);
+    assert.equal(cards.length, MATCH_RULES.cardsDealt, `seed ${seed}`);
     assert.ok(cards.every(rareOrBetter), `seed ${seed}: all rare`);
-    assert.ok(match.cpuDecks.every((deck) => deck.length === PAIGOW_RULES.deckSize));
+    assert.ok(match.cpuDecks.every((deck) => deck.length === MATCH_RULES.deckSize));
     // The player's booster is as ever, and nothing of theirs is locked.
     assert.ok(!match.cards.every(rareOrBetter));
     assert.equal(match.lockedDeck, undefined);
@@ -525,11 +525,11 @@ test('buildDecks with a locked deck: it comes first, as given, and the other two
 test('Goldberry’s Ring borne by the player: an all-rare booster, and five of its cards locked in the first deck', () => {
   const match = createMatch({ seed: 6, opponentId: 'gandalf', rings: ['tomBombadil'] });
   assert.ok(match.cards.every(rareOrBetter));
-  assert.equal(match.lockedDeck.length, PAIGOW_RULES.deckSize);
-  assert.equal(new Set(match.lockedDeck).size, PAIGOW_RULES.deckSize);
+  assert.equal(match.lockedDeck.length, MATCH_RULES.deckSize);
+  assert.equal(new Set(match.lockedDeck).size, MATCH_RULES.deckSize);
   // A campaign's extra commons: just as many cards, all rare.
   const more = createMatch({ seed: 6, opponentId: 'gandalf', rings: ['tomBombadil'], extraCommons: 2 });
-  assert.equal(more.cards.length, PAIGOW_RULES.cardsDealt + 2);
+  assert.equal(more.cards.length, MATCH_RULES.cardsDealt + 2);
   assert.ok(more.cards.every(rareOrBetter));
   // The CPU (Gandalf) is unchanged by the player's ring: its decks are those of the same match without it.
   assert.deepEqual(match.cpuDecks, createMatch({ seed: 6, opponentId: 'gandalf' }).cpuDecks);
@@ -549,12 +549,12 @@ test('the Rider in Black’s packs always hold three Nazgûl', () => {
   for (let seed = 1; seed <= 20; seed += 1) {
     const cards = createMatch({ seed, opponentId: 'riderInBlack' }).cpuDecks.flat();
     assert.equal(cards.filter((id) => id === 'nazgul').length, 3, `seed ${seed}`);
-    assert.equal(cards.length, PAIGOW_RULES.cardsDealt);
+    assert.equal(cards.length, MATCH_RULES.cardsDealt);
   }
 });
 
 test('spreadDecks: Auto-fill fills the decks about evenly, strongest cards first, and keeps what was placed', () => {
-  const { decks, deckSize } = PAIGOW_RULES;
+  const { decks, deckSize } = MATCH_RULES;
   const cards = openBooster(seededRandom(7), { extraCommons: 2 });
   const placed = new Map([[0, 2], [1, 2]]);
   const filled = spreadDecks(cards, placed);

@@ -1,9 +1,10 @@
 /**
- * The title screen's backdrop: a picture of an elven valley, cut into depth layers
- * (app/title/layer-N.webp, made by tools/title/make-layers.py), far to near: the sky and far falls,
- * the cliffs, the valley with its houses and river, the near balcony and woods, the canopy overhead.
+ * The title screen's backdrop: a painting of the Shire, cut into depth layers
+ * (app/title/layer-N.webp, made by tools/title/make-layers.py), far to near: the sky, the mountains,
+ * the green valley with its river and great tree, the hillside smial and path, the meadow in front.
  *
- * The game's name is a layer of its own, set in the sky behind the overhanging branches.
+ * The game's name is a layer of its own, set in the sky above the mountains: the logo
+ * (app/title/logo.webp, made by tools/title/make-logo.py), gold letters with the black cut away.
  *
  * Once the layers have loaded, the camera pulls back from close in, each layer by its depth (`--d`,
  * 0 far to 1 near), so near layers move and shrink more than far ones: a parallax zoom. Then it
@@ -20,10 +21,10 @@ const layer = (el, depth) => {
   return el;
 };
 
-export function rivendell(h) {
+export function shire(h) {
   const images = LAYERS.map((depth, i) => layer(h('img.rv-layer', { src: `app/title/layer-${i}.webp`, alt: '', decoding: 'async', draggable: 'false' }), depth));
-  const title = layer(h('div.rv-layer.rv-title', h('h1.logo-big', 'Istari')), TITLE_DEPTH);
-  // Far to near: sky and cliffs, shade for the words, the name, then the valley, the near woods and the branches.
+  const title = layer(h('div.rv-layer.rv-title', h('h1.logo-big', h('img.logo-img', { src: 'app/title/logo.webp', alt: 'Istari', decoding: 'async', draggable: 'false' }))), TITLE_DEPTH);
+  // Far to near: the sky and mountains, shade for the words, the name, then the valley, the hillside and the meadow.
   const el = h(`div.rv${introPlayed ? '.settled' : ''}`, images[0], images[1], h('div.rv-scrim-top', { 'aria-hidden': 'true' }), title,
     ...images.slice(2), h('div.rv-motes', { 'aria-hidden': 'true' }), h('div.rv-scrim', { 'aria-hidden': 'true' }));
   // Start the move only when every layer can be shown, so it never begins on a half-drawn scene.

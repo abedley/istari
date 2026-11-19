@@ -1,5 +1,5 @@
 /**
- * The Istari app: one page, a few screens (title, choosing a hero, Pai Gow's deck
+ * The Istari app: one page, a few screens (title, choosing a hero, Istari's deck
  * builder and scoreboard, the campaign, battle), for phones held upright.
  */
 import { CARDS } from '../src/cards/cards.js';
@@ -14,7 +14,7 @@ import {
 import { createOverlays } from './overlays.js';
 import { titleScreen } from './screens/title.js';
 import { battleScreen } from './screens/battle.js';
-import { paigowScreen } from './screens/paigow.js';
+import { matchScreen } from './screens/match.js';
 import { heroesScreen } from './screens/heroes.js';
 import { campaignScreen } from './screens/campaign.js';
 import { bookScreen } from './screens/book.js';
@@ -26,7 +26,7 @@ const SCREENS = {
   title: titleScreen,
   heroes: heroesScreen,
   campaign: campaignScreen,
-  paigow: paigowScreen,
+  match: matchScreen,
   battle: battleScreen,
   book: bookScreen,
 };

@@ -1,5 +1,5 @@
 /**
- * The Red Book: what a player has done across every campaign and daily match, kept on the device. Pure functions
+ * The Red Book: what a player has done across every campaign, kept on the device. Pure functions
  * over a plain object (the app loads and saves it: app/book.js); each returns a new book.
  *
  * - `cards`: cards opened in your boosters, by id, with how many times; `seen`: cards met in opponents' decks.
@@ -8,13 +8,12 @@
  *   (`furthest`: the most opponents beaten in one).
  * - `totals`: matches (and how they went), rounds, damage dealt, creatures felled; `blow`: the hardest blow ever
  *   (`{ name, amount }`); `mostDamage`: the most damage dealt in a round.
- * - `daily`: daily matches `played` and `won`, the `streak` of days in a row played, the `best` streak, the `last` day.
  * - `fresh`: what the match going on has added (`seed`, `cards` newly found, `firstWin`, `unlocks`), for its recap.
  * - `counted`: keys of what has been recorded, so nothing counts twice (a reload shows the same screen again).
  */
-import { MATCH_OUTCOME } from './paigow.js';
+import { MATCH_OUTCOME } from './match.js';
 import { matchStats } from './roundStats.js';
-import { PAIGOW_OPPONENTS } from './personas.js';
+import { OPPONENTS } from './personas.js';
 
 export const BOOK_VERSION = 1;
 
@@ -31,7 +30,6 @@ export const emptyBook = () => ({
   totals: { matches: 0, won: 0, lost: 0, tied: 0, rounds: 0, damage: 0, felled: 0 },
   blow: null,
   mostDamage: 0,
-  daily: { played: 0, won: 0, streak: 0, best: 0, last: null },
   fresh: null,
   counted: [],
 });
@@ -41,7 +39,7 @@ export function readBook(value) {
   if (!value || typeof value !== 'object' || value.version !== BOOK_VERSION) return null;
   const blank = emptyBook();
   return {
-    ...blank, ...value, totals: { ...blank.totals, ...value.totals }, daily: { ...blank.daily, ...value.daily },
+    ...blank, ...value, totals: { ...blank.totals, ...value.totals },
     counted: Array.isArray(value.counted) ? value.counted : [], rings: Array.isArray(value.rings) ? value.rings : [],
   };
 }
@@ -94,17 +92,9 @@ export function recordRoundPlayed(book, match, round) {
   });
 }
 
-/** The day before `day` ("YYYY-MM-DD"), in the calendar. */
-export function dayBefore(day) {
-  const [y, m, d] = day.split('-').map(Number);
-  const date = new Date(Date.UTC(y, m - 1, d - 1));
-  return date.toISOString().slice(0, 10);
-}
-
 /**
  * A match over, with its `outcome` (MATCH_OUTCOME). `unlocksOf(book)`: the names of everything unlocked by a book
- * (src/paigow/unlocks.js), so what this match unlocked can be told in its recap. A daily match (`match.daily`, its
- * day) also counts towards the streak of days played.
+ * (src/match/unlocks.js), so what this match unlocked can be told in its recap.
  */
 export function recordMatchEnd(book, match, outcome, { unlocksOf = () => [] } = {}) {
   if (!Object.values(MATCH_OUTCOME).includes(outcome)) return book;
@@ -112,16 +102,10 @@ export function recordMatchEnd(book, match, outcome, { unlocksOf = () => [] } = 
     const before = b.people[match.opponentId] ?? { won: 0, lost: 0, tied: 0 };
     const key = { [MATCH_OUTCOME.WON]: 'won', [MATCH_OUTCOME.LOST]: 'lost', [MATCH_OUTCOME.TIE]: 'tied' }[outcome];
     const fresh = freshFor(b, match.seed);
-    let daily = b.daily;
-    if (match.daily && match.daily !== daily.last) {
-      const streak = daily.last === dayBefore(match.daily) ? daily.streak + 1 : 1;
-      daily = { played: daily.played + 1, won: daily.won + (outcome === MATCH_OUTCOME.WON ? 1 : 0), streak, best: Math.max(daily.best, streak), last: match.daily };
-    }
     const next = {
       ...b,
       people: { ...b.people, [match.opponentId]: { ...before, [key]: before[key] + 1 } },
       totals: { ...b.totals, matches: b.totals.matches + 1, [key]: b.totals[key] + 1 },
-      daily,
     };
     const had = new Set(unlocksOf(b));
     return { ...next, fresh: { ...fresh, firstWin: outcome === MATCH_OUTCOME.WON && before.won === 0, unlocks: unlocksOf(next).filter((name) => !had.has(name)) } };
@@ -169,7 +153,7 @@ export function catchUp(book, campaign) {
     const people = { ...next.people };
     const totals = { ...next.totals };
     for (const { opponentId, outcome } of campaign.history ?? []) {
-      if (!PAIGOW_OPPONENTS[opponentId]) continue;
+      if (!OPPONENTS[opponentId]) continue;
       const key = { [MATCH_OUTCOME.WON]: 'won', [MATCH_OUTCOME.LOST]: 'lost', [MATCH_OUTCOME.TIE]: 'tied' }[outcome];
       if (!key) continue;
       const record = people[opponentId] ?? { won: 0, lost: 0, tied: 0 };

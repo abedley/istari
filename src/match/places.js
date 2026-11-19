@@ -10,7 +10,7 @@ export const AMBIENCE = Object.freeze({ SHIRE: 'shire', FOREST: 'forest', HALL: 
 
 const place = (name, line, cardId, x, y, ambience) => Object.freeze({ name, line, cardId, x, y, ambience });
 
-/** The place each opponent is met, by opponent id (PAIGOW_OPPONENTS). */
+/** The place each opponent is met, by opponent id (OPPONENTS). */
 export const PLACES = Object.freeze({
   birthdayBilbo: place('The Party Field', 'Lanterns in the tree, and a hundred and forty-four guests.', 'theShire', 50, 40, AMBIENCE.SHIRE),
   burglarBilbo: place('Bag End', 'A round green door, and a hobbit who has been there and back again.', 'shireTerrace', 30, 35, AMBIENCE.SHIRE),

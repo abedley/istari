@@ -1,5 +1,5 @@
 /**
- * The campaign: Pai Gow matches (src/paigow/paigow.js) against a road of opponents, one after another,
+ * The campaign: Istari matches (src/match/match.js) against a road of opponents, one after another,
  * with three lives. The road is split into books (CAMPAIGN_BOOKS), each ending with a boss: a book draws
  * a few of its opponents at random (kept in road order), then its boss. For now there is only Book I,
  * which ends with the Ringwraiths; beat them and the campaign is won.
@@ -7,7 +7,7 @@
  * Losing a match costs a life and you face the same opponent again (with a new booster); a tied match
  * costs nothing, and you face them again too. Beat an opponent and you choose a reward: take their Ring
  * of Power (their planeswalker power, an emblem in src/cards/emblems.js) to use alongside your hero's, at
- * the cost of starting every round with one less life (see playerLife in paigow.js), four rings at most;
+ * the cost of starting every round with one less life (see playerLife in match.js), four rings at most;
  * or add a common to every booster you open after (so you have more cards than your three decks of five
  * need, and pick which to leave out).
  * Beat every opponent on the road and the campaign is won; lose your last life and it's lost.
@@ -15,8 +15,8 @@
  * Everything here is pure: a campaign is a plain object (it can be saved as JSON), and each function
  * returns a new one.
  */
-import { createMatch, MATCH_OUTCOME } from './paigow.js';
-import { PAIGOW_HEROES, PAIGOW_OPPONENTS, DEFAULT_HERO } from './personas.js';
+import { createMatch, MATCH_OUTCOME } from './match.js';
+import { HEROES, OPPONENTS, DEFAULT_HERO } from './personas.js';
 import { seededRandom, shuffle } from '../engine/random.js';
 
 export const CAMPAIGN_RULES = Object.freeze({
@@ -26,7 +26,7 @@ export const CAMPAIGN_RULES = Object.freeze({
 });
 
 /**
- * Every opponent on the road, in road order (ids in PAIGOW_OPPONENTS): the books draw from these, and
+ * Every opponent on the road, in road order (ids in OPPONENTS): the books draw from these, and
  * those drawn are faced in this order.
  */
 export const CAMPAIGN_OPPONENTS = Object.freeze([
@@ -57,8 +57,8 @@ export const CAMPAIGN_BOOKS = Object.freeze([
  */
 export function drawBookOpponents(book, random = Math.random, heroId = null) {
   const order = (id) => CAMPAIGN_OPPONENTS.indexOf(id);
-  const own = PAIGOW_HEROES[heroId]?.emblem;
-  const pool = book.pool.filter((id) => PAIGOW_OPPONENTS[id].emblem !== own);
+  const own = HEROES[heroId]?.emblem;
+  const pool = book.pool.filter((id) => OPPONENTS[id].emblem !== own);
   const picked = shuffle(pool, random).slice(0, book.draw).sort((a, b) => order(a) - order(b));
   return [...picked, book.boss];
 }
@@ -67,10 +67,10 @@ export const CAMPAIGN_STATUS = Object.freeze({ PLAYING: 'playing', WON: 'won', L
 
 /** A new campaign for the hero `heroId`. */
 export function createCampaign({ heroId = DEFAULT_HERO, seed = Math.floor(Math.random() * 2 ** 32), opponents = null } = {}) {
-  if (!PAIGOW_HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
+  if (!HEROES[heroId]) throw new Error(`Unknown hero: ${heroId}`);
   // The road: Book I's draw (the same for the same seed), unless one is given.
   opponents ??= drawBookOpponents(CAMPAIGN_BOOKS[0], seededRandom(seed), heroId);
-  for (const id of opponents) if (!PAIGOW_OPPONENTS[id]) throw new Error(`Unknown opponent: ${id}`);
+  for (const id of opponents) if (!OPPONENTS[id]) throw new Error(`Unknown opponent: ${id}`);
   return {
     seed,
     heroId,
@@ -148,7 +148,7 @@ export const canTakeRing = (campaign) => campaign.rings.length < CAMPAIGN_RULES.
 export function takeRing(campaign) {
   if (!campaign.offer) throw new Error('No reward is on offer.');
   if (!canTakeRing(campaign)) throw new Error(`You can bear only ${CAMPAIGN_RULES.maxRings} rings.`);
-  const emblem = PAIGOW_OPPONENTS[campaign.offer].emblem;
+  const emblem = OPPONENTS[campaign.offer].emblem;
   return { ...campaign, rings: [...campaign.rings, emblem], offer: null };
 }
 

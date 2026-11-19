@@ -1,6 +1,6 @@
 /**
  * The Strategist's evaluation weights (see evaluate.js), fitted by tools/tune-eval.js to 147898
- * positions from 24000 self-played rounds of Pai Gow.
+ * positions from 24000 self-played rounds of Istari.
  * Generated: don't edit by hand (run `node tools/tune-eval.js`).
  */
 export const EVAL_WEIGHTS = Object.freeze({

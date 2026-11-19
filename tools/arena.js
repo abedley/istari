@@ -1,5 +1,5 @@
 /**
- * The arena: CPU players against each other at Pai Gow, in mirrored rounds, so the luck of the
+ * The arena: CPU players against each other at Istari, in mirrored rounds, so the luck of the
  * cards cancels. Each seed deals two boosters, a hero's ring to one seat and an opponent's to the
  * other. A "mirror" is one round (the same decks, the same seat going first) played twice with the
  * two AIs swapped; each seed plays two mirrors, one for each seat going first.
@@ -7,7 +7,7 @@
  *   node tools/arena.js --a strategist --b search-blind --seeds 100 [--from 1] [--budget 1000] [--jobs 4]
  *     [--adecks old|new] [--bdecks old|new] [--match] [--personas] [--verbose] [--aopts '{...}'] [--bopts '{...}']
  *
- * AIs: `basic`, `search` (the search AI as shipped: it knows the other side's deck list, so in Pai Gow
+ * AIs: `basic`, `search` (the search AI as shipped: it knows the other side's deck list, so in Istari
  * its hand), `search-blind` (the same, given only a blind view), `strategist`.
  * `--budget`: the search AI's thinking time per decision in ms (default: as it shipped for each opponent,
  * 1000 to 2500). The Strategist's is in its options: `--aopts '{"budgetMs":400}'`.
@@ -25,15 +25,15 @@ import { fileURLToPath } from 'node:url';
 import { Game, GAME_STATUS } from '../src/engine/Game.js';
 import { seededRandom } from '../src/engine/random.js';
 import {
-  createMatch, setDecks, roundSetup, arrangeCpuDecks, PLAYER_ID, CPU_ID, PAIGOW_RULES,
-} from '../src/paigow/paigow.js';
-import { PAIGOW_HEROES } from '../src/paigow/personas.js';
+  createMatch, setDecks, roundSetup, arrangeCpuDecks, PLAYER_ID, CPU_ID, MATCH_RULES,
+} from '../src/match/match.js';
+import { HEROES } from '../src/match/personas.js';
 import { BasicAIController } from '../src/ai/BasicAIController.js';
 import { searchPolicy } from '../src/ai/search.js';
 import { weightsFor } from '../src/ai/evaluate.js';
 import { actingPlayerId } from '../src/ai/simulate.js';
 import { blindView, blindDeterminizer } from '../src/ai/strategist/beliefs.js';
-import { deckPlan } from '../src/paigow/deckBuilder.js';
+import { deckPlan } from '../src/match/deckBuilder.js';
 
 const args = Object.fromEntries(process.argv.slice(2).join(' ').split('--').filter(Boolean).map((part) => {
   const [key, ...value] = part.trim().split(/\s+/);
@@ -79,7 +79,7 @@ async function makePolicy(name, me, { persona, seed, budget, opts }) {
 
 /** A seed's deal: two boosters, the rings, and each seat's decks, built the way of the AI sitting there. */
 async function dealt(seed, builders) {
-  const heroes = Object.keys(PAIGOW_HEROES);
+  const heroes = Object.keys(HEROES);
   const random = seededRandom(seed ^ 0x9e3779b9);
   const heroId = heroes[Math.floor(random() * heroes.length)];
   const match = createMatch({ seed, heroId });
@@ -88,7 +88,7 @@ async function dealt(seed, builders) {
   for (const seat of SEATS) {
     const deckRandom = seededRandom((seed * 2654435761 + (seat === CPU_ID ? 17 : 5)) >>> 0);
     if (builders[seat] === 'new') {
-      const { buildDecks } = await import('../src/paigow/deckBuilder.js');
+      const { buildDecks } = await import('../src/match/deckBuilder.js');
       decks[seat] = buildDecks(cards[seat], deckRandom, { persona: seat === CPU_ID ? match.opponentId : null });
     } else decks[seat] = arrangeCpuDecks(cards[seat], deckRandom);
   }
@@ -106,8 +106,8 @@ async function playRound({ seed, match, round, first, ais, budget }) {
     seed: (seed * 31 + round) >>> 0,
     startingPlayerId: first,
     startingLife: {
-      [PLAYER_ID]: playerFirst ? PAIGOW_RULES.startingLife : PAIGOW_RULES.secondPlayerLife,
-      [CPU_ID]: playerFirst ? PAIGOW_RULES.secondPlayerLife : PAIGOW_RULES.startingLife,
+      [PLAYER_ID]: playerFirst ? MATCH_RULES.startingLife : MATCH_RULES.secondPlayerLife,
+      [CPU_ID]: playerFirst ? MATCH_RULES.secondPlayerLife : MATCH_RULES.startingLife,
     },
     silent: true,
   });
@@ -157,7 +157,7 @@ async function playSeed(seed, { a, b, adecks, bdecks, budget, match: wholeMatch 
       let first = seed % 2 ? PLAYER_ID : CPU_ID;
       const wins = { [PLAYER_ID]: 0, [CPU_ID]: 0 };
       const merged = { think: { [PLAYER_ID]: [], [CPU_ID]: [] }, blunders: { [PLAYER_ID]: {}, [CPU_ID]: {} }, turns: 0, reason: '', persona: match.opponentId };
-      for (let round = 0; round < PAIGOW_RULES.decks && Math.max(...Object.values(wins)) < PAIGOW_RULES.roundsToWin; round++) {
+      for (let round = 0; round < MATCH_RULES.decks && Math.max(...Object.values(wins)) < MATCH_RULES.roundsToWin; round++) {
         const result = await playRound({ seed, match, round, first, ais, budget });
         if (result.winner) wins[result.winner] += 1;
         first = result.winner ? other(result.winner) : other(first);
@@ -171,7 +171,7 @@ async function playSeed(seed, { a, b, adecks, bdecks, budget, match: wholeMatch 
     }
     return [mirror];
   }
-  const round = seed % PAIGOW_RULES.decks;
+  const round = seed % MATCH_RULES.decks;
   for (const first of SEATS) {
     const mirror = [];
     for (const aSeat of SEATS) {

@@ -1,6 +1,6 @@
 /**
  * The campaign's road, as a map: Bag End at the foot, Barad-dûr at the head, a winding dotted road between,
- * and a stop for each opponent at the place they're met (src/paigow/places.js). Beaten stops are marked, the next
+ * and a stop for each opponent at the place they're met (src/match/places.js). Beaten stops are marked, the next
  * one is the biggest and shows who waits there, and those ahead show the place but not the opponent. Your hero
  * stands at the next stop. The more Rings of Power you bear, the darker the map (`burden`, 0 to 4: app.css, "road map").
  */
@@ -8,8 +8,8 @@ import { h, reducedMotion } from '../dom.js';
 import { crest } from '../art.js';
 import { icon } from '../icons.js';
 import { personInfo } from './common.js';
-import { placeOf } from '../../src/paigow/places.js';
-import { paigowOpponent } from '../../src/paigow/personas.js';
+import { placeOf } from '../../src/match/places.js';
+import { opponentById } from '../../src/match/personas.js';
 
 /** The road's shape: how far apart the stops are (px), and how far it swings to each side (percent of the width). */
 const STEP = 118;
@@ -48,7 +48,7 @@ export function roadMap(campaign, { hero, onStop, walkFrom = null }) {
 
   const stops = campaign.opponents.map((id, i) => {
     const spot = placeOf(id);
-    const person = paigowOpponent(id);
+    const person = opponentById(id);
     const state = i < campaign.stage ? 'beaten' : i === campaign.stage ? 'next' : 'later';
     // A book ends with its boss: the last stop on the road.
     const boss = Number.isInteger(campaign.book) && i === count - 1;

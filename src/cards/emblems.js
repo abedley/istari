@@ -69,7 +69,7 @@ export const EMBLEMS = deepFreeze({
     ],
   },
 
-  // Pai Gow's heroes, one for the player to choose (PAIGOW_HEROES in src/paigow/personas.js).
+  // Istari's heroes, one for the player to choose (HEROES in src/match/personas.js).
   // A passive power (a static ability, from the command zone) and a second one to activate (its `name` is the
   // power's name), once a turn.
   frodo: {
@@ -148,7 +148,7 @@ export const EMBLEMS = deepFreeze({
     timing: SORCERY,
   }),
 
-  // Pai Gow's CPU opponents, one each (PAIGOW_OPPONENTS in src/paigow/personas.js).
+  // Istari's CPU opponents, one each (OPPONENTS in src/match/personas.js).
   birthdayBilbo: power('birthdayBilbo', 'Gollum’s Birthday Present', 'Eleventy-First Birthday', {
     text: '0: You gain 1 life. Activate only as a sorcery.',
     effects: [{ type: EFFECT.GAIN_LIFE, amount: 1 }],
@@ -231,7 +231,7 @@ export const EMBLEMS = deepFreeze({
     }],
     triggeredAbilities: [HUNTING_THE_RING],
   },
-  // A passive power for the match rather than the game (see createMatch in src/paigow/paigow.js): what's in the
+  // A passive power for the match rather than the game (see createMatch in src/match/match.js): what's in the
   // booster, and how its decks are made. Nothing to do in a round.
   tomBombadil: {
     id: 'tomBombadil',

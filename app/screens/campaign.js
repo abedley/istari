@@ -7,12 +7,12 @@ import { ringBlock } from './heroes.js';
 import {
   createCampaign, campaignStatus, currentOpponent, startMatch, updateMatch, recordMatch, takeRing, takeCommon, canTakeRing,
   CAMPAIGN_RULES, CAMPAIGN_STATUS, CAMPAIGN_BOOKS,
-} from '../../src/paigow/campaign.js';
-import { playerLife, BOOSTER } from '../../src/paigow/paigow.js';
-import { paigowOpponent, paigowHero, currentHeroId } from '../../src/paigow/personas.js';
-import { placeOf, withArt, JOURNEYS_END } from '../../src/paigow/places.js';
-import { recordRing, recordCampaignBegun, recordCampaignProgress } from '../../src/paigow/book.js';
-import { unlocksOf } from '../../src/paigow/unlocks.js';
+} from '../../src/match/campaign.js';
+import { playerLife, BOOSTER } from '../../src/match/match.js';
+import { opponentById, heroById, currentHeroId } from '../../src/match/personas.js';
+import { placeOf, withArt, JOURNEYS_END } from '../../src/match/places.js';
+import { recordRing, recordCampaignBegun, recordCampaignProgress } from '../../src/match/book.js';
+import { unlocksOf } from '../../src/match/unlocks.js';
 import { updateBook, loadBook, heroLook } from '../book.js';
 
 const CAMPAIGN_KEY = 'istari.campaign';
@@ -24,7 +24,7 @@ export function loadCampaign(app) {
     // A hero that has been renamed since (Bilbo became Samwise, Aragorn became Strider).
     if (campaign?.heroId) campaign.heroId = currentHeroId(campaign.heroId);
     if (campaign?.match?.heroId) campaign.match.heroId = currentHeroId(campaign.match.heroId);
-    return campaign && paigowHero(campaign.heroId) && campaign.opponents?.every(paigowOpponent) ? campaign : null;
+    return campaign && heroById(campaign.heroId) && campaign.opponents?.every(opponentById) ? campaign : null;
   } catch {
     return null;
   }
@@ -71,7 +71,7 @@ const lifeLine = (rings) => {
 const commonsLine = (extra, lead = 'Your') => `${lead} boosters hold ${BOOSTER.commons + extra} commons, ${BOOSTER.commons + BOOSTER.uncommons + BOOSTER.rares + BOOSTER.wildcards + extra} cards in all: make three decks of five and leave the rest out.`;
 
 /**
- * The campaign (src/paigow/campaign.js): a road of opponents (drawn as a map, roadMap.js), three lives, and the rewards you take
+ * The campaign (src/match/campaign.js): a road of opponents (drawn as a map, roadMap.js), three lives, and the rewards you take
  * from those you beat (Rings of Power, or extra commons). With `heroId`, a new campaign begins for that hero.
  * `walkFrom`: the stop just left, after a win, so the hero walks up the road from it (see roadMap).
  */
@@ -85,15 +85,15 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
   if (campaign.offer) return offerView(app, campaign);
   if (campaignStatus(campaign) !== CAMPAIGN_STATUS.PLAYING) return overView(app, campaign);
 
-  const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
+  const hero = heroLook(app, heroById(campaign.heroId), campaign.heroId);
   const opponentId = currentOpponent(campaign);
-  const opponent = paigowOpponent(opponentId);
+  const opponent = opponentById(opponentId);
   const spot = placeOf(opponentId);
 
   const rings = [hero.emblem, ...campaign.rings];
   const play = () => {
     campaign = saveCampaign(app, startMatch(campaign));
-    app.go('paigow', { match: campaign.match });
+    app.go('match', { match: campaign.match });
   };
   const abandon = async () => {
     if (await app.overlays.confirm({ title: 'Turn back for home?', text: 'The campaign ends here. Your lives and rings will be lost.', yes: 'Turn back', danger: true })) {
@@ -104,7 +104,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
   /** A stop tapped: its place, and who is met there (for those not yet reached, only the place). */
   const showStop = (i) => {
     const id = campaign.opponents[i];
-    const person = paigowOpponent(id);
+    const person = opponentById(id);
     const there = placeOf(id);
     const reached = i <= campaign.stage;
     app.overlays.sheet({
@@ -151,7 +151,7 @@ export function campaignScreen(app, { heroId = null, walkFrom = null } = {}) {
  * every booster from now on.
  */
 function offerView(app, campaign) {
-  const opponent = paigowOpponent(campaign.offer);
+  const opponent = opponentById(campaign.offer);
   const able = canTakeRing(campaign);
   const after = [...campaign.rings, opponent.emblem];
   const onward = placeOf(currentOpponent(campaign));
@@ -182,7 +182,7 @@ function offerView(app, campaign) {
 /** The campaign won (where the book's boss fell, or at the Grey Havens for a road begun before books) or lost (at the place where the last life was lost). */
 function overView(app, campaign) {
   const won = campaignStatus(campaign) === CAMPAIGN_STATUS.WON;
-  const hero = heroLook(app, paigowHero(campaign.heroId), campaign.heroId);
+  const hero = heroLook(app, heroById(campaign.heroId), campaign.heroId);
   // The end goes in the Red Book (once): a campaign won may open the hero's second portrait.
   const before = unlocksOf(loadBook(app));
   const book = updateBook(app, (b) => recordCampaignProgress(b, campaign, { won, unlocksOf }));
@@ -207,7 +207,7 @@ function overView(app, campaign) {
       h(`div.result-title.${won ? 'victory' : 'defeat'}`, won ? 'Victory' : 'Defeat'),
       crest(personInfo(hero), { size: 'lg' }),
       h('p.cp-offer-lead', won && bookOf(campaign)
-        ? `${hero.name} has beaten ${paigowOpponent(bookOf(campaign).boss).name} and finished ${bookOf(campaign).name}, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
+        ? `${hero.name} has beaten ${opponentById(bookOf(campaign).boss).name} and finished ${bookOf(campaign).name}, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
         : won
         ? `The road ends at the Grey Havens. ${hero.name} has beaten every opponent on it, with ${livesLeft(campaign.lives).replace(' left', '')} to spare.`
         : `The last life is lost at ${fell.name}. ${hero.name} beat ${wins} of ${campaign.opponents.length} opponents on the road.`),

@@ -166,7 +166,7 @@ export function play(name) {
 }
 
 // ---------------------------------------------------------------------------
-// Ambience: a quiet bed that loops under a screen, by kind of place (AMBIENCE in src/paigow/places.js).
+// Ambience: a quiet bed that loops under a screen, by kind of place (AMBIENCE in src/match/places.js).
 
 /** Looping noise through a filter, its loudness swelling slowly like wind. Returns what to stop. */
 function wind(out, { freq, q = 0.6, gain, swell = 0.12 }) {

@@ -1,15 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { CARDS } from '../src/cards/cards.js';
-import { CAMPAIGN_OPPONENTS } from '../src/paigow/campaign.js';
-import { PAIGOW_OPPONENTS } from '../src/paigow/personas.js';
+import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
+import { OPPONENTS } from '../src/match/personas.js';
 import {
   PLACES, JOURNEYS_END, AMBIENCE, placeOf, withArt,
-} from '../src/paigow/places.js';
+} from '../src/match/places.js';
 
 test('every opponent is met at a place of its own, with a card\'s art', () => {
   const names = new Set();
-  for (const id of Object.keys(PAIGOW_OPPONENTS)) {
+  for (const id of Object.keys(OPPONENTS)) {
     const spot = placeOf(id);
     assert.ok(spot, `${id} has no place`);
     assert.ok(spot.name && spot.line, `${id}: a name and a line`);
@@ -21,7 +21,7 @@ test('every opponent is met at a place of its own, with a card\'s art', () => {
     assert.ok(!names.has(spot.name), `${spot.name} is used twice`);
     names.add(spot.name);
   }
-  assert.deepEqual(Object.keys(PLACES).sort(), Object.keys(PAIGOW_OPPONENTS).sort());
+  assert.deepEqual(Object.keys(PLACES).sort(), Object.keys(OPPONENTS).sort());
   for (const id of CAMPAIGN_OPPONENTS) assert.ok(PLACES[id], id);
 });
 

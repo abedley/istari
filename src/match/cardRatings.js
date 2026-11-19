@@ -1,5 +1,5 @@
 /**
- * Card ratings for Pai Gow, fitted by tools/rate-cards.js from 60000 self-played rounds.
+ * Card ratings for Istari, fitted by tools/rate-cards.js from 60000 self-played rounds.
  * Generated: don't edit by hand (run `node tools/rate-cards.js`).
  *
  * A deck's score is the sum of its cards' ratings plus CREATURE_COUNT_BONUS[its number of creatures];
