@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Cuts the title screen's picture (tools/title/source.jpg, the Shire at dawn) into depth layers for its
+Cuts the title screen's picture (tools/title/source.jpg, a painting of the Shire) into depth layers for its
 parallax zoom, as app/title/layer-N.webp (0 farthest). Dev-only; needs Pillow and numpy.
 
     python3 tools/title/make-layers.py
 
 The picture is scaled to WIDTH pixels wide. Each layer is a hand-drawn region (REGIONS, in pixels of
-the picture at REF wide), refined in places by brightness (the dark trees against the misty hills).
+the picture at REF wide).
 Where a nearer layer covers a farther one, the farther one is filled in a little way under the nearer
 layer's edge (by diffusing the colors around it), so the gap a camera move opens shows scenery rather
 than a hole.
@@ -25,24 +25,26 @@ UNDER = 22     # px a layer is filled in under the edge of the layers in front o
 
 # Far to near, after the sky (layer 0, the whole picture). Polygons are (x, y) at REF.
 REGIONS = {
-    # The misty hills on the horizon, and everything below them. Mist: a soft edge.
-    'hills': dict(feather=6, polys=[
-        [(0, 292), (100, 282), (200, 274), (300, 271), (400, 275), (500, 280), (600, 286), (600, 1075), (0, 1075)],
+    # The mountains at the head of the valley, and everything below them. Haze: a soft edge.
+    'mountains': dict(feather=5, polys=[
+        [(0, 468), (50, 462), (100, 468), (150, 484), (200, 478), (250, 466), (300, 453), (350, 454), (400, 470),
+         (430, 478), (470, 458), (500, 444), (550, 432), (600, 425), (600, 1075), (0, 1075)],
     ]),
-    # The fields, the river and its bridge, and the big trees, left and right.
-    'fields': dict(feather=2, trees=405, polys=[
-        [(0, 322), (40, 318), (90, 330), (112, 340), (150, 345), (182, 362), (186, 398), (250, 404), (330, 398),
-         (400, 390), (462, 384), (470, 355), (520, 350), (568, 362), (592, 392), (600, 398), (600, 1075), (0, 1075)],
+    # The green valley: its hills, the far smials, the great tree, the river and its bridge.
+    'valley': dict(feather=3, polys=[
+        [(0, 522), (40, 516), (70, 510), (95, 506), (120, 518), (160, 520), (200, 530), (260, 522), (300, 526),
+         (345, 522), (362, 514), (388, 511), (412, 520), (430, 540), (470, 546), (520, 548), (560, 540), (600, 545),
+         (600, 1075), (0, 1075)],
     ]),
-    # The far smial's hill with the green door, and the gardens behind the near one.
-    'smials': dict(feather=3, polys=[
-        [(0, 556), (60, 549), (140, 544), (200, 546), (258, 550), (262, 543), (276, 543), (280, 556), (310, 563),
-         (345, 574), (398, 580), (432, 580), (470, 588), (530, 584), (600, 588), (600, 1075), (0, 1075)],
+    # The hillside with the blue-door smial, the fences and the winding path.
+    'hillside': dict(feather=4, polys=[
+        [(0, 742), (150, 735), (250, 725), (330, 705), (380, 682), (440, 665), (500, 650), (560, 638), (600, 630),
+         (600, 1075), (0, 1075)],
     ]),
-    # The near hill with the blue and yellow doors, and the path, fences and bushes in front.
-    'near': dict(feather=3, polys=[
-        [(600, 596), (520, 596), (470, 600), (434, 612), (432, 578), (398, 578), (396, 614), (350, 624), (300, 640),
-         (262, 664), (228, 698), (208, 748), (184, 790), (146, 836), (104, 858), (60, 862), (0, 872), (0, 1075), (600, 1075)],
+    # The meadow in front: long grass, bushes and flowers.
+    'meadow': dict(feather=5, polys=[
+        [(0, 852), (100, 860), (200, 885), (300, 895), (370, 880), (400, 862), (450, 855), (520, 862), (560, 880),
+         (600, 880), (600, 1075), (0, 1075)],
     ]),
 }
 ORDER = ['sky', *REGIONS]
