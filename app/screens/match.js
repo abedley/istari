@@ -332,7 +332,6 @@ function buildView(app, match) {
   const { decks: count, deckSize } = MATCH_RULES;
   // The booster's cards go in the Red Book (once for a match).
   updateBook(app, (book) => recordBooster(book, match));
-  saveDaily(app, match);
   /** Each card's deck (0–2), by its place in `match.cards` (a booster can hold two of a card), or none while it's in the tray. */
   // Tom Bombadil's ring: five cards locked in the first deck, from the start, that can't be moved.
   const locked = new Set(match.lockedDeck ?? []);
@@ -421,7 +420,6 @@ function buildView(app, match) {
     const decks = deckIds.map((i) => deckOf(i).map((n) => match.cards[n]));
     const ready = setDecks(match, decks);
     saveCampaignMatch(app, ready);
-    saveDaily(app, ready);
     start.disabled = true;
     await part();
     app.go('battle', { match: ready });
