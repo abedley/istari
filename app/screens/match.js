@@ -242,7 +242,8 @@ function present(app, match, root) {
       glow.animate([{ opacity: .55, transform: 'scale(.8)' }, { opacity: 1, transform: 'scale(1.15)' }], { duration: 300, easing: 'ease-out', fill: 'forwards' });
 
       // The cards burst out of the top all at once, in a jumble, each rising out of the pack and then tumbling away
-      // wherever it was thrown, spinning as it goes, and slowing as it goes, like the sparks will.
+      // wherever it was thrown, spinning, slower and slower but never quite stopping: their flights are far longer
+      // than the wait, so they're still drifting when they're called back to their places.
       // Thrown all round the pack (more up than down), but kept on the screen.
       const view = layer.getBoundingClientRect();
       const from = stage.getBoundingClientRect();
@@ -251,23 +252,22 @@ function present(app, match, root) {
       const below = view.bottom - from.top - 60;
       const thrown = flying.map(() => {
         const rad = ((Math.random() * 2 - 1) * 125 * Math.PI) / 180;
-        const far = 120 + Math.random() * 170;
+        const far = 140 + Math.random() * 200;
         const x = Math.max(-reach, Math.min(reach, Math.sin(rad) * far * 1.2));
         const y = Math.max(-above, Math.min(below, -Math.cos(rad) * far - 10));
         return { x, y, angle: (Math.random() * 2 - 1) * 200, lift: (Math.random() * 2 - 1) * 14 };
       });
       const order = flying.map((_, i) => i).sort(() => Math.random() - 0.5);
-      const rises = order.map((i, k) => {
+      const drifts = order.map((i, k) => {
         const { x, y, angle, lift } = thrown[i];
         if (k % 3 === 0) setTimeout(() => app.sound('draw'), k * 35);
         return flying[i].animate([
           { transform: 'translateY(70px) scale(.8)', opacity: 1 },
           { transform: `translate(${lift.toFixed(1)}px, -30px) rotate(${(angle * 0.1).toFixed(1)}deg) scale(.9)`, offset: .18 },
           { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`, opacity: 1 },
-        ], { duration: 700 + Math.random() * 200, delay: k * 35, easing: 'cubic-bezier(.2,.75,.3,1)', fill: 'both' }).finished.catch(() => {});
+        ], { duration: 2600 + Math.random() * 600, delay: k * 35, easing: 'cubic-bezier(.12,.75,.3,1)', fill: 'both' });
       });
-      await Promise.all(rises);
-      await wait(120);
+      await wait(order.length * 35 + 300);
 
       // Bang: the empty pack is gone in a flash, and the sky fills with sparks.
       app.sound('reward');
@@ -284,8 +284,8 @@ function present(app, match, root) {
       shots.forEach(([x, y], i) => setTimeout(() => fireworks.rocket(rect.width * x, rect.height * y), 160 + i * 150));
       await wait(420);
 
-      // The night clears to the decks, the last sparks still falling over them, and each card in the air flies down
-      // into its own place (a booster can hold two of a card: each copy finds a place of its own).
+      // The night clears to the decks, the last sparks still falling over them, and each card, still drifting, snaps
+      // back into its own place (a booster can hold two of a card: each copy finds a place of its own).
       layer.style.pointerEvents = 'none';
       layer.classList.add('clearing');
       const places = [...root.querySelectorAll('.pg-card[data-card]')];
@@ -296,18 +296,21 @@ function present(app, match, root) {
       const home = stage.getBoundingClientRect();
       const landings = flying.map((card, i) => {
         const target = spotFor(match.cards[i]);
-        if (!target) return card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.catch(() => {});
+        // Take over from the drift wherever it has got to.
+        const drifting = getComputedStyle(card).transform;
+        card.style.opacity = '1';
+        drifts[order.indexOf(i)].cancel();
+        if (!target) return card.animate([{ transform: drifting, opacity: 1 }, { transform: drifting, opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.catch(() => {});
         const t = target.getBoundingClientRect();
         const dx = t.left + t.width / 2 - (home.left + home.width / 2);
         const dy = t.top + t.height / 2 - home.top;
         const scale = t.width / card.offsetWidth;
-        const { x, y, angle } = thrown[i];
-        target.animate([{ opacity: 0 }, { opacity: 0, offset: .95 }, { opacity: 1 }], { duration: 520 + i * 30 });
+        const delay = i * 12;
+        target.animate([{ opacity: 0 }, { opacity: 0, offset: .97 }, { opacity: 1 }], { duration: 300 + delay });
         return card.animate([
-          { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)` },
-          { transform: `translate(${(x * 0.7 + dx * 0.3).toFixed(1)}px, ${(y - 24).toFixed(1)}px) rotate(${(angle * 0.4).toFixed(1)}deg) scale(${((1 + scale) / 2).toFixed(3)})`, offset: .3 },
+          { transform: drifting },
           { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${scale.toFixed(3)})` },
-        ], { duration: 520, delay: i * 30, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished
+        ], { duration: 300, delay, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'both' }).finished
           .then(() => { card.style.visibility = 'hidden'; }).catch(() => {});
       });
       await Promise.all([fireworks.done, ...landings]);
