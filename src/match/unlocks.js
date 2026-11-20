@@ -1,27 +1,32 @@
 /**
- * What's earned on the road, worked out from the Red Book (src/match/book.js). Only Frodo is open from the start;
- * every campaign won opens one more hero (`book.unlocked`): one of the opponents beaten on that road, at random, or,
+ * What's earned on the road, worked out from the Red Book (src/match/book.js). Frodo, Samwise and Strider are open from
+ * the start; every campaign won opens one more hero (`book.unlocked`): one of the opponents beaten on that road, at random, or,
  * once all of those are open, any hero still closed. A hero's second portrait (its `altPortrait` in
  * src/match/personas.js) opens once a campaign is won with them.
  */
 import { HEROES } from './personas.js';
 import { seededRandom } from '../engine/random.js';
 
-/** The one hero open from the start. */
+/** The hero chosen first. */
 export const STARTING_HERO = 'frodo';
 
+/** The heroes open from the start. */
+export const STARTING_HEROES = [STARTING_HERO, 'samwise', 'strider'];
+
+const startsOpen = (heroId) => STARTING_HEROES.includes(heroId);
+
 /**
- * Whether a hero can be chosen: Frodo, one opened by a campaign won, or one already set out with (a campaign begun
+ * Whether a hero can be chosen: one open from the start, one opened by a campaign won, or one already set out with (a campaign begun
  * before heroes were opened this way).
  */
 export function heroOpen(book, heroId) {
-  if (heroId === STARTING_HERO) return true;
+  if (startsOpen(heroId)) return true;
   if (book?.unlocked?.includes(heroId)) return true;
   return (book?.heroes?.[heroId]?.begun ?? 0) > 0;
 }
 
 /** What opening a hero takes, in words, or null for one open from the start. */
-export const heroNeeds = (heroId) => (heroId === STARTING_HERO ? null
+export const heroNeeds = (heroId) => (startsOpen(heroId) ? null
   : 'Win a campaign to open a new hero: one of those you beat on the road.');
 
 /**
@@ -44,7 +49,7 @@ export const portraitOpen = (book, heroId) => Boolean(HEROES[heroId]?.altPortrai
 /** Everything a book has unlocked, as names to tell the player ("Pippin", "A new portrait for Frodo"). */
 export function unlocksOf(book) {
   return [
-    ...Object.keys(HEROES).filter((id) => id !== STARTING_HERO && heroOpen(book, id)).map((id) => HEROES[id].name),
+    ...Object.keys(HEROES).filter((id) => !startsOpen(id) && heroOpen(book, id)).map((id) => HEROES[id].name),
     ...Object.keys(HEROES).filter((id) => portraitOpen(book, id)).map((id) => `A new portrait for ${HEROES[id].name}`),
   ];
 }

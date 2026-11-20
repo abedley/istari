@@ -370,8 +370,8 @@ const fromOpponent = (id, blurb) => {
 };
 
 /**
- * The player's characters: one is chosen for the whole match. `blurb` is a line for the picker. Only Frodo is
- * open at first; the rest open one at a time, as campaigns are won (src/match/unlocks.js).
+ * The player's characters: one is chosen for the whole match. `blurb` is a line for the picker. Frodo, Samwise
+ * and Strider are open at first; the rest open one at a time, as campaigns are won (src/match/unlocks.js).
  */
 export const HEROES = deepFreeze({
   frodo: {
