@@ -11,16 +11,41 @@ import { creatureValue, anthemValue } from './combat.js';
 import { doomedSacrificeCost } from './doomed.js';
 import { auraPumps, trickPays } from './timing.js';
 
+/** What spending a card on a second copy of a legend costs us, in points: the card itself. */
+export const DUPLICATE_LEGEND_COST = 2;
+
 /**
- * Whether casting `card` would only trip the legend rule (704.5j): it's legendary and
- * `me` already controls a legendary permanent with its name, or has one on the stack.
- * One of the two would just go to the graveyard.
+ * How much a legendary permanent is worth keeping under the legend rule (704.5j). Its
+ * creatureValue already counts what's on it (an opponent's -3/-0 Aura, -1/-1 counters);
+ * our own Auras would go with it, an opponent's curse goes away with it.
  */
-export function duplicatesLegend(state, me, card) {
-  if (!isLegendary(card)) return false;
+export function legendWorth(state, me, permanent) {
+  const attached = state.battlefield.filter((p) => p.attachedTo === permanent.id);
+  const ours = attached.filter((p) => p.controllerId === me).length;
+  const theirs = attached.length - ours;
+  const hurt = Math.min(permanent.damage ?? 0, Math.max(0, (permanent.toughness ?? 0) - 1));
+  return permanentValue(permanent) + 3 * ours - theirs - 0.5 * hurt
+    + (permanent.tapped ? 0 : 1) + (permanent.summoningSick ? 0 : 0.5);
+}
+
+/**
+ * Casting `card`, a legendary permanent, when `me` already controls one with its name:
+ * the legend rule keeps only one. Null when that isn't the case; otherwise what it gains,
+ * which is its enters-the-battlefield triggers plus how much better a fresh copy is
+ * than the one we have (cursed, shrunk, damaged), less the card. Never worth it with a
+ * copy still on the stack.
+ */
+export function duplicateLegendGain(state, me, card) {
+  if (!isLegendary(card)) return null;
   const same = (c) => c && c.name === card.name && c.id !== card.id && isLegendary(c);
-  return state.battlefield.some((p) => p.controllerId === me && same(p))
-    || state.stack.some((s) => s.kind === 'spell' && s.controllerId === me && same(s.card));
+  if (state.stack.some((s) => s.kind === 'spell' && s.controllerId === me && same(s.card))) return -Infinity;
+  const existing = state.battlefield.filter((p) => p.controllerId === me && same(p));
+  if (existing.length === 0) return null;
+  const kept = Math.max(...existing.map((p) => legendWorth(state, me, p)));
+  const fresh = legendWorth(state, me, { ...card, controllerId: me, tapped: false, summoningSick: true });
+  const enters = (card.triggeredAbilities ?? []).filter((t) => t.trigger === 'entersBattlefield')
+    .reduce((sum, t) => sum + Math.max(0, bestScore(state, me, abilityEffects(t), t.target, {}, card.id)), 0);
+  return enters + Math.max(0, fresh - kept) - DUPLICATE_LEGEND_COST;
 }
 
 /** A permanent's worth: creatures by creatureValue, other permanents a flat amount. */

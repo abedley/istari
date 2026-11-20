@@ -133,14 +133,69 @@ test("the basic AI taps creatures for Elven Chorus's mana", async () => {
   assert.ok(manaSources(state, state.validActions.filter((a) => a.playerId === 'p1')).some((s) => s.cardId === bear.id));
 });
 
-test('the legend rule: neither AI casts a second copy of a legend it already controls', () => {
+/** Whether each AI would cast a copy of `cardId` now: the basic AI's action, and the search AI's choices. */
+function castsCopy(g, cardId) {
+  const state = g.getState();
+  const copy = state.players[0].hand.find((c) => c.cardId === cardId);
+  const search = listMacros(state, 'p1').some((m) => m.kind === 'cast' && m.cardId === copy.id);
+  // The basic AI plays its land first: let it act on a copy of the game until it casts or passes.
+  const sim = Game.deserialize(g.serialize(), { silent: true });
+  const ai = new BasicAIController({ game: null, playerId: 'p1' });
+  let basic = false;
+  for (let i = 0; i < 10; i++) {
+    const action = ai.chooseAction(sim.getState());
+    if (action.type === 'CAST_SPELL') { basic = action.cardId === copy.id; break; }
+    if (action.type === 'PASS_PRIORITY') break;
+    sim.dispatch(action);
+  }
+  return { basic, search };
+}
+
+test('the legend rule: neither AI casts a plain second copy of a legend it already controls', () => {
   const legend = creature('legend', 3, 3, { name: 'Legend', supertypes: ['Legendary'] });
   const g = game({ hand: ['legend', 'legend'], cards: { legend } });
   castAndResolve(g, 'legend');
-  const state = g.getState();
-  assert.equal(state.battlefield.filter((p) => p.cardId === 'legend').length, 1);
-  const ai = new BasicAIController({ game: null, playerId: 'p1' });
-  const action = ai.chooseAction(state);
-  assert.notEqual(action?.type, 'CAST_SPELL', 'the basic AI holds the duplicate');
-  assert.ok(!listMacros(state, 'p1').some((m) => m.kind === 'cast'), 'the search AI doesn\'t consider it');
+  assert.equal(g.getState().battlefield.filter((p) => p.cardId === 'legend').length, 1);
+  assert.deepEqual(castsCopy(g, 'legend'), { basic: false, search: false });
+});
+
+test('the legend rule: a second copy is worth it for a strong enters trigger', () => {
+  const legend = creature('legend', 2, 2, {
+    name: 'Legend', supertypes: ['Legendary'],
+    triggeredAbilities: [{ id: 'etb', trigger: 'entersBattlefield', effects: [{ type: 'drawCards', count: 3 }] }],
+  });
+  const g = game({ hand: ['legend', 'legend'], cards: { legend } });
+  castAndResolve(g, 'legend');
+  assert.deepEqual(castsCopy(g, 'legend'), { basic: true, search: true });
+});
+
+test('the legend rule: a second copy replaces one under the opponent\'s curse, and the fresh one is kept', () => {
+  const legend = creature('legend', 3, 3, { name: 'Legend', supertypes: ['Legendary'] });
+  const shackle = {
+    id: 'shackle', name: 'Shackle', manaCost: {}, types: ['Enchantment'], subtypes: ['Aura'], enchant: 'creature',
+    keywords: [KEYWORD.FLASH], staticAbilities: [{ affected: 'attachedPermanent', power: -3 }],
+  };
+  const deck = ['legend', 'legend', ...Array(35).fill('forest')];
+  const g = new Game({
+    players, cards: { legend, shackle }, shuffleLibraries: false, emblems: { p1: [], p2: [] },
+    decks: { p1: deck, p2: ['shackle', ...Array(39).fill('forest')] },
+  });
+  g.start();
+  while (g.getState().phase !== PHASE.PRECOMBAT_MAIN) g.dispatch(passPriority(g.getState().priorityPlayerId));
+  castAndResolve(g, 'legend');
+  const cursed = g.getState().battlefield.find((p) => p.cardId === 'legend').id;
+  g.dispatch(passPriority('p1'));
+  g.dispatch(castSpell('p2', g.getState().players[1].hand.find((c) => c.cardId === 'shackle').id, [cursed]));
+  resolve(g);
+  assert.equal(g.getState().battlefield.find((p) => p.id === cursed).power, 0);
+  assert.equal(g.getState().priorityPlayerId, 'p1');
+  assert.deepEqual(castsCopy(g, 'legend'), { basic: true, search: true });
+
+  castAndResolve(g, 'legend');
+  assert.equal(g.getState().pendingDecision.type, DECISION.LEGEND_RULE);
+  aiDecides(g);
+  const kept = g.getState().battlefield.filter((p) => p.cardId === 'legend');
+  assert.equal(kept.length, 1);
+  assert.notEqual(kept[0].id, cursed);
+  assert.equal(kept[0].power, 3);
 });

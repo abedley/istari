@@ -14,7 +14,7 @@ import {
   creatureValue, curseValue, anthemValue, planAttack, chooseBlocks, combatValue, damageWeight, BLOCKING, legalBlocks,
 } from './combat.js';
 import {
-  scoreEffects, bestScore, costScore, candidateTargets, permanentValue, wastedDamage, targetCombos, sacrificeCandidates, duplicatesLegend,
+  scoreEffects, bestScore, costScore, candidateTargets, permanentValue, wastedDamage, targetCombos, sacrificeCandidates, duplicateLegendGain, legendWorth,
 } from './scoring.js';
 import { planLookaheadAttack } from './attacking.js';
 import { BLOCK_PLAN } from './blocking.js';
@@ -184,7 +184,7 @@ export class BasicAIController extends EventEmitter {
       case DECISION.CHOOSE_MODE:
         return bestBy(mine, (a) => scoreEffects(state, me, decision.modes[a.mode].effects, a.targets ?? [], decision.sourceId));
       case DECISION.LEGEND_RULE:
-        return bestBy(mine, (a) => legendValue(state, a.cardId));
+        return bestBy(mine, (a) => legendWorth(state, me, state.battlefield.find((p) => p.id === a.cardId)));
       case DECISION.MULLIGAN: {
         const { hand } = state.players.find((p) => p.id === me);
         const keeps = !this.#mulligans || keepsHand(hand, decision.mulligans, landShare(state, me));
@@ -479,13 +479,6 @@ function chooseLand(state, me, mine) {
   return plays.find((a) => Boolean(card(a)?.entersTapped) === tappedIsFree) ?? plays[0];
 }
 
-/** Which of several legendary permanents with the same name to keep (704.5j). */
-function legendValue(state, id) {
-  const permanent = state.battlefield.find((p) => p.id === id);
-  const attached = state.battlefield.filter((p) => p.attachedTo === id).length;
-  return permanentValue(permanent) + 3 * attached + (permanent.tapped ? 0 : 1) + (permanent.summoningSick ? 0 : 0.5);
-}
-
 /**
  * The best combination of targets for a spell or ability with several (a fight, "up to
  * two"), or none, `{ targets, score }`, or null if there's none. `x` is X, if it has one.
@@ -571,8 +564,10 @@ function combatSwing(state, me, effects, targetId, sourceId) {
 
 /** Casting a permanent: `[{ targetId, score }]`, one per Aura target, or one for anything else. */
 function permanentSpellOptions(state, me, card, preCombat, heuristics = {}) {
-  // A second copy of a legend we already have would just die to the legend rule.
-  if (duplicatesLegend(state, me, card)) return [];
+  // A second copy of a legend we already have: one goes to the graveyard (704.5j), so only
+  // for its enters-the-battlefield triggers or to replace a cursed or shrunk copy.
+  const duplicate = duplicateLegendGain(state, me, card);
+  if (duplicate !== null) return duplicate > 0 ? [{ targetId: null, score: duplicate }] : [];
   if (isCurse(card)) {
     // A curse goes on their creature that it hurts the most.
     return state.battlefield.filter((p) => p.controllerId !== me && isCreature(p))

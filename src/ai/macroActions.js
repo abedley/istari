@@ -24,7 +24,7 @@ import {
   planAttack, planBlocks, chooseBlocks, creatureValue, curseValue, BLOCKING,
 } from './combat.js';
 import {
-  candidateTargets, scoreEffects, costScore, wastedDamage, targetCombos, sacrificeCandidates, duplicatesLegend,
+  candidateTargets, scoreEffects, costScore, wastedDamage, targetCombos, sacrificeCandidates, duplicateLegendGain,
 } from './scoring.js';
 import { planLookaheadAttack } from './attacking.js';
 import { windowOf, windowAllows, permanentWindowAllows } from './timing.js';
@@ -173,8 +173,8 @@ function priorityMacros(state, me, mine) {
     }
     if (isLand(card) || !(instant || sorceryTiming) || !affordable(castCost(state, me, card))) continue;
     if (!canSacrifice(card.additionalCost, card.id)) continue;
-    // A second copy of a legend we already have would just die to the legend rule.
-    if (!card.spell && duplicatesLegend(state, me, card)) continue;
+    // A second copy of a legend we already have: only when an enters trigger or a fresh copy makes it pay (704.5j).
+    if (!card.spell && (duplicateLegendGain(state, me, card) ?? 1) <= 0) continue;
     if (card.spell?.targets || card.spell?.modes || card.manaCost?.X) {
       // Several targets (a fight, "up to two"), modes, or {X} (as big as we can pay): the best few combinations.
       const x = card.manaCost?.X ? capX(state, Math.max(0, available - manaValue(castCost(state, me, card) ?? {}))) : undefined;
