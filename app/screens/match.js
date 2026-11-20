@@ -165,25 +165,38 @@ const deckName = (i) => `Deck ${i + 1}`;
 /** The boosters already unwrapped (by match seed), so the present is opened once a match. */
 const OPENED_KEY = 'istari.opened';
 
+/** How many of the booster's cards fly out of the pack when it's torn open. */
+const FLYING_CARDS = 7;
+
+/** A torn edge, as clip-path points: `n` jags across the width, between `top` and `bottom` (px down the element). */
+function tornEdge(n, top, bottom, random = Math.random) {
+  return Array.from({ length: n + 1 }, (_, i) => `${((i / n) * 100).toFixed(1)}% ${(top + random() * (bottom - top)).toFixed(1)}px`);
+}
+
 /**
  * The booster as a present: a foil booster pack, swaying slowly in the air as the light runs over it. A tap and it
- * rumbles, its top strip tears off and it bursts like one of Gandalf's fireworks; then the cards arrive in the tray.
+ * rumbles and turns to face you; its top strip tears off along the perforation, left to right, and flies away; light
+ * spills from the open top and the cards fly out of it in a fan; then the pack bursts like one of Gandalf's
+ * fireworks and the cards fly down into their places in the tray.
  * Shown once for a match (its seed is remembered), and not at all when the system asks for less motion.
  * Built with the screen, over it, so the screen comes in already covered: nothing behind it shows until it's opened.
  * Returns `{ layer, opened }` (`opened` resolves once it's open and the last spark has fallen), or null when there's nothing to show.
  */
 function present(app, match, root) {
   if (reducedMotion() || app.storage.getItem(OPENED_KEY) === String(match.seed)) return null;
-  // A foil booster pack, crimped top and bottom; the top strip is torn off to open it.
-  const crimp = (side) => h(`div.pack-crimp.${side}`);
-  const lid = crimp('top');
-  const box = h('div.pack', lid,
-    h('div.pack-body',
-      h('div.pack-art', h('span.pack-star', '✦')),
-      h('div.pack-title', 'Istari'),
-      h('div.pack-sub', 'Booster')),
-    crimp('bottom'));
-  const stage = h('div.present-stage', box);
+  // A foil booster pack, crimped top and bottom; the top strip, above the perforation, is torn off to open it.
+  const strip = h('div.pack-strip', h('div.pack-crimp.top'), h('div.pack-band'));
+  const body = h('div.pack-body',
+    h('div.pack-art', h('span.pack-star', '✦')),
+    h('div.pack-title', 'Istari'),
+    h('div.pack-sub', 'Booster'));
+  const spark = h('div.pack-tear-spark');
+  const box = h('div.pack', strip, body, h('div.pack-crimp.bottom'), spark);
+  // Behind the pack, hidden by it until they rise out of its open top: the light inside, and the cards.
+  const glow = h('div.pack-glow');
+  const flying = match.cards.slice(0, FLYING_CARDS).map((cardId) =>
+    h('div.present-card', fullCard({ ...app.definitions[cardId], cardId, id: cardId }, app.definitions, { big: true })));
+  const stage = h('div.present-stage', glow, ...flying, box);
   const hint = h('div.present-hint', 'Tap to open');
   const sky = h('canvas.present-sky', { 'aria-hidden': 'true' });
   const layer = h('button.present', { type: 'button', 'aria-label': 'Open your booster' }, stage, hint, sky);
@@ -197,36 +210,103 @@ function present(app, match, root) {
       app.sound('select');
       const fade = { opacity: 0, transform: 'translateY(-10px)' };
       hint.animate([{}, fade], { duration: 200, fill: 'forwards' });
-      // It rumbles, brighter and brighter, as the magic inside gets out of hand.
+      // It stops swaying and turns to face you, rumbling, brighter and brighter, as the magic inside gets restless.
+      box.animate([{ transform: getComputedStyle(box).transform }, { transform: 'none' }], { duration: 320, easing: 'ease-out', fill: 'forwards' });
       box.classList.add('stirring');
       await stage.animate([
         { transform: 'none' }, { transform: 'translate(-3px, 1px) rotate(-2deg)' }, { transform: 'translate(3px, -2px) rotate(2deg) scale(1.03)' },
-        { transform: 'translate(-5px, 0) rotate(-4deg) scale(1.05)' }, { transform: 'translate(5px, -3px) rotate(4deg) scale(1.08)' },
-        { transform: 'translate(-6px, 2px) rotate(-5deg) scale(1.1)' }, { transform: 'translateY(6px) scale(1.14, .92)' },
-      ], { duration: 650, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
+        { transform: 'translate(-4px, 0) rotate(-3deg) scale(1.04)' }, { transform: 'translate(4px, -2px) rotate(3deg) scale(1.05)' },
+        { transform: 'translate(-2px, 1px) rotate(-1deg) scale(1.04)' }, { transform: 'translateY(30px)' },
+      ], { duration: 560, easing: 'ease-in-out', fill: 'forwards' }).finished.catch(() => {});
+
+      // The tear: the strip comes away along the perforation, left to right, a spark running along the rip, the
+      // left end lifting first while the right still holds. Both torn edges are ragged.
+      const jags = 22;
+      strip.style.clipPath = `polygon(0 0, 100% 0, ${tornEdge(jags, 22, 30).reverse().join(', ')})`;
+      body.style.clipPath = `polygon(${tornEdge(jags, 0, 4).join(', ')}, 100% 100%, 0 100%)`;
+      app.sound('draw');
+      const tear = 420;
+      spark.animate([{ left: '0%', opacity: 1 }, { left: '100%', opacity: 1 }, { left: '104%', opacity: 0 }],
+        { duration: tear + 60, easing: 'ease-in', fill: 'forwards' });
+      glow.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: .55, transform: 'scale(.8)' }], { duration: tear, easing: 'ease-in', fill: 'forwards' });
+      await strip.animate([
+        { transform: 'none' },
+        { transform: 'translateY(-1px) rotate(-2deg)', offset: .4 },
+        { transform: 'translate(-2px, -6px) rotate(-9deg)' },
+      ], { duration: tear, easing: 'ease-in', fill: 'forwards' }).finished.catch(() => {});
+
+      // Free: the strip spins away, and the light pours out of the open pack.
+      app.sound('select');
+      strip.animate([
+        { transform: 'translate(-2px, -6px) rotate(-9deg)', opacity: 1 },
+        { transform: 'translate(-150px, -230px) rotate(-150deg)', opacity: 1, offset: .75 },
+        { transform: 'translate(-190px, -280px) rotate(-200deg)', opacity: 0 },
+      ], { duration: 800, easing: 'cubic-bezier(.15,.7,.4,1)', fill: 'forwards' });
+      glow.animate([{ opacity: .55, transform: 'scale(.8)' }, { opacity: 1, transform: 'scale(1.15)' }], { duration: 300, easing: 'ease-out', fill: 'forwards' });
+
+      // The cards fly out of the top, one after another, rising straight out of the pack and then fanning out above it.
+      const n = flying.length;
+      const fan = flying.map((_, i) => {
+        const angle = n > 1 ? -54 + (108 * i) / (n - 1) : 0;
+        const rad = (angle * Math.PI) / 180;
+        return { x: Math.sin(rad) * 120, y: -Math.cos(rad) * 104 - 34, angle };
+      });
+      // From the middle out, so the fan opens both ways.
+      const order = flying.map((_, i) => i).sort((a, b) => Math.abs(a - (n - 1) / 2) - Math.abs(b - (n - 1) / 2) || a - b);
+      const rises = order.map((i, k) => {
+        const { x, y, angle } = fan[i];
+        setTimeout(() => app.sound('draw'), k * 80);
+        return flying[i].animate([
+          { transform: 'translateY(70px) scale(.85)', opacity: 1 },
+          { transform: `translate(${(x * 0.1).toFixed(1)}px, -40px) rotate(${(angle * 0.15).toFixed(1)}deg) scale(.95)`, offset: .35 },
+          { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`, opacity: 1 },
+        ], { duration: 560, delay: k * 80, easing: 'cubic-bezier(.25,.8,.35,1.15)', fill: 'both' }).finished.catch(() => {});
+      });
+      await Promise.all(rises);
+      await wait(260);
+
+      // Bang: the empty pack is gone in a flash, and the sky fills with sparks.
       app.sound('reward');
-      // Bang: the top strip tears off, the pack is gone in a flash, and the sky fills with sparks.
       const rect = layer.getBoundingClientRect();
       const at = box.getBoundingClientRect();
       const fireworks = fireworksIn(sky, rect);
-      fireworks.burst(at.left + at.width / 2 - rect.left, at.top + at.height / 2 - rect.top, { count: 140, power: 1.25 });
-      lid.animate([{}, { transform: 'translate(140px, -220px) rotate(38deg)', opacity: 0 }],
-        { duration: 600, easing: 'cubic-bezier(.2,.7,.4,1)', fill: 'forwards' });
-      stage.animate([{ transform: 'translateY(6px) scale(1.14, .92)', opacity: 1, filter: 'brightness(1)' },
-        { transform: 'scale(1.45)', opacity: 0, filter: 'brightness(3)' }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+      fireworks.burst(at.left + at.width / 2 - rect.left, at.top + at.height / 3 - rect.top, { count: 140, power: 1.25 });
+      box.animate([{ transform: 'none', opacity: 1, filter: 'brightness(1)' },
+        { transform: 'scale(1.4)', opacity: 0, filter: 'brightness(3)' }], { duration: 260, easing: 'ease-out', fill: 'forwards' });
+      glow.animate([{ opacity: 1 }, { opacity: 0, transform: 'scale(2)' }], { duration: 400, easing: 'ease-out', fill: 'forwards' });
       layer.classList.add('flash');
       // More rockets go up around it, one after another.
       const shots = [[0.22, 0.24], [0.78, 0.2], [0.5, 0.12], [0.3, 0.42], [0.72, 0.4]];
       shots.forEach(([x, y], i) => setTimeout(() => fireworks.rocket(rect.width * x, rect.height * y), 160 + i * 150));
-      await wait(700);
-      // The night clears to the decks, the last sparks still falling over them, and the cards arrive in the tray.
+      await wait(420);
+
+      // The night clears to the decks, the last sparks still falling over them, and the cards arrive in the tray: the
+      // ones in the air fly down into their own places, and the rest drop in after them.
       layer.style.pointerEvents = 'none';
       layer.classList.add('clearing');
-      [...root.querySelectorAll('.pg-tray .pg-card')].forEach((card, i) => {
-        card.animate([{ opacity: 0, transform: 'translateY(-40px) scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'none' }],
-          { duration: 420, delay: 150 + i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
+      const tray = [...root.querySelectorAll('.pg-tray .pg-card')];
+      const home = stage.getBoundingClientRect();
+      const landings = flying.map((card, i) => {
+        const target = tray[i];
+        if (!target) return card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.catch(() => {});
+        const t = target.getBoundingClientRect();
+        const dx = t.left + t.width / 2 - (home.left + home.width / 2);
+        const dy = t.top + t.height / 2 - home.top;
+        const scale = t.width / card.offsetWidth;
+        const { x, y, angle } = fan[i];
+        target.animate([{ opacity: 0 }, { opacity: 0, offset: .95 }, { opacity: 1 }], { duration: 520 + i * 60 });
+        return card.animate([
+          { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)` },
+          { transform: `translate(${(x * 0.6 + dx * 0.4).toFixed(1)}px, ${(y - 30).toFixed(1)}px) rotate(${(angle * 0.4).toFixed(1)}deg) scale(${(1 + scale) / 2})`, offset: .3 },
+          { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${scale.toFixed(3)})` },
+        ], { duration: 520, delay: i * 60, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished
+          .then(() => { card.style.visibility = 'hidden'; }).catch(() => {});
       });
-      await fireworks.done;
+      tray.slice(flying.length).forEach((card, i) => {
+        card.animate([{ opacity: 0, transform: 'translateY(-40px) scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'none' }],
+          { duration: 420, delay: 300 + i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
+      });
+      await Promise.all([fireworks.done, ...landings]);
       layer.remove();
       resolve();
     }, { once: true });
