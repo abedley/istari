@@ -22,7 +22,8 @@ import { icon } from '../icons.js';
 import { coach, coached } from '../coach.js';
 import { RoundStats } from '../../src/match/roundStats.js';
 import { crest, preloadImages } from '../art.js';
-import { BoardView } from './BoardView.js';
+import { BoardView, PASSIVE_POWER } from './BoardView.js';
+import { EMBLEMS } from '../../src/cards/emblems.js';
 import {
   playOptions, perform, nextChoice, narrow, interchangeableTargets,
 } from './play.js';
@@ -1151,6 +1152,12 @@ export class Battle {
 
   #showAbility(target) {
     const emblem = findCard(this.#state, target.emblem);
+    // A passive power: its name and what it does, from the ring's definition (nothing to activate).
+    if (emblem && target.ability === PASSIVE_POWER) {
+      const definition = EMBLEMS[emblem.emblemId];
+      if (definition?.passive) this.#app.overlays.sheet({ title: definition.power ? `${emblem.name}: ${definition.power}` : emblem.name, text: definition.text, options: [], cancel: 'Close' });
+      return;
+    }
     const ability = emblem?.abilities.find((a) => a.id === target.ability);
     if (!ability) return;
     const option = this.#options.find((o) => o.sourceId === target.emblem && o.abilityId === target.ability);

@@ -14,6 +14,7 @@ import { fit } from '../fit.js';
 import { fullCard, boardCard, chipFace, abilityFace, boardSignature, manaPips, cardBack } from '../cardView.js';
 import { isCreature, isLand } from '../../src/cards/cards.js';
 import { DECISION } from '../../src/engine/Game.js';
+import { EMBLEMS } from '../../src/cards/emblems.js';
 import { TURN_PIPS, COMBAT_STEPS, combatStepIndex, findCard, targetRoles } from './describe.js';
 import {
   relRect, flip, floatText, shake, pop, flyAway, crumble, banner, enter,
@@ -21,6 +22,9 @@ import {
 } from './fx.js';
 
 /** How long a spell's bolt takes to reach its target (ms, before `speed`). */
+/** The ability id of the badge for a passive power (see #renderAbilities): there's nothing to activate. */
+export const PASSIVE_POWER = 'passive';
+
 const BOLT_MS = 300;
 
 const DEATH_EVENTS = new Set(['creatureDied', 'permanentDestroyed', 'permanentSacrificed', 'cardBurned', 'spellCountered']);
@@ -636,7 +640,9 @@ export class BoardView {
   /** Planeswalker abilities (Rings of Power): buttons for us, small badges for the opponent. */
   #renderAbilities(player, side) {
     const parts = this.#parts[side];
-    const abilities = player.emblems.flatMap((emblem) => emblem.abilities.map((ability) => ({ emblem, ability })));
+    // The opponent's passive powers show too, as a badge like their others, so they can be looked at.
+    const passive = (emblem) => (side === 'opp' && EMBLEMS[emblem.emblemId]?.passive ? [{ emblem, ability: { id: PASSIVE_POWER, passive: true } }] : []);
+    const abilities = player.emblems.flatMap((emblem) => [...passive(emblem), ...emblem.abilities.map((ability) => ({ emblem, ability }))]);
     const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}/${emblem.activationsThisGame ?? 0}/${emblem.usedThisGame?.[ability.id] ? 1 : 0}/${player.turnTally?.activated?.[`${emblem.id}:${ability.id}`] ? 1 : 0}`).join();
     if (parts.abilities.dataset.key === key) return;
     parts.abilities.dataset.key = key;
@@ -656,11 +662,11 @@ export class BoardView {
         // Its symbol, which tells it from the others at a glance, then its cost (none shown when it's free).
         h('span.ab-head', ...(() => {
           const symbol = powerIcon(emblem.emblemId, 'ab-sym');
-          const shown = cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : symbol ? null : '0';
+          const shown = cost.mana ? manaPips(cost.mana) : cost.life ? `−${cost.life}♥` : symbol ? null : ability.passive ? '◆' : '0';
           return [symbol, shown ? h('span.ab-cost', shown) : null];
         })()),
         side === 'me' ? h('span.ab-text.fit', { dataset: { min: 6.5 } }, label) : null,
-        left !== null ? h('span.ab-uses', '•'.repeat(Math.max(0, left))) : null);
+        left !== null && !ability.passive ? h('span.ab-uses', '•'.repeat(Math.max(0, left))) : null);
       this.#abilityButtons.set(`${emblem.id}/${ability.id}`, button);
       return button;
     });
