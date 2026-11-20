@@ -30,7 +30,7 @@ import {
 import {
   creatureValue, curseValue, chooseBlocks, damageThrough, resolveCombat, unblockedDamage,
 } from '../combat.js';
-import { scoreEffects, costScore, wastedDamage } from '../scoring.js';
+import { scoreEffects, costScore, wastedDamage, withoutShortfalls } from '../scoring.js';
 import { listMacros, macroKey } from '../macroActions.js';
 import { guardActivations } from '../manaPlanning.js';
 import { BLOCK_PLAN, blockingPlans } from '../blocking.js';
@@ -260,7 +260,7 @@ function priorityCandidates(state, me, game) {
     else if (score > list[same].score || (score === list[same].score && (action.x ?? 0) > (list[same].action.x ?? 0))) list[same] = entry;
     groups.set(what.group, list);
   }
-  const options = [...groups.values()].flatMap((list) => list.sort((a, b) => b.score - a.score).slice(0, TARGETS));
+  const options = [...groups.values()].flatMap((list) => withoutShortfalls(list).sort((a, b) => b.score - a.score).slice(0, TARGETS));
   if (options.length === 0) return passMacro;
 
   const forced = [];

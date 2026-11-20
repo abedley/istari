@@ -33,6 +33,7 @@ const CARDS = {
   zap: { id: 'zap', name: 'Zap', manaCost: { generic: 1 }, types: ['Instant'], target: 'any', effects: [{ type: 'dealDamage', amount: 2 }] },
   lobelia: { ...LTR.lobeliaSackvilleBaggins, id: 'lobelia' },
   eowyn: { ...LTR.eowynFearlessKnight, id: 'eowyn' },
+  horses: { ...LTR.horsesOfTheBruinen, id: 'horses' },
 };
 
 /** Passes (or confirms empty declarations) until `until(state)`. */
@@ -169,6 +170,16 @@ test('its choices don\'t change when the other player\'s hidden cards do', () =>
 
 // ---------------------------------------------------------------------------
 // Tricks: only to kill, to save, or to win
+
+test('"up to two" targets: it doesn\'t leave out a second creature worth taking', () => {
+  // Horses of the Bruinen with two of their creatures out: bounce both, never just one.
+  const game = position({ p1: { board: ['giant'], hand: ['horses'] }, p2: { board: ['bear', 'ox'] } });
+  const s = game.peekState();
+  const horses = s.validActions.find((a) => a.type === ACTION.CAST_SPELL)?.cardId;
+  const casts = candidates(s, 'p1', game).filter((m) => m.action?.cardId === horses);
+  assert.ok(casts.length > 0, 'a move');
+  for (const move of casts) assert.equal(move.action.targets.filter(Boolean).length, 2, JSON.stringify(move.action.targets));
+});
 
 test('it never casts a pump in its main phase', () => {
   const game = position({ p1: { board: ['bear'], hand: ['growth'] }, p2: { board: ['ox'] } });

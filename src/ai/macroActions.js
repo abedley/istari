@@ -25,6 +25,7 @@ import {
 } from './combat.js';
 import {
   candidateTargets, scoreEffects, costScore, wastedDamage, targetCombos, sacrificeCandidates, duplicateLegendGain,
+  withoutShortfalls,
 } from './scoring.js';
 import { planLookaheadAttack } from './attacking.js';
 import { windowOf, windowAllows, permanentWindowAllows } from './timing.js';
@@ -181,10 +182,10 @@ function priorityMacros(state, me, mine) {
       // A permanent spell with {X} (Spiteful Banditry) has no spell effects of its own here.
       const modes = card.spell?.modes ? card.spell.modes.map((m, i) => [i, m]) : [[undefined, card.spell ?? { effects: [] }]];
       for (const [mode, holder] of modes) {
-        targetCombos(state, me, targetList(holder), card.id, 200, x)
+        withoutShortfalls(targetCombos(state, me, targetList(holder), card.id, 200, x)
           .map((targets) => ({ targets, score: scoreEffects(state, me, holder.effects ?? [], targets, card.id, { x }) }))
           .filter(({ targets }) => timely(holder.effects ?? [], targets.filter(Boolean).at(-1) ?? null))
-          .filter(({ score }) => score >= 0)
+          .filter(({ score }) => score >= 0))
           .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
           .forEach(({ targets }) => macros.push(keyed({
             kind: 'cast', cardId: card.id, targetId: null, targets, ...(mode !== undefined ? { mode } : {}), ...(x !== undefined ? { x } : {}),
@@ -221,10 +222,10 @@ function priorityMacros(state, me, mine) {
         // Several targets, or {X}: the best few combinations, for each X we could pay.
         const max = ability.cost.mana?.X ? capX(state, Math.max(0, available - manaValue(ability.cost.mana))) : 0;
         for (let x = 0; x <= max; x++) {
-          targetCombos(state, me, targetList(ability), source.id, 200, x)
+          withoutShortfalls(targetCombos(state, me, targetList(ability), source.id, 200, x)
             .map((targets) => ({ targets, score: scoreEffects(state, me, ability.effects, targets, source.id, { x }) }))
-            .filter(({ score }) => score >= 0)
-          .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
+            .filter(({ score }) => score >= 0))
+            .sort((a, b) => b.score - a.score).slice(0, TARGETS_PER_SPELL)
             .forEach(({ targets }) => macros.push(keyed({
               kind: 'activate', cardId: source.id, abilityId: ability.id, targetId: null, targets, ...(ability.cost.mana?.X ? { x } : {}),
             })));

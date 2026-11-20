@@ -100,6 +100,17 @@ export function targetCombos(state, me, kinds, sourceId = null, limit = 400, x =
   return combos;
 }
 
+/**
+ * `options` (`{ targets, score }`, null for an optional target left out) without the ones that leave a
+ * target out when choosing it too does at least as well: "up to two" on one creature when there were
+ * two worth it.
+ */
+export function withoutShortfalls(options) {
+  const chosen = options.map(({ targets }) => (targets ?? []).filter(Boolean));
+  return options.filter((option, i) => !options.some((other, j) => j !== i && other.score >= option.score
+    && chosen[j].length > chosen[i].length && chosen[i].every((id) => chosen[j].includes(id))));
+}
+
 /** The ids an effect applies to, for these targets. */
 export function affectedIds(state, me, effect, targets, sourceId) {
   const opponentId = state.players.find((p) => p.id !== me).id;
