@@ -5,6 +5,7 @@ import {
   Game, GAME_STATUS, DECISION, CHOICE, PHASE, CARDS, KEYWORD, BasicAIController, LTR_DECKS, passPriority, castSpell,
 } from '../src/index.js';
 import { playout } from '../src/ai/simulate.js';
+import { listMacros } from '../src/ai/macroActions.js';
 import { determinize } from '../src/ai/determinize.js';
 import { seededRandom } from '../src/engine/random.js';
 
@@ -130,4 +131,16 @@ test("the basic AI taps creatures for Elven Chorus's mana", async () => {
   const state = g.getState();
   const bear = state.battlefield.find((p) => p.cardId === 'bear');
   assert.ok(manaSources(state, state.validActions.filter((a) => a.playerId === 'p1')).some((s) => s.cardId === bear.id));
+});
+
+test('the legend rule: neither AI casts a second copy of a legend it already controls', () => {
+  const legend = creature('legend', 3, 3, { name: 'Legend', supertypes: ['Legendary'] });
+  const g = game({ hand: ['legend', 'legend'], cards: { legend } });
+  castAndResolve(g, 'legend');
+  const state = g.getState();
+  assert.equal(state.battlefield.filter((p) => p.cardId === 'legend').length, 1);
+  const ai = new BasicAIController({ game: null, playerId: 'p1' });
+  const action = ai.chooseAction(state);
+  assert.notEqual(action?.type, 'CAST_SPELL', 'the basic AI holds the duplicate');
+  assert.ok(!listMacros(state, 'p1').some((m) => m.kind === 'cast'), 'the search AI doesn\'t consider it');
 });

@@ -5,11 +5,23 @@
 import {
   isCreature, isPermanentCard, hasKeyword, cantAttack, KEYWORD, EFFECT, AFFECTED, TARGET, PLAYER_TARGETS, SPELL_TARGETS,
   effectAffects, matchesPermanentKind, matchesFilter, countOf, scaleEffect, targetKindOf, targetFilterOf, isOptionalTarget,
-  GRAVEYARD_TARGETS, abilityEffects, targetList, COUNTER, CARDS,
+  GRAVEYARD_TARGETS, abilityEffects, targetList, COUNTER, CARDS, isLegendary,
 } from '../cards/cards.js';
 import { creatureValue, anthemValue } from './combat.js';
 import { doomedSacrificeCost } from './doomed.js';
 import { auraPumps, trickPays } from './timing.js';
+
+/**
+ * Whether casting `card` would only trip the legend rule (704.5j): it's legendary and
+ * `me` already controls a legendary permanent with its name, or has one on the stack.
+ * One of the two would just go to the graveyard.
+ */
+export function duplicatesLegend(state, me, card) {
+  if (!isLegendary(card)) return false;
+  const same = (c) => c && c.name === card.name && c.id !== card.id && isLegendary(c);
+  return state.battlefield.some((p) => p.controllerId === me && same(p))
+    || state.stack.some((s) => s.kind === 'spell' && s.controllerId === me && same(s.card));
+}
 
 /** A permanent's worth: creatures by creatureValue, other permanents a flat amount. */
 export const permanentValue = (p) => (isCreature(p) ? 2 + creatureValue(p) : 4);

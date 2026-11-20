@@ -14,7 +14,7 @@ import {
   creatureValue, curseValue, anthemValue, planAttack, chooseBlocks, combatValue, damageWeight, BLOCKING, legalBlocks,
 } from './combat.js';
 import {
-  scoreEffects, bestScore, costScore, candidateTargets, permanentValue, wastedDamage, targetCombos, sacrificeCandidates,
+  scoreEffects, bestScore, costScore, candidateTargets, permanentValue, wastedDamage, targetCombos, sacrificeCandidates, duplicatesLegend,
 } from './scoring.js';
 import { planLookaheadAttack } from './attacking.js';
 import { BLOCK_PLAN } from './blocking.js';
@@ -571,6 +571,8 @@ function combatSwing(state, me, effects, targetId, sourceId) {
 
 /** Casting a permanent: `[{ targetId, score }]`, one per Aura target, or one for anything else. */
 function permanentSpellOptions(state, me, card, preCombat, heuristics = {}) {
+  // A second copy of a legend we already have would just die to the legend rule.
+  if (duplicatesLegend(state, me, card)) return [];
   if (isCurse(card)) {
     // A curse goes on their creature that it hurts the most.
     return state.battlefield.filter((p) => p.controllerId !== me && isCreature(p))
