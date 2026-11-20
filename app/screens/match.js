@@ -353,7 +353,7 @@ function buildView(app, match) {
   const tray = h('div.pg-tray');
   const trayTitle = h('h4');
   const zoom = trayZoom(app, tray);
-  const start = h('button.btn.primary.pg-start', { onclick: () => play() });
+  const start = h('button.btn.primary.pg-start', { onclick: () => play() }, 'Start match');
   const autoFill = h('button.btn', { onclick: () => fill() }, 'Auto-fill');
   const clear = h('button.btn.ghost.small.pg-clear', { onclick: () => change(() => { placed = lockedPlaces(); selected = firstFree(); }) }, 'Clear');
 
@@ -461,7 +461,6 @@ function buildView(app, match) {
     tray.replaceChildren(...(left.length
       ? left.map((n) => miniCard(app, match.cards[n], { onTap: () => place(n), full: true }))
       : [h('p.pg-tray-empty', `Your decks are ready. Deck 1 plays round 1, deck 2 round 2, deck 3 round 3. Your opponent's ${count} decks are set the same way, unseen. Win two rounds to take the match.`)]));
-    start.textContent = full ? 'Start match' : `Place ${toPlace}`;
     start.disabled = !full;
     autoFill.disabled = full;
     clear.hidden = placed.size === locked.size;
