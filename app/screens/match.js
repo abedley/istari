@@ -200,13 +200,14 @@ function present(app, match, root) {
   root.append(layer);
   stage.animate([{ transform: 'translateY(40px) scale(.75)' }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
 
+  // The hint goes the moment a finger touches the pack (a click only comes when it lifts).
+  layer.addEventListener('pointerdown', () => hint.classList.add('gone'), { once: true });
   const opened = new Promise((resolve) => {
     layer.addEventListener('click', async () => {
       app.storage.setItem(OPENED_KEY, String(match.seed));
       layer.disabled = true;
       app.sound('select');
-      const fade = { opacity: 0, transform: 'translateY(-10px)' };
-      hint.animate([{}, fade], { duration: 200, fill: 'forwards' });
+      hint.classList.add('gone');
       // It stops swaying and turns to face you, rumbling, brighter and brighter, as the magic inside gets restless.
       box.animate([{ transform: getComputedStyle(box).transform }, { transform: 'none' }], { duration: 320, easing: 'ease-out', fill: 'forwards' });
       box.classList.add('stirring');
