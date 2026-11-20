@@ -641,7 +641,12 @@ export class BoardView {
   #renderAbilities(player, side) {
     const parts = this.#parts[side];
     // The opponent's passive powers show too, as a badge like their others, so they can be looked at.
-    const passive = (emblem) => (side === 'opp' && EMBLEMS[emblem.emblemId]?.passive ? [{ emblem, ability: { id: PASSIVE_POWER, passive: true } }] : []);
+    // It has a name and text (from the ring's definition) like any ability, for the label below.
+    const passive = (emblem) => {
+      const definition = EMBLEMS[emblem.emblemId];
+      if (side !== 'opp' || !definition?.passive) return [];
+      return [{ emblem, ability: { id: PASSIVE_POWER, passive: true, name: definition.power ?? emblem.name, text: definition.text ?? '' } }];
+    };
     const abilities = player.emblems.flatMap((emblem) => [...passive(emblem), ...emblem.abilities.map((ability) => ({ emblem, ability }))]);
     const key = abilities.map(({ emblem, ability }) => `${emblem.id}/${ability.id}/${emblem.activationsThisTurn}/${emblem.activationsThisGame ?? 0}/${emblem.usedThisGame?.[ability.id] ? 1 : 0}/${player.turnTally?.activated?.[`${emblem.id}:${ability.id}`] ? 1 : 0}`).join();
     if (parts.abilities.dataset.key === key) return;
