@@ -23,10 +23,10 @@ test('the road holds every opponent, in order, Sauron last', () => {
   assert.deepEqual([...CAMPAIGN_OPPONENTS].sort(), Object.keys(OPPONENTS).sort(), 'no opponent is left out');
 });
 
-test('a campaign walks Book I: four opponents drawn at random, in road order, then the Ringwraiths, with three lives', () => {
+test('a campaign walks Book I: five opponents drawn at random, in road order, then the Ringwraiths, with three lives', () => {
   const [book] = CAMPAIGN_BOOKS;
   assert.equal(book.boss, 'ringwraiths');
-  assert.equal(book.draw, 4);
+  assert.equal(book.draw, 5);
   assert.ok(!book.pool.includes(book.boss));
   assert.deepEqual([...book.pool].sort(), CAMPAIGN_OPPONENTS.slice(0, CAMPAIGN_OPPONENTS.indexOf('elrond')).filter((id) => id !== 'ringwraiths').sort());
   const roads = new Set();
@@ -34,10 +34,10 @@ test('a campaign walks Book I: four opponents drawn at random, in road order, th
   for (let seed = 1; seed <= 200; seed++) {
     const { opponents, book: index } = createCampaign({ seed });
     assert.equal(index, 0);
-    assert.equal(opponents.length, 5);
+    assert.equal(opponents.length, 6);
     assert.equal(opponents.at(-1), 'ringwraiths');
-    const drawn = opponents.slice(0, 4);
-    assert.equal(new Set(drawn).size, 4);
+    const drawn = opponents.slice(0, 5);
+    assert.equal(new Set(drawn).size, 5);
     assert.ok(drawn.every((id) => book.pool.includes(id)));
     const order = drawn.map((id) => CAMPAIGN_OPPONENTS.indexOf(id));
     assert.deepEqual(order, [...order].sort((a, b) => a - b), 'in road order');
@@ -47,7 +47,7 @@ test('a campaign walks Book I: four opponents drawn at random, in road order, th
   assert.ok(roads.size > 50, 'roads differ from campaign to campaign');
   assert.equal(met.size, book.pool.length, 'any of the pool may be met');
   assert.deepEqual(createCampaign({ seed: 9 }).opponents, createCampaign({ seed: 9 }).opponents, 'the same seed, the same road');
-  assert.deepEqual(drawBookOpponents(book, () => 0.5).length, 5);
+  assert.deepEqual(drawBookOpponents(book, () => 0.5).length, 6);
 
   const campaign = createCampaign({ heroId: 'strider', seed: 1 });
   assert.equal(campaign.lives, 3);

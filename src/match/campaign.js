@@ -46,7 +46,7 @@ export const CAMPAIGN_BOOKS = Object.freeze([
       'birthdayBilbo', 'burglarBilbo', 'lobelia', 'gandalf', 'pippin', 'merry', 'oldManWillow', 'goldberry', 'tomBombadil', 'gildor', 'riderInBlack', 'butterbur', 'billFerny', 'strider',
       'glorfindel',
     ]),
-    draw: 4,
+    draw: 5,
     boss: 'ringwraiths',
   }),
 ]);

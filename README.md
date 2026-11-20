@@ -129,7 +129,7 @@ six cards for Legolas to mill or no creature of his own for the card it gives hi
 **The campaign** (`src/match/campaign.js`, its screen `app/screens/campaign.js`, from *Campaign* on
 the title screen): you choose a hero, then play a match against each opponent on your road in
 turn. The campaign is split into six books (`CAMPAIGN_BOOKS`), each ending with a boss; only Book I is built
-so far. Book I draws 4 opponents at random (`drawBookOpponents`, seeded by the campaign's seed) from Birthday
+so far. Book I draws 5 opponents at random (`drawBookOpponents`, seeded by the campaign's seed) from Birthday
 Bilbo, Burglar Bilbo, Lobelia Sackville-Baggins, Gandalf, Pippin, Merry, Old Man Willow, Goldberry, Tom Bombadil, Gildor, the
 Rider in Black, Butterbur, Bill Ferny, Strider and Glorfindel (never your own hero), faces them in road order (`CAMPAIGN_OPPONENTS`, every
 opponent from Birthday Bilbo to Sauron), then ends with its boss, the Ringwraiths; until Books II to VI
