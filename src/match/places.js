@@ -15,7 +15,7 @@ export const PLACES = Object.freeze({
   birthdayBilbo: place('The Party Field', 'Lanterns in the tree, and a hundred and forty-four guests.', 'theShire', 50, 40, AMBIENCE.SHIRE),
   burglarBilbo: place('Bag End', 'A round green door, and a hobbit who has been there and back again.', 'shireTerrace', 30, 35, AMBIENCE.SHIRE),
   lobelia: place('Sackville', 'A smart hole across the Water, and a drawer full of other people\'s spoons.', 'lobeliaSackvilleBaggins', 50, 30, AMBIENCE.SHIRE),
-  gandalf: place('The Bridge of Khazad-dûm', 'Deep under the mountains, where the drums have stopped.', 'minesOfMoria', 55, 45, AMBIENCE.HALL),
+  gandalf: place('Bilbo\'s Party', 'A cart of fireworks from the wizard, and a dragon of red and gold over the Water.', 'birthdayEscape', 50, 40, AMBIENCE.SHIRE),
   pippin: place('Farmer Maggot\'s Fields', 'A short cut through the crops, a barking dog, and a basket of stolen mushrooms.', 'shortcutToMushrooms', 50, 40, AMBIENCE.SHIRE),
   merry: place('Bucklebury Ferry', 'A flat raft on the dark Brandywine, and a lantern on the far bank.', 'brandywineFarmer', 50, 40, AMBIENCE.SHIRE),
   oldManWillow: place('The Old Forest', 'The trees do not like strangers, and the paths move.', 'oldManWillow', 60, 50, AMBIENCE.FOREST),

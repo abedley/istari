@@ -34,6 +34,8 @@ function powerLeft(state, player, ability) {
   if (target === TARGET.CREATURE && setPower !== undefined) {
     return state.battlefield.some((p) => p.controllerId !== player.id && isCreature(p) && p.power > setPower);
   }
+  // Gandalf's fireworks (or any other power on a creature): with no creatures on either side, nothing to aim at.
+  if (target === TARGET.CREATURE) return state.battlefield.some(isCreature);
   if (effects.length && effects.every((e) => e.type === EFFECT.DISCARD)) return opponents.some((p) => (p.hand?.length ?? p.handSize ?? 0) > 0);
   if (effects.length && effects.every((e) => e.type === EFFECT.RING_TEMPTS)) return (player.ring?.level ?? 0) < 4;
   // Legolas's Quick Reflexes is for a creature of their own, and they have none.

@@ -100,7 +100,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Birthday Bilbo | Gollum's Birthday Present | Eleventy-First Birthday | 0: You gain 1 life. Sorcery speed. |
 | Burglar Bilbo | The Magic Ring | Burglar's Stealth | 0: Target creature you control gets +1/+0 and menace until end of turn. Sorcery speed. |
 | Lobelia Sackville-Baggins | The Sackville Ring *(made up)* | Spoons and Silver | (passive) Creatures you control get +1/+1 for each Treasure you control. |
-| Gandalf | Narya | You Shall Not Pass | 0: Tap target creature an opponent controls. Sorcery speed. |
+| Gandalf | Narya | Fireworks | 0: Deal 1 damage to target creature. Sorcery speed. |
 | Old Man Willow | The Withywindle Ring *(made up)* | Roots of the Old Forest | (passive) At the beginning of each end step, if a creature you controlled died this turn, create a 2/2 green Treefolk creature token. |
 | Gildor | The Starlit Ring *(made up)* | A Star Shines on Our Meeting | (passive) At the start of the game, shuffle two Forests and a Chance-Met Elves into your library. |
 | Rider in Black | A Ring of the Nine | Hunting the Ring; Drawn to the Ring | (passive) At the beginning of your end step, each opponent who controls a Ring-bearer loses life equal to the number of abilities their Ring has. And a second power: 0: The Ring tempts you. Activate only as a sorcery. |
@@ -147,7 +147,7 @@ round, so a reload picks it up where it was (a round in progress starts over).
 **Places** (`src/match/places.js`): each opponent is met at a place on the road from Bag End to Barad-dûr
 (`PLACES`, by opponent id): a name, a line that sets the scene, a picture, and a kind of ambience. The picture is
 always a card's art (`cardId`, with the point to keep in view), so there is no art of the game's own: The Party
-Field is *The Shire*, The Bridge of Khazad-dûm *Mines of Moria*, The Hornburg *Rally at the Hornburg*, and so on;
+Field is *The Shire*, Bilbo's Party *Birthday Escape*, The Hornburg *Rally at the Hornburg*, and so on;
 a won campaign ends where its book's boss fell (a road begun before books, at *The Grey Havens*, `JOURNEYS_END`). The campaign screen draws the road as a map
 (`app/screens/roadMap.js`): a parchment with a winding road and a stop for each opponent, the place shown but the
 opponent kept back ("Who waits here?") until you reach it, your hero standing at the next stop and walking on

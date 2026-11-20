@@ -131,8 +131,8 @@ test('each power does what it says', () => {
   s = usePower(powerGame('strider'), (st) => p1Bear(st).id);
   assert.equal(p1Bear(s).power, 4);
   assert.equal(p1Bear(s).toughness, 2);
-  s = usePower(powerGame('gandalf'));
-  assert.equal(p2Bears(s).filter((p) => p.tapped).length, 1);
+  s = usePower(powerGame('gandalf'), (st) => p2Bears(st)[0].id);
+  assert.equal(p2Bears(s).filter((p) => p.damage === 1).length, 1);
   s = usePower(powerGame('sauron'));
   assert.ok(s.battlefield.some((p) => p.controllerId === 'p1' && p.subtypes?.includes('Army') && p.power === 1));
   s = usePower(powerGame('saruman'));

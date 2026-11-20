@@ -160,10 +160,10 @@ export const EMBLEMS = deepFreeze({
     effects: [{ type: EFFECT.PUMP, power: 1, toughness: 0, keywords: [KEYWORD.MENACE] }],
     timing: SORCERY,
   }),
-  gandalf: power('gandalf', 'Narya', 'You Shall Not Pass', {
-    text: '0: Tap target creature an opponent controls. Activate only as a sorcery.',
-    target: TARGET.CREATURE_OPPONENT_CONTROLS,
-    effects: [{ type: EFFECT.TAP }],
+  gandalf: power('gandalf', 'Narya', 'Fireworks', {
+    text: '0: Deal 1 damage to target creature. Activate only as a sorcery.',
+    target: TARGET.CREATURE,
+    effects: [{ type: EFFECT.DEAL_DAMAGE, amount: 1 }],
     timing: SORCERY,
   }),
   // A passive power with a triggered ability: emblems' `triggeredAbilities` trigger like a permanent's (see Game's
