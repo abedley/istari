@@ -1246,7 +1246,7 @@ button.mull-card { appearance: none; border: 0; padding: 0; background: none; cu
 .pack-tear-spark { position: absolute; z-index: 2; top: 30px; left: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; opacity: 0; pointer-events: none; background: radial-gradient(#fff 0 18%, rgba(255, 236, 170, .95) 30%, rgba(255, 200, 90, .4) 55%, transparent 72%); }
 .pack-glow { position: absolute; left: -45%; right: -45%; top: -110px; height: 200px; opacity: 0; pointer-events: none; background: radial-gradient(ellipse 50% 50% at 50% 70%, rgba(255, 246, 214, .95), rgba(255, 214, 120, .45) 40%, transparent 72%); }
 /* The cards in the pack: they wait behind it, out of sight, until they fly out of the top. */
-.present-card { position: absolute; left: 50%; top: 0; width: 76px; aspect-ratio: 63 / 88; margin: -53px 0 0 -38px; opacity: 0; pointer-events: none; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .6)); }
+.present-card { position: absolute; left: 50%; top: 0; width: 64px; aspect-ratio: 63 / 88; margin: -45px 0 0 -32px; opacity: 0; pointer-events: none; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .6)); }
 .present-card .card-face { box-shadow: 0 0 0 1px rgba(255, 233, 168, .6), 0 0 16px rgba(255, 214, 120, .5); }
 .pack-body { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 12px; overflow: hidden; box-shadow: inset 6px 0 10px -4px rgba(0, 0, 0, .35), inset -6px 0 10px -4px rgba(0, 0, 0, .35); }
 /* The sheen: a soft band of white light that runs over the pack as it turns. */

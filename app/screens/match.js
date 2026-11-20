@@ -165,9 +165,6 @@ const deckName = (i) => `Deck ${i + 1}`;
 /** The boosters already unwrapped (by match seed), so the present is opened once a match. */
 const OPENED_KEY = 'istari.opened';
 
-/** How many of the booster's cards fly out of the pack when it's torn open. */
-const FLYING_CARDS = 7;
-
 /** A torn edge, as clip-path points: `n` jags across the width, between `top` and `bottom` (px down the element). */
 function tornEdge(n, top, bottom, random = Math.random) {
   return Array.from({ length: n + 1 }, (_, i) => `${((i / n) * 100).toFixed(1)}% ${(top + random() * (bottom - top)).toFixed(1)}px`);
@@ -176,8 +173,8 @@ function tornEdge(n, top, bottom, random = Math.random) {
 /**
  * The booster as a present: a foil booster pack, swaying slowly in the air as the light runs over it. A tap and it
  * rumbles and turns to face you; its top strip tears off along the perforation, left to right, and flies away; light
- * spills from the open top and the cards fly out of it in a fan; then the pack bursts like one of Gandalf's
- * fireworks and the cards fly down into their places in the tray.
+ * spills from the open top and every card bursts out of it, tumbling every which way; then the pack bursts like one
+ * of Gandalf's fireworks and the cards fly down into their places.
  * Shown once for a match (its seed is remembered), and not at all when the system asks for less motion.
  * Built with the screen, over it, so the screen comes in already covered: nothing behind it shows until it's opened.
  * Returns `{ layer, opened }` (`opened` resolves once it's open and the last spark has fallen), or null when there's nothing to show.
@@ -194,7 +191,7 @@ function present(app, match, root) {
   const box = h('div.pack', strip, body, h('div.pack-crimp.bottom'), spark);
   // Behind the pack, hidden by it until they rise out of its open top: the light inside, and the cards.
   const glow = h('div.pack-glow');
-  const flying = match.cards.slice(0, FLYING_CARDS).map((cardId) =>
+  const flying = match.cards.map((cardId) =>
     h('div.present-card', fullCard({ ...app.definitions[cardId], cardId, id: cardId }, app.definitions, { big: true })));
   const stage = h('div.present-stage', glow, ...flying, box);
   const hint = h('div.present-hint', 'Tap to open');
@@ -244,26 +241,33 @@ function present(app, match, root) {
       ], { duration: 800, easing: 'cubic-bezier(.15,.7,.4,1)', fill: 'forwards' });
       glow.animate([{ opacity: .55, transform: 'scale(.8)' }, { opacity: 1, transform: 'scale(1.15)' }], { duration: 300, easing: 'ease-out', fill: 'forwards' });
 
-      // The cards fly out of the top, one after another, rising straight out of the pack and then fanning out above it.
-      const n = flying.length;
-      const fan = flying.map((_, i) => {
-        const angle = n > 1 ? -54 + (108 * i) / (n - 1) : 0;
-        const rad = (angle * Math.PI) / 180;
-        return { x: Math.sin(rad) * 120, y: -Math.cos(rad) * 104 - 34, angle };
+      // The cards burst out of the top all at once, in a jumble, each rising out of the pack and then tumbling away
+      // wherever it was thrown, spinning as it goes, and slowing as it goes, like the sparks will.
+      // Thrown all round the pack (more up than down), but kept on the screen.
+      const view = layer.getBoundingClientRect();
+      const from = stage.getBoundingClientRect();
+      const reach = view.width / 2 - 34;
+      const above = from.top - view.top - 50;
+      const below = view.bottom - from.top - 60;
+      const thrown = flying.map(() => {
+        const rad = ((Math.random() * 2 - 1) * 125 * Math.PI) / 180;
+        const far = 120 + Math.random() * 170;
+        const x = Math.max(-reach, Math.min(reach, Math.sin(rad) * far * 1.2));
+        const y = Math.max(-above, Math.min(below, -Math.cos(rad) * far - 10));
+        return { x, y, angle: (Math.random() * 2 - 1) * 200, lift: (Math.random() * 2 - 1) * 14 };
       });
-      // From the middle out, so the fan opens both ways.
-      const order = flying.map((_, i) => i).sort((a, b) => Math.abs(a - (n - 1) / 2) - Math.abs(b - (n - 1) / 2) || a - b);
+      const order = flying.map((_, i) => i).sort(() => Math.random() - 0.5);
       const rises = order.map((i, k) => {
-        const { x, y, angle } = fan[i];
-        setTimeout(() => app.sound('draw'), k * 80);
+        const { x, y, angle, lift } = thrown[i];
+        if (k % 3 === 0) setTimeout(() => app.sound('draw'), k * 35);
         return flying[i].animate([
-          { transform: 'translateY(70px) scale(.85)', opacity: 1 },
-          { transform: `translate(${(x * 0.1).toFixed(1)}px, -40px) rotate(${(angle * 0.15).toFixed(1)}deg) scale(.95)`, offset: .35 },
+          { transform: 'translateY(70px) scale(.8)', opacity: 1 },
+          { transform: `translate(${lift.toFixed(1)}px, -30px) rotate(${(angle * 0.1).toFixed(1)}deg) scale(.9)`, offset: .18 },
           { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`, opacity: 1 },
-        ], { duration: 560, delay: k * 80, easing: 'cubic-bezier(.25,.8,.35,1.15)', fill: 'both' }).finished.catch(() => {});
+        ], { duration: 700 + Math.random() * 200, delay: k * 35, easing: 'cubic-bezier(.2,.75,.3,1)', fill: 'both' }).finished.catch(() => {});
       });
       await Promise.all(rises);
-      await wait(260);
+      await wait(120);
 
       // Bang: the empty pack is gone in a flash, and the sky fills with sparks.
       app.sound('reward');
@@ -280,31 +284,31 @@ function present(app, match, root) {
       shots.forEach(([x, y], i) => setTimeout(() => fireworks.rocket(rect.width * x, rect.height * y), 160 + i * 150));
       await wait(420);
 
-      // The night clears to the decks, the last sparks still falling over them, and the cards arrive in the tray: the
-      // ones in the air fly down into their own places, and the rest drop in after them.
+      // The night clears to the decks, the last sparks still falling over them, and each card in the air flies down
+      // into its own place (a booster can hold two of a card: each copy finds a place of its own).
       layer.style.pointerEvents = 'none';
       layer.classList.add('clearing');
-      const tray = [...root.querySelectorAll('.pg-tray .pg-card')];
+      const places = [...root.querySelectorAll('.pg-card[data-card]')];
+      const spotFor = (cardId) => {
+        const at = places.findIndex((el) => el.dataset.card === cardId);
+        return at < 0 ? null : places.splice(at, 1)[0];
+      };
       const home = stage.getBoundingClientRect();
       const landings = flying.map((card, i) => {
-        const target = tray[i];
+        const target = spotFor(match.cards[i]);
         if (!target) return card.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished.catch(() => {});
         const t = target.getBoundingClientRect();
         const dx = t.left + t.width / 2 - (home.left + home.width / 2);
         const dy = t.top + t.height / 2 - home.top;
         const scale = t.width / card.offsetWidth;
-        const { x, y, angle } = fan[i];
-        target.animate([{ opacity: 0 }, { opacity: 0, offset: .95 }, { opacity: 1 }], { duration: 520 + i * 60 });
+        const { x, y, angle } = thrown[i];
+        target.animate([{ opacity: 0 }, { opacity: 0, offset: .95 }, { opacity: 1 }], { duration: 520 + i * 30 });
         return card.animate([
           { transform: `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)` },
-          { transform: `translate(${(x * 0.6 + dx * 0.4).toFixed(1)}px, ${(y - 30).toFixed(1)}px) rotate(${(angle * 0.4).toFixed(1)}deg) scale(${(1 + scale) / 2})`, offset: .3 },
+          { transform: `translate(${(x * 0.7 + dx * 0.3).toFixed(1)}px, ${(y - 24).toFixed(1)}px) rotate(${(angle * 0.4).toFixed(1)}deg) scale(${((1 + scale) / 2).toFixed(3)})`, offset: .3 },
           { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) scale(${scale.toFixed(3)})` },
-        ], { duration: 520, delay: i * 60, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished
+        ], { duration: 520, delay: i * 30, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'forwards' }).finished
           .then(() => { card.style.visibility = 'hidden'; }).catch(() => {});
-      });
-      tray.slice(flying.length).forEach((card, i) => {
-        card.animate([{ opacity: 0, transform: 'translateY(-40px) scale(.7) rotate(-6deg)' }, { opacity: 1, transform: 'none' }],
-          { duration: 420, delay: 300 + i * 45, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' });
       });
       await Promise.all([fireworks.done, ...landings]);
       layer.remove();
