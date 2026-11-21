@@ -171,8 +171,6 @@ export const OPPONENTS = deepFreeze({
   },
   ringwraiths: {
     name: 'Ringwraiths', color: 'black', emblem: 'ringwraiths', ai: strategist(),
-    // Two of the Nine in every pack.
-    setup: { pack: ['ringwraiths', 'ringwraiths'] },
     portrait: portrait('2/a/2a8495c3-96cf-40ab-b68a-1b5711b7659e.jpg?1783916220', 50, 10, 300, 'Ringwraiths', 'Warren Mahy'),
     banter: {
       start: ['We are nine. You are one.', 'Give us the Ring, and the knife need not find you.', 'The hill is high, and the night is long. Come up, little one.'],

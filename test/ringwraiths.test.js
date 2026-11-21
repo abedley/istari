@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { ACTION, PHASE } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
 import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
-import { createMatch } from '../src/match/match.js';
 import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
 import { placeOf } from '../src/match/places.js';
 import {
@@ -31,15 +30,11 @@ function settle(game) {
   throw new Error('Did not settle');
 }
 
-test('the Ringwraiths are an opponent with two Ringwraiths in every pack', () => {
+test('the Ringwraiths are an opponent whose packs are boosters like any other', () => {
   assert.equal(OPPONENTS.ringwraiths.emblem, 'ringwraiths');
   assert.ok(CAMPAIGN_OPPONENTS.includes('ringwraiths'));
   assert.equal(placeOf('ringwraiths').name, 'Weathertop');
-  assert.deepEqual(opponentSetup('ringwraiths').pack, ['ringwraiths', 'ringwraiths']);
-  for (let seed = 1; seed <= 20; seed += 1) {
-    const cards = createMatch({ seed, opponentId: 'ringwraiths' }).cpuDecks.flat();
-    assert.equal(cards.filter((id) => id === 'ringwraiths').length, 2, `seed ${seed}`);
-  }
+  assert.deepEqual(opponentSetup('ringwraiths').pack, []);
 });
 
 test('their ring has the Rider in Black’s powers, and the Morgul-knife', () => {

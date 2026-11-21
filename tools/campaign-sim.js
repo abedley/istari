@@ -5,15 +5,17 @@
  * played again for free, and a beaten opponent offers their ring or an extra common.
  *
  *   node tools/campaign-sim.js [--heroes frodo,strider,samwise] [--campaigns 20] [--from 1] [--jobs 4]
- *     [--rewards common|ring|smart] [--budget 100] [--verbose]
+ *     [--rewards common|ring|smart|split] [--budget 100] [--every 50] [--verbose]
  *
  * `--rewards`: what your side takes after a win: always the extra common (the default), always the ring
- * (while there's room), or `smart`: the ring while it costs at most one life (one ring), then commons.
+ * (while there's room), `smart`: the ring while it costs at most one life (one ring), then commons, or `split`:
+ * ring and common in turn, starting with the ring.
  * `--budget`: thinking time per decision (ms) for both sides; by default each side's profile decides (100 to 150 ms).
  * Your side builds its decks with buildDecks (src/match/deckBuilder.js), as the CPU does, playing as the hero's temperament.
  *
  * It reports, for each hero, how many campaigns were won (with a 95% interval), lives left when won, where the
- * lost ones fell, and each opponent's record: matches and rounds won against them.
+ * lost ones fell, and each opponent's record: matches and rounds won against them. `--every`: also print the report so far
+ * after every that many campaigns (default 50), so a long run shows its results even if it's cut short.
  */
 import { fork } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -73,7 +75,8 @@ function chooseDecks(match, seed) {
 
 /** The reward after a win, by the `rewards` rule. */
 function chooseReward(campaign, rewards) {
-  const ring = rewards === 'ring' || (rewards === 'smart' && campaign.rings.length < 1);
+  const taken = campaign.history.filter((h) => h.outcome === MATCH_OUTCOME.WON).length - 1;
+  const ring = rewards === 'ring' || (rewards === 'smart' && campaign.rings.length < 1) || (rewards === 'split' && taken % 2 === 0);
   return ring && canTakeRing(campaign) ? takeRing(campaign) : takeCommon(campaign);
 }
 
@@ -111,7 +114,8 @@ if (args.worker) {
   const count = Number(args.campaigns ?? 20);
   const from = Number(args.from ?? 1);
   const options = { rewards: args.rewards ?? 'common', budget: args.budget ? Number(args.budget) : undefined };
-  const tasks = heroes.flatMap((heroId) => Array.from({ length: count }, (_, i) => ({ heroId, seed: from + i })));
+  // Heroes in turn, so a report part way through has them all alike.
+  const tasks = Array.from({ length: count }, (_, i) => heroes.map((heroId) => ({ heroId, seed: from + i }))).flat();
   const jobs = Math.min(Number(args.jobs ?? 4), tasks.length);
   const started = performance.now();
   const results = [];
@@ -139,6 +143,11 @@ if (args.worker) {
             const r = message.result;
             console.log(`${r.heroId} #${r.seed}: ${r.status}, ${r.lives} lives left; ${r.matches.map((x) => `${x.opponentId} ${x.outcome[0].toUpperCase()}`).join(', ')}`);
           }
+        }
+        const every = Number(args.every ?? 50);
+        if (every > 0 && results.length % every === 0 && results.length < tasks.length) {
+          console.log(`\n--- so far: ${results.length} of ${tasks.length} ---`);
+          report(heroes, options, results, errors, (performance.now() - started) / 1000);
         }
         give();
       });
