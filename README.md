@@ -1306,6 +1306,12 @@ To run them again: `node tools/arena.js --a strategist --b search-blind --seeds 
 `--b search` (seeing hands), `--adecks new --match` (whole matches), `--a basic --b basic --adecks new --match`
 (the decks alone). `--aopts '{"worlds":6}'` and the like set a Strategist's options.
 
+**The campaign simulator** (`tools/campaign-sim.js`) has the Strategist play your side through whole
+campaigns of Book I against the opponents as they ship, with every campaign rule (lives, replays, rewards),
+to gauge how hard the road is: `node tools/campaign-sim.js --heroes frodo,strider,samwise --campaigns 100`
+(`--rewards common|ring|smart` for what it takes after a win). It reports each hero's campaigns won, where the
+lost ones fell, and every opponent's match and round record.
+
 ### Basic AI (`BasicAIController`)
 
 A fast heuristic player, also used to play out the search AI's simulations (5–20 µs per decision).
