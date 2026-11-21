@@ -80,7 +80,7 @@ a Ring of Power: an emblem in `src/cards/emblems.js` (see *Emblems*) named by th
 `src/match/personas.js`, with the ring's name as the emblem's `name` and the power's own name as its
 `power`. Each bearer has their ring from the story where they had one (the Three, the Ring of Barahir,
 and the One Ring under its names: *the magic ring* of The Hobbit, Gollum's *birthday
-present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Goldberry's only once a game, Bill Ferny's as often as he has Treasures, the Ringwraiths' each power on its own), uses the stack,
+present*, Sauron's Ruling Ring); the rest are made up. A ring can be used once a turn (Bill Ferny's as often as he has Treasures, the Ringwraiths' each power on its own), uses the stack,
 and costs nothing or a little life (mana means nothing here). Samwise's is passive instead: the emblem's
 `startsWith` cards are put onto the battlefield before the first turn, like a Leyline (so their "when this enters"
 abilities don't trigger). Old Man Willow's and the Rider in Black's are passive too: the emblem's `triggeredAbilities` trigger like a permanent's,
@@ -108,7 +108,7 @@ one changes the rules (`{ rule: 'flashForCreatures' }`), one is an anthem. They'
 | Bill Ferny | The Swindler's Ring *(made up)* | Sold to the Black Riders | Sacrifice a Treasure: Create a Nazgûl creature token (a 1/2 black Wraith Knight with deathtouch and the Nazgûl card's abilities). Sorcery speed, any number of times a turn. |
 | Ringwraiths | The Nine Rings *(made up: the Rider in Black's ring, all nine)* | Hunting the Ring; Drawn to the Ring; The Morgul-Knife | The Rider in Black's powers, and a third: 0: Attach a Morgul-Knife Wound to target creature (`EFFECT.ATTACH_NEW_AURA`). Sorcery speed, and only once each game (the ability's `oncePerGame`). Each power has its own limit: the temptation once a turn (`oncePerTurn`), the knife once a game. |
 | Glorfindel | The Ring of the Golden Flower *(made up)* | The Ford of Bruinen; Light of the Eldar | (passive) At the start of the game, shuffle a Forest, a Rivendell and a Horses of the Bruinen into your library. And a second power: 0: Target creature you control gains first strike until end of turn. Scry 1. Sorcery speed. |
-| Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | 0: Put a shield counter on target creature you control. Sorcery speed, and only once each game (`activationsPerGame`). |
+| Goldberry | The River-Daughter's Ring *(made up)* | Fear Nothing Tonight | Remove a counter from target permanent: Put a shield counter on target creature you control. Sorcery speed. The counter can come off anyone's permanent (of a kind she chooses when it has several), and the creature may be the same one (a `repeat` target). |
 | Tom Bombadil | Goldberry's Ring *(made up)* | Treasure of the Barrow | *Passive, for the match:* your booster is all rares and mythics, but your first deck is five of its cards picked at random, locked in before you build. |
 | Sauron | The Ruling Ring | Armies of Mordor | 0: Amass Orcs 1. Sorcery speed. |
 | Saruman | The Ring of Many Colours *(made up: his own ring, unnamed in the story)* | The Voice | 0: Target creature an opponent controls gets −2/−0 until end of turn. |

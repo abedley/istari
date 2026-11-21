@@ -7,7 +7,7 @@ import {
   isLand, isCreature, isAura, isEquipment, isPermanentCard, isManaAbility, hasKeyword, anthemApplies,
   abilityEffects, effectAffects, matchesPermanentKind, TOKENS, COLORS_OF_MANA, needsManaColor, castsAtInstantSpeed,
   isLegendary, matchesFilter, countOf, TOKEN, scaleEffect, spellCost, canBlockCreature, colorsOf, tokenCardId, creatureTokenName,
-  targetKindOf, targetFilterOf, isOptionalTarget, targetList, GRAVEYARD_TARGETS, triggersOn, WATCHER_TRIGGERS, isSaga,
+  targetKindOf, targetFilterOf, isOptionalTarget, isRepeatTarget, targetList, GRAVEYARD_TARGETS, triggersOn, WATCHER_TRIGGERS, isSaga,
   isInstant, isSorcery, isArtifact, isToken, withX, amassArmyToken, reduceGeneric, manaValue, COLORS_OF_MANA as COLORS, hasSubtype,
   KEYWORD_COUNTERS,
 } from '../cards/cards.js';
@@ -100,6 +100,8 @@ export const CHOICE = Object.freeze({
   EXILE_COST: 'exileCost',
   /** A kind of counter to put on (Aragorn, Company Leader). */
   COUNTER: 'counter',
+  /** A kind of counter to remove from a permanent ("remove a counter from target permanent": Goldberry's ring). */
+  REMOVE_COUNTER: 'removeCounter',
   /** Counters to move, as `kind#n` (Goldberry). */
   COUNTERS: 'counters',
   /** Any number of permanents to sacrifice (Hew the Entwood). */
@@ -3136,6 +3138,19 @@ export class Game extends EventEmitter {
         break;
       }
       case EFFECT.REMOVE_COUNTERS: {
+        if (effect.counter === 'any') {
+          // "Remove a counter from target permanent": of the kind chosen, when it has more than one.
+          context.paid = false;
+          const [permanent] = permanents();
+          const kinds = Object.keys(permanent?.counters ?? {}).filter((c) => permanent.counters[c] > 0);
+          if (kinds.length === 1) {
+            this.#removeCounter(permanent, kinds[0], 1);
+            context.paid = true;
+          } else if (kinds.length > 1) {
+            this.#ask({ type: DECISION.CHOOSE, kind: CHOICE.REMOVE_COUNTER, playerId: controllerId, options: kinds, permanentId: permanent.id });
+          }
+          break;
+        }
         let removed = false;
         for (const permanent of permanents()) {
           const have = permanent.counters[effect.counter] ?? 0;
@@ -3936,7 +3951,7 @@ export class Game extends EventEmitter {
     for (const kind of kinds) {
       options = options.flatMap((chosen) => {
         const legal = this.#legalTargets(kind, controllerId, excludeId, { sourceId, x, chosen, amassedArmyId })
-          .filter((target) => !chosen.includes(target.id) && !skip?.(target));
+          .filter((target) => (isRepeatTarget(kind) || !chosen.includes(target.id)) && !skip?.(target));
         const next = legal.map((target) => [...chosen, target.id]);
         if (isOptionalTarget(kind)) next.push([...chosen, null]);
         return next;
@@ -4150,6 +4165,14 @@ export class Game extends EventEmitter {
         if (decision.remaining > 1 && zone.hand.length > 0) {
           this.#ask({ ...decision, options: zone.hand.map((c) => c.id), remaining: decision.remaining - 1 });
           return;
+        }
+        break;
+      }
+      case CHOICE.REMOVE_COUNTER: {
+        const permanent = this.#permanent(decision.permanentId);
+        if (permanent?.counters[choice] > 0) {
+          this.#removeCounter(permanent, choice, 1);
+          if (this.#resolving) this.#resolving.context.paid = true;
         }
         break;
       }

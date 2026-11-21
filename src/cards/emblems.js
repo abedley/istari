@@ -30,13 +30,13 @@ const deepFreeze = (value) => {
  * (the emblem's, and shown on its button), `power` the name of what it does, `text` its rules text,
  * `timing` 'sorcery' or left out for any time with priority. Each can be used once a turn.
  */
-const power = (id, ring, powerName, { text, cost = {}, effects, target, timing }) => ({
+const power = (id, ring, powerName, { text, cost = {}, effects, target, targets, timing }) => ({
   id,
   name: ring,
   ring: true,
   power: powerName,
   activationsPerTurn: 1,
-  abilities: [{ id: 'power', name: ring, text, cost, effects, ...(target ? { target } : {}), ...(timing ? { timing } : {}) }],
+  abilities: [{ id: 'power', name: ring, text, cost, effects, ...(target ? { target } : {}), ...(targets ? { targets } : {}), ...(timing ? { timing } : {}) }],
 });
 const SORCERY = ACTIVATION_TIMING.SORCERY;
 /** The Rider in Black's powers (and the Ringwraiths'). */
@@ -295,16 +295,18 @@ export const EMBLEMS = deepFreeze({
     } }],
     timing: SORCERY,
   })),
-  // "Once per game": `activationsPerGame` (see Game's #canActivate).
-  goldberry: {
-    ...power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {
-      text: '0: Put a shield counter on target creature you control. Activate only as a sorcery and only once each game. (If it would be dealt damage or destroyed, instead remove a shield counter from it.)',
-      target: TARGET.CREATURE_YOU_CONTROL,
-      effects: [{ type: EFFECT.ADD_COUNTERS, counter: COUNTER.SHIELD, count: 1 }],
+  // The cost is a target of its own ("remove a counter from target permanent"), the first of its two targets: the
+  // shield goes on only if a counter came off.
+  goldberry: power('goldberry', 'The River-Daughter\u2019s Ring', 'Fear Nothing Tonight', {
+      text: 'Remove a counter from target permanent: Put a shield counter on target creature you control. Activate only as a sorcery. (If it would be dealt damage or destroyed, instead remove a shield counter from it.)',
+      effects: [
+        { type: EFFECT.REMOVE_COUNTERS, counter: 'any', affected: AFFECTED.TARGET, targetIndex: 0 },
+        { type: EFFECT.ADD_COUNTERS, counter: COUNTER.SHIELD, count: 1, affected: AFFECTED.TARGET, targetIndex: 1, condition: { paid: true } },
+      ],
+      // The creature may be the permanent the counter comes off (a +1/+1 counter traded for a shield).
+      targets: [{ kind: TARGET.PERMANENT, filter: { controller: 'any', hasCounter: 'any' } }, { kind: TARGET.CREATURE_YOU_CONTROL, repeat: true }],
       timing: SORCERY,
     }),
-    activationsPerGame: 1,
-  },
   sauron: power('sauron', 'The Ruling Ring', 'Armies of Mordor', {
     text: '0: Amass Orcs 1. Activate only as a sorcery.',
     effects: [{ type: EFFECT.AMASS, count: 1, subtype: 'Orc' }],

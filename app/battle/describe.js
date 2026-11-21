@@ -78,6 +78,7 @@ export function choiceLabel(state, decision, choice, me) {
     }
     case CHOICE.KEYWORD: return capitalize(choice);
     case CHOICE.COUNTER: return `${capitalize(choice)} counter`;
+    case CHOICE.REMOVE_COUNTER: return `${capitalize(choice)} counter`;
     case CHOICE.CARD_TYPE: return `Protection from ${choice === 'Sorcery' ? 'sorceries' : `${choice.toLowerCase()}s`}`;
     case CHOICE.CREATURE_TYPE: return choice;
     case CHOICE.CAST_FREE_VARIANT: {
@@ -174,6 +175,7 @@ function choosePrompt(decision) {
     case CHOICE.KEYWORD: return `Choose the ability it gains${from}`;
     case CHOICE.MAY: return decision.text ?? `Do it?${from}`;
     case CHOICE.COUNTER: return `Choose a counter${from}`;
+    case CHOICE.REMOVE_COUNTER: return `Choose a counter to remove${from}`;
     case CHOICE.CARD_TYPE: return `Choose a card type to gain protection from${from}`;
     case CHOICE.CAST_FREE: return `You may cast a spell without paying its mana cost${from}`;
     case CHOICE.CAST_FREE_VARIANT: return `Choose its targets${from}`;
