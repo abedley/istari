@@ -30,11 +30,15 @@ const resolve = (game) => {
   for (let i = 0; i < 10 && state(game).stack.length; i++) ok(game, passPriority(state(game).priorityPlayerId));
 };
 
-/** Uses Goldberry's power: a counter off `from`, a shield counter on `to` (ids), and lets it resolve. */
-function usePower(game, from, to) {
-  const action = state(game).validActions.find((a) => a.type === ACTION.ACTIVATE_ABILITY && a.playerId === 'p1'
-    && a.cardId === 'p1-emblem-1' && a.targets?.[0] === from && a.targets?.[1] === to);
-  assert.ok(action, 'the power can take a counter off the one and shield the other');
+/** Goldberry's power, paid with a `counter` off `from`, for a shield counter on `to` (ids). */
+const powerAction = (game, from, to, counter = '+1/+1') => state(game).validActions.find((a) => a.type === ACTION.ACTIVATE_ABILITY
+  && a.playerId === 'p1' && a.cardId === 'p1-emblem-1' && a.targets?.[0] === to
+  && a.costChoices?.removeCounter?.id === from && a.costChoices.removeCounter.counter === counter);
+
+/** Uses Goldberry's power (see powerAction), and lets it resolve. */
+function usePower(game, from, to, counter) {
+  const action = powerAction(game, from, to, counter);
+  assert.ok(action, 'the power can take the counter off the one and shield the other');
   ok(game, action);
   resolve(game);
 }
@@ -48,31 +52,47 @@ function shield(game) {
   assert.deepEqual(bear(game).counters, { shield: 1 });
 }
 
-test('Goldberry is an opponent whose power removes a counter from a permanent to put a shield counter on a creature of hers', () => {
+test('Goldberry is an opponent whose power, for a counter removed from a permanent, puts a shield counter on a creature of hers', () => {
   assert.equal(OPPONENTS.goldberry.emblem, 'goldberry');
   const ring = EMBLEMS.goldberry;
   assert.equal(ring.activationsPerTurn, 1);
   assert.equal(ring.activationsPerGame, undefined, 'no longer once a game');
   assert.equal(ring.abilities[0].timing, 'sorcery');
-  assert.equal(ring.abilities[0].targets.length, 2);
+  assert.deepEqual(ring.abilities[0].cost, { removeAnyCounter: true });
+  assert.equal(ring.abilities[0].target, 'creatureYouControl');
 
-  const { game } = goldberryGame(['bear', 'bear', 'bolster', 'bolster']);
+  const { game } = goldberryGame(['bear', 'bear', 'bolster']);
   advanceTo(game, { turn: 1, phase: PHASE.PRECOMBAT_MAIN });
   cast(game, 'p1', 'bear');
   // A creature to shield, but no counter anywhere to remove: no power.
   assert.equal(power(game), undefined, 'no counter, no power');
   shield(game);
   assert.equal(power(game), undefined, 'once a turn');
-  // On her next turn she can move the shield to another creature, or trade a new counter for a second shield.
+  // On her next turn she can move the shield to another creature.
   advanceTo(game, { turn: 3, phase: PHASE.PRECOMBAT_MAIN });
   cast(game, 'p1', 'bear');
   const [first, second] = byCard(game, 'bear').filter((p) => p.controllerId === 'p1').map((p) => p.id);
-  usePower(game, first, second);
+  usePower(game, first, second, 'shield');
   assert.deepEqual(state(game).battlefield.find((p) => p.id === first).counters, {});
   assert.deepEqual(state(game).battlefield.find((p) => p.id === second).counters, { shield: 1 });
 });
 
-test('Goldberry\'s power can take a counter off an opponent\'s permanent, and its controller chooses which kind', () => {
+test('the counter is a cost: it comes off as the power is activated, before anything can answer it', () => {
+  const { game } = goldberryGame(['bear', 'bolster']);
+  advanceTo(game, { turn: 1, phase: PHASE.PRECOMBAT_MAIN });
+  cast(game, 'p1', 'bear');
+  const id = bear(game).id;
+  cast(game, 'p1', 'bolster', { targets: [id] });
+  resolve(game);
+  ok(game, powerAction(game, id, id));
+  // On the stack: the counter is already gone, and only the shield is left to resolve.
+  assert.equal(state(game).stack.length, 1);
+  assert.deepEqual(bear(game).counters, {}, 'paid on activation');
+  resolve(game);
+  assert.deepEqual(bear(game).counters, { shield: 1 });
+});
+
+test('Goldberry\'s power can take any kind of counter off an opponent\'s permanent, chosen as it\'s paid', () => {
   const { game } = goldberryGame(['bear', 'daze'], ['bear']);
   advanceTo(game, { turn: 1, phase: PHASE.PRECOMBAT_MAIN });
   cast(game, 'p1', 'bear');
@@ -83,16 +103,8 @@ test('Goldberry\'s power can take a counter off an opponent\'s permanent, and it
   cast(game, 'p1', 'daze', { targets: [theirs] });
   resolve(game);
   assert.deepEqual(bear(game, 'p2').counters, { stun: 1, '+1/+1': 1 });
-  const action = state(game).validActions.find((a) => a.type === ACTION.ACTIVATE_ABILITY && a.cardId === 'p1-emblem-1'
-    && a.targets?.[0] === theirs && a.targets?.[1] === bear(game).id);
-  ok(game, action);
-  for (let i = 0; i < 10 && !state(game).pendingDecision; i++) ok(game, passPriority(state(game).priorityPlayerId));
-  const decision = state(game).pendingDecision;
-  assert.equal(decision.kind, 'removeCounter');
-  assert.equal(decision.playerId, 'p1');
-  assert.deepEqual([...decision.options].sort(), ['+1/+1', 'stun']);
-  ok(game, { type: ACTION.CHOOSE, playerId: 'p1', choice: '+1/+1' });
-  resolve(game);
+  assert.ok(powerAction(game, theirs, bear(game).id, 'stun'), 'either kind can be removed');
+  usePower(game, theirs, bear(game).id, '+1/+1');
   assert.deepEqual(bear(game, 'p2').counters, { stun: 1 }, 'the +1/+1 counter is gone, the stun counter stays');
   assert.deepEqual(bear(game).counters, { shield: 1 });
 });

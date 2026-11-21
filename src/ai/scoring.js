@@ -414,7 +414,7 @@ export function spellThreat(state, me, spell) {
 
 /**
  * What paying a cost's sacrifices, discards and life would lose `me` (zero or
- * negative). With `doomed` (doomedCreatures), a creature about to die anyway costs
+ * negative; positive only for a counter taken off an opponent's permanent). With `doomed` (doomedCreatures), a creature about to die anyway costs
  * little to sacrifice (doomedSacrificeCost).
  */
 export function costScore(state, me, cost, costChoices, sourceId, doomed = null) {
@@ -427,7 +427,17 @@ export function costScore(state, me, cost, costChoices, sourceId, doomed = null)
     - sacrificed.reduce((sum, p) => sum + (p ? value(p) : 0), 0)
     - (costChoices.discard?.length ?? 0) * 2
     // "Mill six cards": cards that won't be drawn.
-    - (cost.mill ?? 0) * 0.3;
+    - (cost.mill ?? 0) * 0.3
+    + removedCounterScore(state, me, costChoices.removeCounter);
+}
+
+/** What taking a counter off a permanent is worth to `me` (Goldberry's ring): good off theirs, bad off ours, but for a stun counter. */
+function removedCounterScore(state, me, removal) {
+  if (!removal) return 0;
+  const permanent = state.battlefield.find((p) => p.id === removal.id);
+  if (!permanent) return 0;
+  const worth = { [COUNTER.SHIELD]: 2, [COUNTER.PLUS_ONE]: 1.5, [COUNTER.STUN]: -1.5 }[removal.counter] ?? 0.5;
+  return permanent.controllerId === me ? -worth : worth;
 }
 
 const COMBAT_TARGETS = new Set([TARGET.ATTACKING_CREATURE, TARGET.ATTACKING_OR_BLOCKING_CREATURE]);

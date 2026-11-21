@@ -3,7 +3,7 @@ import { ACTION } from '../engine/actions.js';
 import { DECISION, CHOICE } from '../engine/Game.js';
 import { PHASE } from '../engine/turnStructure.js';
 import {
-  isCreature, isLand, isAura, isCurse, hasKeyword, cantAttack, manaValue, KEYWORD, EFFECT, AFFECTED, COUNTER, isHarmfulEffect,
+  isCreature, isLand, isAura, isCurse, hasKeyword, cantAttack, manaValue, KEYWORD, EFFECT, AFFECTED, isHarmfulEffect,
   targetList, withX, colorsOf, COLORS_OF_MANA, flattenEffects,
 } from '../cards/cards.js';
 import { manaPoolTotal, canPayMana } from '../engine/mana.js';
@@ -707,12 +707,6 @@ function choiceScore(state, me, decision, choice) {
       const card = cardIn(hand, decision.cardId);
       const holder = card?.spell?.modes && variant.mode !== undefined && !Array.isArray(variant.mode) ? card.spell.modes[variant.mode] : card?.spell;
       return holder ? scoreEffects(state, me, holder.effects ?? [], variant.targets ?? [], decision.cardId) : 0;
-    }
-    case CHOICE.REMOVE_COUNTER: {
-      // Goldberry's ring: an opponent's best counter, or our own worst.
-      const target = permanent(decision.permanentId);
-      const worth = { [COUNTER.SHIELD]: 3, [COUNTER.PLUS_ONE]: 2, [COUNTER.STUN]: -2 }[choice] ?? 1;
-      return target?.controllerId === me ? -worth : worth;
     }
     case CHOICE.COUNTER:
     case CHOICE.KEYWORD: {

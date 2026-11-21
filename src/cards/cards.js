@@ -14,6 +14,8 @@
  *     - `sacrificeSelf: true` ("Sacrifice this creature")
  *     - `sacrifice: kind`, where kind is a TARGET permanent kind ("Sacrifice a creature")
  *     - `discard: n` ("Discard a card")
+ *     - `removeAnyCounter: true` ("Remove a counter from a permanent": any permanent's, any kind, chosen and
+ *       removed as the cost is paid)
  *   - `effects`: see EFFECT, applied in order on resolution (608.2c)
  *   - `timing`: `'sorcery'` to allow activation only at sorcery speed (default: any time with priority)
  *   - `target`: a TARGET kind, for abilities that target (e.g. equip)
@@ -89,17 +91,14 @@ export const TARGET = Object.freeze({
 
 /**
  * A target can be a TARGET kind, or a spec narrowing one:
- * `{ kind, filter?, optional?, other?, repeat? }`, where `filter` is a matchesFilter filter
+ * `{ kind, filter?, optional?, other? }`, where `filter` is a matchesFilter filter
  * ("target nonlegendary creature", "target creature with power X"), `optional` makes it
- * "up to one" (a spell or ability may be given `null` in its place), `other` keeps
- * the source out ("another target creature"), and `repeat` lets it be an object an earlier target
- * already is (601.2c: an object can be chosen once for each instance of the word "target"; otherwise
- * the targets are kept apart).
+ * "up to one" (a spell or ability may be given `null` in its place), and `other` keeps
+ * the source out ("another target creature").
  */
 export const targetKindOf = (spec) => (spec && typeof spec === 'object' ? spec.kind : spec);
 export const targetFilterOf = (spec) => (spec && typeof spec === 'object' ? spec.filter ?? null : null);
 export const isOptionalTarget = (spec) => Boolean(spec && typeof spec === 'object' && spec.optional);
-export const isRepeatTarget = (spec) => Boolean(spec && typeof spec === 'object' && spec.repeat);
 /** The target kinds of a card or ability's `target` or `targets`, as a list ([] when it doesn't target). */
 export const targetList = (holder) => (holder?.targets ?? (holder?.target ? [holder.target] : []));
 /** Graveyard target kinds pick cards in a graveyard, not permanents or players. */
@@ -384,10 +383,7 @@ export const EFFECT = Object.freeze({
   REVEAL_TOP: 'revealTop',
   /** `{ tapped?, attacking? }`: the card REVEAL_TOP revealed goes from the library onto the battlefield. */
   PUT_REVEALED_ONTO_BATTLEFIELD: 'putRevealedOntoBattlefield',
-  /**
-   * `{ counter, count }`: remove counters from the affected permanents; later effects can check `{ paid: true }` ("If you do").
-   * `counter: 'any'`: one counter of any kind ("remove a counter from target permanent"), the kind chosen when it has several.
-   */
+  /** `{ counter, count }`: remove counters from the affected permanents; later effects can check `{ paid: true }` ("If you do"). */
   REMOVE_COUNTERS: 'removeCounters',
   /**
    * `{ count, filter, max }`: look at the top `count` cards of your library; you may reveal up to `max`
@@ -832,7 +828,7 @@ export const isToken = (card) => Boolean(card.token);
  * - `keywords` / `withoutKeywords`: has one of them / none of them ("creature with flying")
  * - `power` / `toughness`: `{ min?, max? }`, or `{ equalsX: true }` (`x` from the context);
  *   `powerOrToughnessAtMost`: n
- * - `enteredThisTurn`, `dealtDamageThisTurn`, `blockedByOrBlockedLegendaryThisTurn`, `hasCounter` (a COUNTER kind, or 'any')
+ * - `enteredThisTurn`, `dealtDamageThisTurn`, `blockedByOrBlockedLegendaryThisTurn`, `hasCounter` (a COUNTER kind)
  * - `diedThisTurn`: a card put into a graveyard from the battlefield this turn (`turn` from the context)
  * - `attacking`, `blocking` (`combat` from the context)
  * - `anyOf`: a list of filters, one of which must match (each matching anyone's, unless it gives a `controller`)
@@ -871,8 +867,7 @@ export function matchesFilter(object, filter = {}, {
   // Shelob: "dealt damage this turn by a Spider you controlled".
   if (filter.damagedBySpiderOfYou && !object.damagedBySpiderOf?.includes(controllerId)) return false;
   // "a creature you control with a +1/+1 counter on it".
-  if (filter.hasCounter === 'any' ? !Object.values(object.counters ?? {}).some((n) => n > 0)
-    : filter.hasCounter && !(object.counters?.[filter.hasCounter] > 0)) return false;
+  if (filter.hasCounter && !(object.counters?.[filter.hasCounter] > 0)) return false;
   if (filter.enteredThisTurn && !object.enteredThisTurn) return false;
   if (filter.dealtDamageThisTurn && !object.dealtDamageThisTurn) return false;
   if (filter.blockedByOrBlockedLegendaryThisTurn && !object.blockedByOrBlockedLegendaryThisTurn) return false;

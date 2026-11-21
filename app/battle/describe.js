@@ -43,6 +43,11 @@ export function variantLabel(state, variant, me) {
   };
   if (sacrifice.length) parts.push(`Sacrifice ${sacrifice.map(withStats).join(', ')}`);
   if (discard.length) parts.push(`Discard ${discard.map((id) => nameOf(state, id, me)).join(', ')}`);
+  const { removeCounter } = variant.costChoices ?? {};
+  if (removeCounter) {
+    const owner = findCard(state, removeCounter.id)?.controllerId;
+    parts.push(`Remove a ${removeCounter.counter} counter from ${owner && owner !== me ? 'their ' : ''}${nameOf(state, removeCounter.id, me)}`);
+  }
   if (variant.manaColor) parts.push(`Add {${variant.manaColor}}`);
   return parts.join(' · ') || 'Play';
 }
@@ -78,7 +83,6 @@ export function choiceLabel(state, decision, choice, me) {
     }
     case CHOICE.KEYWORD: return capitalize(choice);
     case CHOICE.COUNTER: return `${capitalize(choice)} counter`;
-    case CHOICE.REMOVE_COUNTER: return `${capitalize(choice)} counter`;
     case CHOICE.CARD_TYPE: return `Protection from ${choice === 'Sorcery' ? 'sorceries' : `${choice.toLowerCase()}s`}`;
     case CHOICE.CREATURE_TYPE: return choice;
     case CHOICE.CAST_FREE_VARIANT: {
@@ -175,7 +179,6 @@ function choosePrompt(decision) {
     case CHOICE.KEYWORD: return `Choose the ability it gains${from}`;
     case CHOICE.MAY: return decision.text ?? `Do it?${from}`;
     case CHOICE.COUNTER: return `Choose a counter${from}`;
-    case CHOICE.REMOVE_COUNTER: return `Choose a counter to remove${from}`;
     case CHOICE.CARD_TYPE: return `Choose a card type to gain protection from${from}`;
     case CHOICE.CAST_FREE: return `You may cast a spell without paying its mana cost${from}`;
     case CHOICE.CAST_FREE_VARIANT: return `Choose its targets${from}`;
