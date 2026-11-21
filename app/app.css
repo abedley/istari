@@ -292,6 +292,12 @@ header.top h2 { flex: 1; margin: 0; text-align: center; font: 700 21px var(--dis
 
 .bar { display: flex; align-items: center; gap: 12px; min-width: 0; max-width: 100%; position: relative; z-index: 3; padding: 0 2px 0 4px; }
 .bar-opp { padding-right: 44px; }
+/* Our bar is mirrored: the main button on the left, under a left thumb; the portrait on the right. */
+.bar-me { flex-direction: row-reverse; padding: 0 4px 0 2px; }
+.bar-me .avatar { margin-right: 0; margin-left: 6px; }
+.bar-me .life { right: auto; left: -10px; }
+.bar-me .who { align-items: flex-end; text-align: right; }
+.bar-me .abilities { margin-left: 0; margin-right: auto; }
 /* the life gem hangs 13px off the portrait's right (10px offset + its 3px ring): keep that clear of the name and counts */
 .avatar { position: relative; flex: none; cursor: pointer; margin-right: 6px; }
 .avatar .crest { width: 46px; height: 46px; font-size: 33px; }
