@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ACTION, PHASE, TOKEN, EFFECT, KEYWORD } from '../src/index.js';
 import { EMBLEMS } from '../src/cards/emblems.js';
 import { OPPONENTS, opponentSetup } from '../src/match/personas.js';
-import { createMatch, MATCH_RULES } from '../src/match/match.js';
+import { createMatch, placeInDecks, MATCH_RULES } from '../src/match/match.js';
 import { CAMPAIGN_OPPONENTS } from '../src/match/campaign.js';
 import { placeOf } from '../src/match/places.js';
 import { TOKEN_PRESENTATION } from '../src/cards/tokenArt.js';
@@ -61,4 +61,27 @@ test('Bill Ferny’s packs always hold two of himself and two Bill the Ponys', (
     assert.equal(cards.filter((id) => id === 'billThePony').length, 2, `seed ${seed}`);
     assert.equal(cards.length, MATCH_RULES.cardsDealt);
   }
+});
+
+test('Bill Ferny’s first deck and his second each hold one of himself and one Bill the Pony', () => {
+  assert.deepEqual(opponentSetup('billFerny').decks, [['billFernyBreeSwindler', 'billThePony'], ['billFernyBreeSwindler', 'billThePony']]);
+  const count = (deck, id) => deck.filter((card) => card === id).length;
+  for (let seed = 1; seed <= 40; seed += 1) {
+    const { cpuDecks } = createMatch({ seed, opponentId: 'billFerny' });
+    for (const deck of cpuDecks.slice(0, 2)) {
+      assert.equal(count(deck, 'billFernyBreeSwindler'), 1, `seed ${seed}`);
+      assert.equal(count(deck, 'billThePony'), 1, `seed ${seed}`);
+    }
+    assert.equal(count(cpuDecks[2], 'billFernyBreeSwindler') + count(cpuDecks[2], 'billThePony'), 0, `seed ${seed}`);
+    assert.ok(cpuDecks.every((deck) => deck.length === MATCH_RULES.deckSize));
+  }
+});
+
+test('placeInDecks swaps a card into its deck for that deck\'s weakest spare card, and leaves a deck alone when it holds it', () => {
+  // Birthday Escape (3) is the weakest of the first deck; Bag End Porter (10) is its strongest.
+  const decks = [['bagEndPorter', 'birthdayEscape', 'arwensGift'], ['bombadilsSong', 'billThePony', 'brandywineFarmer']];
+  assert.deepEqual(placeInDecks(decks, []), decks);
+  assert.deepEqual(placeInDecks(decks, [['billThePony']]), [['bagEndPorter', 'billThePony', 'arwensGift'], ['bombadilsSong', 'birthdayEscape', 'brandywineFarmer']]);
+  assert.deepEqual(placeInDecks(decks, [[], ['billThePony']]), decks, 'already there');
+  assert.throws(() => placeInDecks(decks, [['glorfindelDauntlessRescuer']]), /No glorfindelDauntlessRescuer/);
 });

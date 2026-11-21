@@ -139,6 +139,35 @@ export function withCards(booster, cards) {
 }
 
 /**
+ * `decks` with the cards in `placed` (an opponent's setup `decks`: card ids each deck must hold, in round order)
+ * moved into their decks. A card a deck lacks is swapped in from a deck that has a copy it doesn't need, for that
+ * deck's weakest card (`cardStrength`) it doesn't need either. Takes no random draws.
+ */
+export function placeInDecks(decks, placed = []) {
+  const result = decks.map((deck) => [...deck]);
+  const needed = result.map((deck) => deck.map(() => false));
+  const missing = [];
+  placed.forEach((cards, i) => {
+    for (const cardId of cards) {
+      const at = result[i].findIndex((id, n) => id === cardId && !needed[i][n]);
+      if (at >= 0) needed[i][at] = true;
+      else missing.push([i, cardId]);
+    }
+  });
+  for (const [i, cardId] of missing) {
+    const j = result.findIndex((deck, k) => k !== i && deck.some((id, n) => id === cardId && !needed[k][n]));
+    if (j < 0) throw new Error(`No ${cardId} to place in deck ${i + 1}.`);
+    const from = result[j].findIndex((id, n) => id === cardId && !needed[j][n]);
+    const spare = result[i].map((id, n) => n).filter((n) => !needed[i][n]);
+    if (!spare.length) throw new Error(`Deck ${i + 1} has no room for ${cardId}.`);
+    const out = spare.reduce((a, b) => (cardStrength(result[i][b]) < cardStrength(result[i][a]) ? b : a));
+    [result[i][out], result[j][from]] = [result[j][from], result[i][out]];
+    needed[i][out] = true;
+  }
+  return result;
+}
+
+/**
  * How the CPU's decks used to be made (now buildDecks in deckBuilder.js; kept for the arena to compare with):
  * its cards from strongest to weakest, dealt out snake-wise (1→3, 3→1, 1→3, …) so
  * each deck gets a fair share, and then the decks in a random order (so its best isn't always first).
@@ -218,6 +247,7 @@ export function createMatch({
   const built = buildDecks(cpuCards, null, { persona: opponentId, locked: cpuLocked });
   // A locked deck stays first; the others go in a random order.
   const cpuOrder = cpuLocked ? [0, ...order.filter((i) => i !== 0)] : order;
+  const cpuDecks = placeInDecks(cpuOrder.map((i) => built[i]), opponentSetup(opponentId).decks);
   return {
     seed,
     heroId,
@@ -228,7 +258,7 @@ export function createMatch({
     // Places in `cards` that must make up the first deck (Tom Bombadil's ring), or none.
     ...(lockedDeck ? { lockedDeck } : {}),
     decks: null,
-    cpuDecks: cpuOrder.map((i) => built[i]),
+    cpuDecks,
     playerStarts: random() < 0.5,
     rounds: [],
   };

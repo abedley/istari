@@ -155,8 +155,11 @@ export const OPPONENTS = deepFreeze({
   },
   billFerny: {
     name: 'Bill Ferny', color: 'black', emblem: 'billFerny', ai: strategist(),
-    // Himself twice over, and the pony he starved and sold, twice.
-    setup: { pack: ['billFernyBreeSwindler', 'billFernyBreeSwindler', 'billThePony', 'billThePony'] },
+    // Himself twice over, and the pony he starved and sold, twice: one of each in his first deck and one of each in his second.
+    setup: {
+      pack: ['billFernyBreeSwindler', 'billFernyBreeSwindler', 'billThePony', 'billThePony'],
+      decks: [['billFernyBreeSwindler', 'billThePony'], ['billFernyBreeSwindler', 'billThePony']],
+    },
     portrait: portrait('2/0/20ac63cb-fa4d-4340-8062-1029c8bd5ec8.jpg?1783916321', 50, 10, 300, 'Bill Ferny, Bree Swindler', 'Hristo D. Chukov'),
     banter: {
       start: ['Well, well. Hobbits, a long way from home. Fancy a game?', 'Sit down, sit down. I\'ll deal. Honest as the day.', 'Friends of mine are asking after you. Black cloaks. Very generous.'],
@@ -459,12 +462,13 @@ export const opponentById = (id) => OPPONENTS[id];
 
 /**
  * What an opponent starts with besides a booster's cards (its `setup`, every part empty when it has none):
- * `pack` (card ids its booster always holds), `library` (card ids shuffled into its library each round)
- * and `battlefield` (card ids it begins each round with on the battlefield).
+ * `pack` (card ids its booster always holds), `decks` (card ids each of its decks must hold, in round order: the
+ * first list for round 1's deck, and so on; they must be in `pack`), `library` (card ids shuffled into its library
+ * each round) and `battlefield` (card ids it begins each round with on the battlefield).
  */
 export function opponentSetup(id) {
   const setup = OPPONENTS[id]?.setup ?? {};
   return {
-    pack: setup.pack ?? [], library: setup.library ?? [], battlefield: setup.battlefield ?? [], graveyard: setup.graveyard ?? [],
+    pack: setup.pack ?? [], decks: setup.decks ?? [], library: setup.library ?? [], battlefield: setup.battlefield ?? [], graveyard: setup.graveyard ?? [],
   };
 }

@@ -426,7 +426,7 @@ test('a booster with cards it must hold: each takes the place of a card of its r
 });
 
 test('Old Man Willow’s own setup: his card in every pack, and five Forests in play and five in his library each round', () => {
-  assert.deepEqual(opponentSetup('sauron'), { pack: [], library: [], battlefield: [], graveyard: [] });
+  assert.deepEqual(opponentSetup('sauron'), { pack: [], decks: [], library: [], battlefield: [], graveyard: [] });
   assert.deepEqual(opponentSetup('oldManWillow').library, Array(5).fill('forest'));
   assert.deepEqual(opponentSetup('oldManWillow').battlefield, Array(5).fill('forest'));
   for (let seed = 1; seed <= 20; seed += 1) {
